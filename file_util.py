@@ -77,11 +77,17 @@ def rename_files(path):
 
     for root, dirs, files in os.walk(path):
         for file_name in files:
+            if file_name.startswith('log'):
+                continue
+
             new_name = file_name
 
             new_name = remove_date_prefix(new_name)
             new_name = remove_unused(new_name)
             new_name = make_valid_product_name(new_name)
+
+            if new_name == file_name:
+                continue
 
             o_path = os.path.join(root, file_name)
             n_path = os.path.join(root, new_name)

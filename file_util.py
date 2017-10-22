@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
+import datetime
+
 
 MIN_BRAND_LEN = 2
 REMOVE_STRS = ["[Thz.la]",
@@ -61,7 +63,18 @@ def make_valid_product_name(src_name):
         return brand + '-' + number_n_other
 
 
+def create_log_name(root_path):
+    return os.path.join(root_path, 'log_' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.txt')
+
+
+def backup_file_name(log_name, old_path, new_path):
+    with open(log_name, 'a') as f:
+        f.write("{} <- {}\n".format(old_path, new_path))
+
+
 def rename_files(path):
+    log_name = create_log_name(path)
+
     for root, dirs, files in os.walk(path):
         for file_name in files:
             new_name = file_name
@@ -74,6 +87,8 @@ def rename_files(path):
             n_path = os.path.join(root, new_name)
             print(new_name, '<-', file_name)
             os.rename(o_path, n_path)
+
+            backup_file_name(log_name, o_path, n_path)
 
 #rename_files("D:/새 폴더")
 

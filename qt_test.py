@@ -24,10 +24,10 @@ class MyWindow(QMainWindow, form_class):
         self.tbl_search_result.setColumnCount(5)
         self.tbl_search_result.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
+        self.load_ini_file()
+
     def update_result(self, files):
-        # self.tbl_search_result.setRowCount(0)
         self.tbl_search_result.clear()
-        print('in update_result')
         for row, f in enumerate(files):
             print(row, f)
             btn_open_dir = QPushButton(self.tbl_search_result)
@@ -50,12 +50,35 @@ class MyWindow(QMainWindow, form_class):
         self.tbl_search_result.resizeColumnsToContents()
         self.tbl_search_result.resizeRowsToContents()
 
+        self.update_ini_file()
+
+    def update_ini_file(self):
+        with open('search.ini', 'w') as f:
+            search_text = self.txt_search_text.text()
+            src_dir = self.txt_selected_src_dir.text()
+            tgt_dir = self.txt_selected_tgt_dir.text()
+
+            f.write('last_search_text={}\n'.format(search_text))
+            f.write('last_src_dir={}\n'.format(src_dir))
+            f.write('last_tgt_dir={}\n'.format(tgt_dir))
+
+    def load_ini_file(self):
+        with open('search.ini', 'r') as f:
+            for line in iter(f):
+                key_val = line.split('=')
+                if key_val[0] == 'last_search_text':
+                    self.txt_search_text.setText(key_val[1].rstrip())
+                elif key_val[0] == 'last_src_dir':
+                    self.txt_selected_src_dir.setText(key_val[1].rstrip())
+                elif key_val[0] == 'last_tgt_dir':
+                    self.txt_selected_tgt_dir.setText(key_val[1].rstrip())
+
     def on_search_dir_clicked(self):
         # target_dir = 'c:\\__devroot\\utils\\sample_data'
-        target_dir = self.txt_selected_src_dir.text()
+        src_dir = self.txt_selected_src_dir.text()
         search_text = self.txt_search_text.text()
         # results = find_file(target_dir, 'juy(.*)012')
-        results = find_file(target_dir, search_text)
+        results = find_file(src_dir, search_text)
         print(results)
         self.update_result(results)
 

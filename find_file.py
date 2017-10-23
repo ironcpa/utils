@@ -9,10 +9,12 @@ import stat
 from symlink import *
 import subprocess
 
+
 def get_file_size(file):
     file.seek(0, 2)
     size = file.tell()
     return size
+
 
 def xcopy(src, dst):
     #os.system('xcopy "%s" "%s"' % (src, dst))
@@ -28,12 +30,14 @@ def remove_file(path):
     os.chmod(path, stat.S_IWRITE)
     os.remove(path)
 
+
 def create_dir_if_not_exists(path):
     dir = os.path.dirname(path)
     if not os.path.exists(dir):
         os.makedirs(dir)
         print('create new dir : {}'.format(path))
-        
+
+
 def find_file(root_folder, file_name, ignore_path = None):
     founds = []
     rex = re.compile(file_name, re.IGNORECASE)
@@ -62,6 +66,7 @@ def find_file(root_folder, file_name, ignore_path = None):
                     print(full_path + ", size=" + format(os.path.getsize(full_path) / 1000, ','))
     return founds
 
+
 def find_file_in_all_drives(file_name, ignore_path = None):
     print( 'search : ' + file_name)
     all_founds = []
@@ -69,6 +74,7 @@ def find_file_in_all_drives(file_name, ignore_path = None):
         all_founds.extend(find_file(drive, file_name, ignore_path))
     print('found results : ' + str(len(all_founds)))
     return all_founds
+
 
 def move_files(search_text, dest_dir):
     if not dest_dir.endswith('\\'):
@@ -99,6 +105,7 @@ def move_files(search_text, dest_dir):
         job_counter = job_counter + 1
         print('{}/{} completed'.format(job_counter, len(founds)))
 
+
 def remove_dup_files_in_dest(file_name, dest_dir):
     founds = find_file_in_all_drives(file_name, dest_dir)
 
@@ -107,7 +114,8 @@ def remove_dup_files_in_dest(file_name, dest_dir):
         if os.path.isfile(dest_path):
             print('call remove ' + path)
             remove_file(path)
-            
+
+
 def create_symlinks(search_text, dest_dir):
     founds = find_file_in_all_drives(search_text)
 
@@ -125,29 +133,22 @@ def create_symlinks(search_text, dest_dir):
         symlink(file_path, link_path)
 
 
-#===================================================
-# run
-#===================================================
-'''
-todo
--wakaba_kana 고화질
--mitsui hikaru 점검
-harumiya suzu 전편
-tomoka akari 점검
-kono madoka 전편 - 넓은몸
-'''
-search_text = 'vicd(.*)362'
-#search_text = '(.*)75'
-dest_dir = r'C:\__vid_temps\__find_1018' + '\\'
+if __name__ == '__main__':
+    search_text = 'vicd(.*)362'
+    # search_text = '(.*)75'
+    dest_dir = r'C:\__vid_temps\__find_1018' + '\\'
 
-#remove_dup_files_in_dest(search_text, dest_dir)
-#find_file_in_all_drives( search_text )
-#find_file('c:\\', "star(.*)752")
-#move_files(search_text, dest_dir)
-create_symlinks(search_text, dest_dir)
+    # remove_dup_files_in_dest(search_text, dest_dir)
+    # find_file_in_all_drives( search_text )
+    # find_file('c:\\', "star(.*)752")
+    # move_files(search_text, dest_dir)
+    # create_symlinks(search_text, dest_dir)
 
-#symlink(r'xxxx', r'yyyy')
-#xcopy('test_file.wmv', 'test_filder')
-#create_dir_if_not_exists(dest_dir)
+    # symlink(r'xxxx', r'yyyy')
+    # xcopy('test_file.wmv', 'test_filder')
+    # create_dir_if_not_exists(dest_dir)
 
-win32ui.MessageBox("Script End", "Python", 4096)
+    results = find_file('c:\\__devroot\\utils\\sample_data\\', 'aaa')
+    print(results)
+
+    # win32ui.MessageBox("Script End", "Python", 4096)

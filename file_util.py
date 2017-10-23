@@ -9,10 +9,6 @@ REMOVE_STRS = ["[Thz.la]",
                "[thz.la]",
                "21bt.net-"
                "1203-javbo.net_",
-               "0814",
-               "1018",
-               "1019",
-               "1020",
               ]
 
 
@@ -69,7 +65,7 @@ def create_log_name(root_path):
 
 def backup_file_name(log_name, old_path, new_path):
     with open(log_name, 'a') as f:
-        f.write("{} <- {}\n".format(old_path, new_path))
+        f.write("{} <- {}\n".format(new_path, old_path))
 
 
 def rename_files(path):

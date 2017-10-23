@@ -14,22 +14,28 @@ class MyWindow(QMainWindow, form_class):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.btn_search.clicked.connect(self.on_search_clicked)
+
+        self.btn_search_dir.clicked.connect(self.on_search_dir_clicked)
+        self.btn_search_all_drives.clicked.connect(self.on_search_all_drives_clicked)
         self.btn_select_src_dir.clicked.connect(lambda state: self.on_select_dir_clicked(False))
         self.btn_select_tgt_dir.clicked.connect(lambda state: self.on_select_dir_clicked(True))
 
-        self.tbl_search_result.setRowCount(5)
+        self.tbl_search_result.setRowCount(10)
         self.tbl_search_result.setColumnCount(5)
         self.tbl_search_result.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
     def update_result(self, files):
+        # self.tbl_search_result.setRowCount(0)
+        self.tbl_search_result.clear()
+        print('in update_result')
         for row, f in enumerate(files):
+            print(row, f)
             btn_open_dir = QPushButton(self.tbl_search_result)
-            btn_open_dir.setText('folder'.format(row))
+            btn_open_dir.setText('folder({}'.format(row))
             btn_open_dir.clicked.connect(lambda state, x=row: self.on_open_dir_clicked(x))
             self.tbl_search_result.setCellWidget(row, column_def['dir'], btn_open_dir)
             btn_open_file = QPushButton(self.tbl_search_result)
-            btn_open_file.setText('open'.format(row))
+            btn_open_file.setText('open')
             btn_open_file.clicked.connect(lambda state, x=row: self.on_open_file_clicked(x))
             self.tbl_search_result.setCellWidget(row, column_def['open'], btn_open_file)
 
@@ -40,12 +46,22 @@ class MyWindow(QMainWindow, form_class):
             item = QTableWidgetItem(f)
             self.tbl_search_result.setItem(row, column_def['path'], item)
 
+        self.tbl_search_result.setRowCount(len(files))
         self.tbl_search_result.resizeColumnsToContents()
         self.tbl_search_result.resizeRowsToContents()
 
-    def on_search_clicked(self):
-        target_dir = 'c:\\__devroot\\utils\\sample_data'
-        results = find_file(target_dir, 'juy(.*)012')
+    def on_search_dir_clicked(self):
+        # target_dir = 'c:\\__devroot\\utils\\sample_data'
+        target_dir = self.txt_selected_src_dir.text()
+        search_text = self.txt_search_text.text()
+        # results = find_file(target_dir, 'juy(.*)012')
+        results = find_file(target_dir, search_text)
+        print(results)
+        self.update_result(results)
+
+    def on_search_all_drives_clicked(self):
+        search_text = self.txt_search_text.text()
+        results = find_file_in_all_drives(search_text)
         print(results)
         self.update_result(results)
 

@@ -11,18 +11,30 @@ column_def = {'dir' : 0, 'open' : 1, 'del' : 2, 'path' : 3 }
 
 
 class MyWindow(QMainWindow, form_class):
+    search_start_req = pyqtSignal(str, str)
+    search_stop_req = pyqtSignal()
+
     def __init__(self):
         super().__init__()
         self.setupUi(self)
 
+        self.thread = QThread()
+        self.thread.start()
+
         self.search_worker = SearchWorker()
+        self.search_worker.moveToThread(self.thread)
         self.search_worker.finished.connect(self.on_search_finished)
+
+        self.search_start_req.connect(self.search_worker.search)
+        self.search_stop_req.connect(self.search_worker.stop)
 
         self.btn_search_dir.clicked.connect(self.on_search_dir_clicked)
         self.btn_search_all_drives.clicked.connect(self.on_search_all_drives_clicked)
         self.btn_select_src_dir.clicked.connect(lambda state: self.on_select_dir_clicked(False))
         self.btn_select_tgt_dir.clicked.connect(lambda state: self.on_select_dir_clicked(True))
-        self.btn_stop.clicked.connect(self.on_stop_clicked)
+        # self.btn_stop.clicked.connect(self.on_stop_clicked)
+        self.btn_stop.clicked.connect(lambda: self.search_worker.stop())
+        # self.btn_stop.clicked.connect(self.search_worker.stop_work)       # can't work
 
         self.tbl_search_result.setRowCount(10)
         self.tbl_search_result.setColumnCount(5)
@@ -81,10 +93,11 @@ class MyWindow(QMainWindow, form_class):
                 elif key_val[0] == 'last_tgt_dir':
                     self.txt_selected_tgt_dir.setText(key_val[1].rstrip())
 
-    def start_search(self, text, src_dir = None):
+    def start_search(self, text, src_dir = ''):
         self.btn_search_dir.setEnabled(False)
         self.btn_search_all_drives.setEnabled(False)
-        self.search_worker.search(text, src_dir)
+        # self.search_worker.search(text, src_dir)
+        self.search_start_req.emit(text, src_dir)
 
     def on_search_dir_clicked(self):
         # # target_dir = 'c:\\__devroot\\utils\\sample_data'
@@ -106,7 +119,7 @@ class MyWindow(QMainWindow, form_class):
         # self.update_result(results)
 
         search_text = self.txt_search_text.text()
-        self.start_search(search_text)
+        self.start_search(search_text, '')
 
     def on_search_finished(self):
         self.update_result(self.search_worker.search_results)
@@ -134,10 +147,12 @@ class MyWindow(QMainWindow, form_class):
 
     def on_stop_clicked(self):
         print('stop clicked')
-        self.search_worker.is_working = False
+        self.search_stop_req.emit()
 
 
-class SearchWorker(QThread):
+class SearchWorker(QObject):
+    finished = pyqtSignal()
+
     def __init__(self):
         super().__init__()
 
@@ -146,24 +161,27 @@ class SearchWorker(QThread):
         self.src_dir = None
         self.search_results = []
 
-    def __del__(self):
-        print('... end thread ...')
-        self.wait()
-
     def search(self, text, src_dir = None):
         self.search_text = text
         self.src_dir = src_dir
         self.is_working = True
         self.search_results = []
 
-        self.start()
-
-    def run(self):
-        if self.src_dir is None:
+        # if self.src_dir is None:
+        if self.src_dir == '':
             self.search_results = self.find_file_in_all_drives(self.search_text)
         else:
             self.search_results = self.find_file(self.src_dir, self.search_text)
 
+        self.is_working = False
+        self.finished.emit()
+
+    def stop(self):
+        print('worker.stop')
+        self.is_working = False
+
+    def stop_work(self):
+        print('stop work')
         self.is_working = False
 
     def find_file(self, root_folder, file_name, ignore_path = None):
@@ -175,6 +193,7 @@ class SearchWorker(QThread):
             if not self.is_working:
                 print('is not working')
                 break
+            print(root)
 
             for extension in ('*.avi', '*.wmv', '*.mp4', '*.mpg', '*.asf', '*.mov', '*.mkv', '*.iso'):
                 #for f in files:
@@ -199,12 +218,11 @@ class SearchWorker(QThread):
                         print(full_path + ", size=" + format(os.path.getsize(full_path) / 1000, ','))
         return founds
 
-
     def find_file_in_all_drives(self, file_name, ignore_path = None):
-        print( 'search : ' + file_name)
+        print('search : ' + file_name)
         all_founds = []
         for drive in win32api.GetLogicalDriveStrings().split('\000')[:-1]:
-            all_founds.extend(find_file(drive, file_name, ignore_path))
+            all_founds.extend(self.find_file(drive, file_name, ignore_path))
         print('found results : ' + str(len(all_founds)))
         return all_founds
 

@@ -22,6 +22,7 @@ class MyWindow(QMainWindow, form_class):
         self.btn_search_all_drives.clicked.connect(self.on_search_all_drives_clicked)
         self.btn_select_src_dir.clicked.connect(lambda state: self.on_select_dir_clicked(False))
         self.btn_select_tgt_dir.clicked.connect(lambda state: self.on_select_dir_clicked(True))
+        self.btn_stop.clicked.connect(self.on_stop_clicked)
 
         self.tbl_search_result.setRowCount(10)
         self.tbl_search_result.setColumnCount(5)
@@ -131,12 +132,16 @@ class MyWindow(QMainWindow, form_class):
         path = self.tbl_search_result.item(row, column_def['path']).text()
         subprocess.Popen('explorer "{}"'.format(path))
 
+    def on_stop_clicked(self):
+        print('stop clicked')
+        self.search_worker.is_working = False
+
 
 class SearchWorker(QThread):
     def __init__(self):
         super().__init__()
 
-        self.working = False
+        self.is_working = False
         self.search_text = ''
         self.src_dir = None
         self.search_results = []
@@ -148,18 +153,60 @@ class SearchWorker(QThread):
     def search(self, text, src_dir = None):
         self.search_text = text
         self.src_dir = src_dir
-        self.working = True
+        self.is_working = True
         self.search_results = []
 
         self.start()
 
     def run(self):
         if self.src_dir is None:
-            self.search_results = find_file_in_all_drives(self.search_text)
+            self.search_results = self.find_file_in_all_drives(self.search_text)
         else:
-            self.search_results = find_file(self.src_dir, self.search_text)
+            self.search_results = self.find_file(self.src_dir, self.search_text)
 
-        self.working = False
+        self.is_working = False
+
+    def find_file(self, root_folder, file_name, ignore_path = None):
+        founds = []
+        rex = re.compile(file_name, re.IGNORECASE)
+        print( root_folder)
+        for root, dirs, files in os.walk(root_folder):
+            # for thread stop
+            if not self.is_working:
+                print('is not working')
+                break
+
+            for extension in ('*.avi', '*.wmv', '*.mp4', '*.mpg', '*.asf', '*.mov', '*.mkv', '*.iso'):
+                #for f in files:
+                for f in fnmatch.filter(files, extension):
+                    result = rex.search(f)
+                    if result:
+                        full_path = os.path.join(root, f)
+                        #ignore path patterns
+                        if not (ignore_path is None) and (ignore_path in full_path):
+                            print('ignore path ' + ignore_path)
+                            continue
+                        if r"C:\Users\hjchoi\Documents" in full_path:   # downloading torrent
+                            print('ignore ' + full_path)
+                            continue
+                        if r"C:\Windows\Sys" in full_path:      # why some files found in system folders?
+                            print('ignore system ' + full_path)
+                            continue
+                        if full_path.endswith(SYMLINK_SUFFIX):
+                            print('ignore symlink file ' + full_path)
+                            continue
+                        founds.append(full_path)
+                        print(full_path + ", size=" + format(os.path.getsize(full_path) / 1000, ','))
+        return founds
+
+
+    def find_file_in_all_drives(self, file_name, ignore_path = None):
+        print( 'search : ' + file_name)
+        all_founds = []
+        for drive in win32api.GetLogicalDriveStrings().split('\000')[:-1]:
+            all_founds.extend(find_file(drive, file_name, ignore_path))
+        print('found results : ' + str(len(all_founds)))
+        return all_founds
 
 
 if __name__ == "__main__":

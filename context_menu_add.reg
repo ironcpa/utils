@@ -12,6 +12,12 @@ Windows Registry Editor Version 5.00
 [HKEY_CLASSES_ROOT\Directory\shell\JAV Run Search\command]
 @="\"C:\\__devroot\\utils\\context_menu_run_search.bat\" \"%1\""
 
+[HKEY_CLASSES_ROOT\Drive\shell\JAV Run Search]
+@="&JAV Run Search"
+
+[HKEY_CLASSES_ROOT\Drive\shell\JAV Run Search\command]
+@="\"C:\\__devroot\\utils\\context_menu_run_search.bat\" \"%1\""
+
 [HKEY_CLASSES_ROOT\Directory\Background\shell\JAV Run Search]
 @="&JAV Run Search"
 

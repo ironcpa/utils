@@ -1,4 +1,6 @@
-import sys
+#-*-coding:utf-8-*-
+
+# import sys
 import os
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
@@ -231,6 +233,8 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     src_path = ''
+    print('arg', sys.argv)
+    # if len(sys.argv) > 1 and os.path.isdir(sys.argv[1]):
     if len(sys.argv) > 1 and os.path.isdir(sys.argv[1]):
         src_path = sys.argv[1]
     mywindow = MyWindow(src_path)

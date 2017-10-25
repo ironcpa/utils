@@ -34,15 +34,15 @@ class MainWindow(QMainWindow, form_class):
 
         # no reencoding : copy all settings
         # command = 'ffmpeg -i "{}" -ss {} -t {} -vcodec copy -acodec copy {}'.format(src_file, start_time, end_time, clip_file)
-        command = 'ffmpeg -i "{}" -ss {} -t {} -c copy {} -y'.format(src_file, start_time, end_time, clip_file_full)
+        command = 'ffmpeg -i "{}" -ss {} -to {} -c copy {} -y'.format(src_file, start_time, end_time, clip_file_full)
         # reencoding : if no reencoding result has glitch on start
-        command = 'ffmpeg -i "{}" -ss {} -t {} {} -y'.format(src_file, start_time, end_time, clip_file_full)
+        # command = 'ffmpeg -i "{}" -ss {} -to {} {} -y'.format(src_file, start_time, end_time, clip_file_full)
         print(command)
 
         try:
             subprocess.check_output(command, stderr=subprocess.STDOUT)
             QMessageBox.information(self, 'info', 'encoding complete')
-            self.close()
+            # self.close()
         except subprocess.CalledProcessError as e:
             print(e)
             QMessageBox.critical(self, 'error', 'encoding failed\n{}'.format(err))

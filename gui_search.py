@@ -1,19 +1,21 @@
-#-*-coding:utf-8-*-
+# -*-coding:utf-8-*-
 
+import subprocess
 import sys
-import os
-from PyQt5.QtWidgets import *
+
 from PyQt5 import uic
 from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from send2trash import send2trash
+
 from find_file import *
-import subprocess
 
 # form_class = uic.loadUiType("./resource/mainwindow.ui")[0]
 form_class = uic.loadUiType("C:/__devroot/utils/resource/mainwindow.ui")[0]
 column_def = {'dir': 0, 'open': 1, 'del': 2, 'path': 3}
 
 
-class MyWindow(QMainWindow, form_class):
+class MainWindow(QMainWindow, form_class):
     search_start_req = pyqtSignal(str, str)
     search_stop_req = pyqtSignal()
 
@@ -37,7 +39,7 @@ class MyWindow(QMainWindow, form_class):
         self.btn_select_tgt_dir.clicked.connect(lambda state: self.on_select_dir_clicked(True))
         # self.btn_stop.clicked.connect(self.on_stop_clicked)       # it'll be called from worker's thread : so can't be stopped
         self.btn_stop.clicked.connect(lambda: self.search_worker.stop())  # called from main thread
-        self.btn_clear_result.clicked.connect(self.clear_result)
+        self.btn_clear_result.clicked.connect(self.on_clear_result)
 
         self.tbl_search_result.setRowCount(10)
         self.tbl_search_result.setColumnCount(5)
@@ -64,12 +66,12 @@ class MyWindow(QMainWindow, form_class):
 
             btn_delete_file = QPushButton(self.tbl_search_result)
             btn_delete_file.setText('delete')
+            btn_delete_file.clicked.connect(lambda state, x=row: self.on_del_file_clicked(x))
             self.tbl_search_result.setCellWidget(row, column_def['del'], btn_delete_file)
 
             item = QTableWidgetItem(f)
             self.tbl_search_result.setItem(row, column_def['path'], item)
 
-        print('new row', len(files))
         self.tbl_search_result.resizeColumnsToContents()
         self.tbl_search_result.resizeRowsToContents()
 
@@ -154,11 +156,17 @@ class MyWindow(QMainWindow, form_class):
         path = self.tbl_search_result.item(row, column_def['path']).text()
         subprocess.Popen('explorer "{}"'.format(path))
 
+    def on_del_file_clicked(self, row):
+        reply = QMessageBox.question(self, 'alert', 'Sure to delete?', QMessageBox.Yes, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            path = self.tbl_search_result.item(row, column_def['path']).text()
+            send2trash(path)
+
     def on_stop_clicked(self):
         print('stop clicked')
         self.search_stop_req.emit()
 
-    def clear_result(self):
+    def on_clear_result(self):
         self.tbl_search_result.clear()
 
 
@@ -244,7 +252,7 @@ if __name__ == "__main__":
     # if len(sys.argv) > 1 and os.path.isdir(sys.argv[1]):
     if len(sys.argv) > 1 and os.path.isdir(sys.argv[1]):
         src_path = sys.argv[1]
-    mywindow = MyWindow(src_path)
+    mywindow = MainWindow(src_path)
     mywindow.show()
     app.exec_()
 

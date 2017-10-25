@@ -23,3 +23,10 @@ Windows Registry Editor Version 5.00
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\JAV Run Search\command]
 @="\"C:\\__devroot\\utils\\context_menu_run_search.bat\" \"%1\""
+
+[HKEY_CLASSES_ROOT\*\shell\JAV Encode Clip]
+@="&JAV Encode Clip"
+
+[HKEY_CLASSES_ROOT\*\shell\JAV Encode Clip\command]
+;@="\"C:\\__devroot\\utils\\context_menu_encode_clip.bat\" \"%1\""
+@="\"C:\\__devenv\\anaconda3\\pythonw\" "\"C:\\__devroot\\utils\\gui_ffmpeg.py\" \"%1\""

@@ -9,10 +9,11 @@ from PyQt5.QtWidgets import *
 from send2trash import send2trash
 
 from find_file import *
+import gui_ffmpeg
 
 # form_class = uic.loadUiType("./resource/mainwindow.ui")[0]
 form_class = uic.loadUiType("C:/__devroot/utils/resource/mainwindow.ui")[0]
-column_def = {'dir': 0, 'open': 1, 'del': 2, 'path': 3}
+column_def = {'dir': 0, 'open': 1, 'del': 2, 'clip':3, 'path': 4}
 
 
 class MainWindow(QMainWindow, form_class):
@@ -55,10 +56,12 @@ class MainWindow(QMainWindow, form_class):
         self.tbl_search_result.setRowCount(len(files))
         for row, f in enumerate(files):
             print(row, f)
+
             btn_open_dir = QPushButton(self.tbl_search_result)
             btn_open_dir.setText('folder({}'.format(row))
             btn_open_dir.clicked.connect(lambda state, x=row: self.on_open_dir_clicked(x))
             self.tbl_search_result.setCellWidget(row, column_def['dir'], btn_open_dir)
+
             btn_open_file = QPushButton(self.tbl_search_result)
             btn_open_file.setText('open')
             btn_open_file.clicked.connect(lambda state, x=row: self.on_open_file_clicked(x))
@@ -68,6 +71,11 @@ class MainWindow(QMainWindow, form_class):
             btn_delete_file.setText('delete')
             btn_delete_file.clicked.connect(lambda state, x=row: self.on_del_file_clicked(x))
             self.tbl_search_result.setCellWidget(row, column_def['del'], btn_delete_file)
+
+            btn_open_ffmpeg = QPushButton(self.tbl_search_result)
+            btn_open_ffmpeg.setText('clip')
+            btn_open_ffmpeg.clicked.connect(lambda state, x=row: self.on_open_ffmpeg_clicked(x))
+            self.tbl_search_result.setCellWidget(row, column_def['clip'], btn_open_ffmpeg)
 
             item = QTableWidgetItem(f)
             self.tbl_search_result.setItem(row, column_def['path'], item)
@@ -161,6 +169,11 @@ class MainWindow(QMainWindow, form_class):
         if reply == QMessageBox.Yes:
             path = self.tbl_search_result.item(row, column_def['path']).text()
             send2trash(path)
+
+    def on_open_ffmpeg_clicked(self, row):
+        path = self.tbl_search_result.item(row, column_def['path']).text()
+        w = gui_ffmpeg.MainWindow(path)
+        w.show()
 
     def on_stop_clicked(self):
         print('stop clicked')

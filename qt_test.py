@@ -1,6 +1,6 @@
 #-*-coding:utf-8-*-
 
-# import sys
+import sys
 import os
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
@@ -37,6 +37,7 @@ class MyWindow(QMainWindow, form_class):
         self.btn_select_tgt_dir.clicked.connect(lambda state: self.on_select_dir_clicked(True))
         # self.btn_stop.clicked.connect(self.on_stop_clicked)       # it'll be called from worker's thread : so can't be stopped
         self.btn_stop.clicked.connect(lambda: self.search_worker.stop())  # called from main thread
+        self.btn_clear_result.clicked.connect(self.clear_result)
 
         self.tbl_search_result.setRowCount(10)
         self.tbl_search_result.setColumnCount(5)
@@ -49,6 +50,7 @@ class MyWindow(QMainWindow, form_class):
 
     def update_result(self, files):
         self.tbl_search_result.clear()
+        self.tbl_search_result.setRowCount(len(files))
         for row, f in enumerate(files):
             print(row, f)
             btn_open_dir = QPushButton(self.tbl_search_result)
@@ -67,7 +69,7 @@ class MyWindow(QMainWindow, form_class):
             item = QTableWidgetItem(f)
             self.tbl_search_result.setItem(row, column_def['path'], item)
 
-        self.tbl_search_result.setRowCount(len(files))
+        print('new row', len(files))
         self.tbl_search_result.resizeColumnsToContents()
         self.tbl_search_result.resizeRowsToContents()
 
@@ -156,6 +158,9 @@ class MyWindow(QMainWindow, form_class):
         print('stop clicked')
         self.search_stop_req.emit()
 
+    def clear_result(self):
+        self.tbl_search_result.clear()
+
 
 class SearchWorker(QObject):
     finished = pyqtSignal()
@@ -194,7 +199,6 @@ class SearchWorker(QObject):
         for root, dirs, files in os.walk(root_folder):
             # for thread stop
             if not self.is_working:
-                print('is not working')
                 break
 
             for extension in ('*.avi', '*.wmv', '*.mp4', '*.mpg', '*.asf', '*.mov', '*.mkv', '*.iso'):
@@ -224,6 +228,9 @@ class SearchWorker(QObject):
         print('search : ' + file_name)
         all_founds = []
         for drive in win32api.GetLogicalDriveStrings().split('\000')[:-1]:
+            # for thread stop
+            if not self.is_working:
+                break
             all_founds.extend(self.find_file(drive, file_name, ignore_path))
         print('found results : ' + str(len(all_founds)))
         return all_founds

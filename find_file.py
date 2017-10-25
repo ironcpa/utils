@@ -148,7 +148,8 @@ if __name__ == '__main__':
     # xcopy('test_file.wmv', 'test_filder')
     # create_dir_if_not_exists(dest_dir)
 
-    results = find_file('c:\\__devroot\\utils\\sample_data\\', 'aaa')
+    # results = find_file('c:\\__devroot\\utils\\sample_data\\', 'aaa')
+    results = find_file('c:\\__devroot\\utils\\sample_data\\', '*')
     print(results)
 
     # win32ui.MessageBox("Script End", "Python", 4096)

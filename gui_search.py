@@ -245,7 +245,7 @@ class SearchWorker(QObject):
                         if full_path.endswith(SYMLINK_SUFFIX):
                             print('ignore symlink file ' + full_path)
                             continue
-                        founds.append(full_path)
+                        founds.append(full_path.replace('/', '\\')) # for windows cmd call
                         print(full_path + ", size=" + format(os.path.getsize(full_path) / 1000, ','))
         return founds
 

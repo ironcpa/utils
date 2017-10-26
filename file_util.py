@@ -50,7 +50,7 @@ def make_valid_product_name(src_name):
             num_pos = i
             break
 
-    brand = src_name[0:num_pos]
+    brand = src_name[0:num_pos].lower()
     number_n_other = src_name[num_pos:]
 
     if brand.endswith('-'):

@@ -23,7 +23,7 @@ class MainWindow(QMainWindow, form_class):
 
         src_name_only, src_ext = os.path.splitext(os.path.basename(src_path))
         clip_name = 'clip_' + src_name_only
-        self.txt_clip_name.setText(clip_name + '_{}_{}' + src_ext)
+        self.txt_clip_name.setText('c:\\__clips\\' + clip_name + '_{}_{}' + src_ext)
 
         self.btn_encode.clicked.connect(self.on_encode_clicked)
         self.btn_del_src.clicked.connect(self.on_del_src_clicked)
@@ -106,6 +106,7 @@ class MainWindow(QMainWindow, form_class):
                 self.clip_model.removeRow(r)
 
     def on_open_dir_clicked(self):
+        print('explorer /select,"{}"'.format(self.get_selected_path(self.sender())))
         subprocess.Popen('explorer /select,"{}"'.format(self.get_selected_path(self.sender())))
 
     def on_open_file_clicked(self):

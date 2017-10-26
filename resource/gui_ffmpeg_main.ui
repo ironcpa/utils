@@ -7,12 +7,12 @@
     <x>0</x>
     <y>0</y>
     <width>905</width>
-    <height>425</height>
+    <height>685</height>
    </rect>
   </property>
   <property name="font">
    <font>
-    <family>Agency FB</family>
+    <family>Arial</family>
     <pointsize>20</pointsize>
    </font>
   </property>
@@ -21,19 +21,15 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
+    <item row="4" column="0">
+     <widget class="QTableWidget" name="tbl_clip_result"/>
+    </item>
     <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="1" colspan="3">
        <widget class="QLabel" name="lbl_src_file">
         <property name="text">
          <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>file name</string>
         </property>
        </widget>
       </item>
@@ -44,22 +40,15 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="1" colspan="3">
-       <widget class="QLineEdit" name="txt_clip_name"/>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>clip name</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
          <string>end</string>
         </property>
        </widget>
+      </item>
+      <item row="3" column="1" colspan="3">
+       <widget class="QLineEdit" name="txt_clip_name"/>
       </item>
       <item row="2" column="1">
        <widget class="QLineEdit" name="txt_end_time">
@@ -87,20 +76,41 @@
         </property>
        </widget>
       </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>file name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>clip name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="2">
+       <widget class="QPushButton" name="btn_encode">
+        <property name="text">
+         <string>do encode</string>
+        </property>
+        <property name="autoDefault">
+         <bool>true</bool>
+        </property>
+        <property name="default">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2" colspan="2">
+       <widget class="QCheckBox" name="chk_reencode">
+        <property name="text">
+         <string>re-encode?</string>
+        </property>
+       </widget>
+      </item>
      </layout>
-    </item>
-    <item row="1" column="0">
-     <widget class="QPushButton" name="btn_encode">
-      <property name="text">
-       <string>do encode</string>
-      </property>
-      <property name="autoDefault">
-       <bool>true</bool>
-      </property>
-      <property name="default">
-       <bool>true</bool>
-      </property>
-     </widget>
     </item>
    </layout>
   </widget>
@@ -110,7 +120,7 @@
      <x>0</x>
      <y>0</y>
      <width>905</width>
-     <height>21</height>
+     <height>51</height>
     </rect>
    </property>
   </widget>
@@ -120,7 +130,6 @@
   <tabstop>txt_start_time</tabstop>
   <tabstop>txt_end_time</tabstop>
   <tabstop>txt_clip_name</tabstop>
-  <tabstop>btn_encode</tabstop>
  </tabstops>
  <resources/>
  <connections/>

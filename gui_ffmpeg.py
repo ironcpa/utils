@@ -32,11 +32,11 @@ class MainWindow(QMainWindow, form_class):
         clip_file_form = self.txt_clip_name.text()
         clip_file_full = clip_file_form.format(start_time.replace(':', ''), end_time.replace(':', ''))
 
-        # no reencoding : copy all settings
-        # command = 'ffmpeg -i "{}" -ss {} -t {} -vcodec copy -acodec copy {}'.format(src_file, start_time, end_time, clip_file)
-        command = 'ffmpeg -i "{}" -ss {} -to {} -c copy {} -y'.format(src_file, start_time, end_time, clip_file_full)
-        # reencoding : if no reencoding result has glitch on start
-        # command = 'ffmpeg -i "{}" -ss {} -to {} {} -y'.format(src_file, start_time, end_time, clip_file_full)
+        command = ''
+        if self.chk_reencode.isChecked():
+            command = 'ffmpeg -i "{}" -ss {} -to {} {} -y'.format(src_file, start_time, end_time, clip_file_full)
+        else:
+            command = 'ffmpeg -i "{}" -ss {} -to {} -c copy {} -y'.format(src_file, start_time, end_time, clip_file_full)
         print(command)
 
         try:

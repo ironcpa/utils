@@ -26,13 +26,14 @@ class MainWindow(QMainWindow, form_class):
         self.txt_clip_name.setText(clip_name + '_{}_{}' + src_ext)
 
         self.btn_encode.clicked.connect(self.on_encode_clicked)
+        self.btn_del_src.clicked.connect(self.on_del_src_clicked)
 
         self.tbl_clip_result.setColumnCount(5)
         self.tbl_clip_result.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        # test
-        self.txt_start_time.setText('000000')
-        self.txt_end_time.setText('000010')
+        # # test
+        # self.txt_start_time.setText('000000')
+        # self.txt_end_time.setText('000010')
 
     def on_encode_clicked(self):
         start_time = self.txt_start_time.text().replace(' ', '')
@@ -47,6 +48,9 @@ class MainWindow(QMainWindow, form_class):
         else:
             print(err)
             QMessageBox.critical(self, 'error', 'encoding failed\n{}'.format(err))
+
+    def on_del_src_clicked(self):
+        self.delete_path(self.lbl_src_file.text())
 
     def run_ffmpeg_make_clip(self, start_time, end_time, out_clip_path):
         src_file = self.lbl_src_file.text()
@@ -102,10 +106,7 @@ class MainWindow(QMainWindow, form_class):
         subprocess.Popen('explorer "{}"'.format(path))
 
     def on_del_file_clicked(self, row):
-        reply = QMessageBox.question(self, 'alert', 'Sure to delete?', QMessageBox.Yes, QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            path = self.tbl_clip_result.item(row, column_def['path']).text()
-            send2trash(path)
+        self.delete_path(self.tbl_clip_result.item(row, column_def['path']).text())
 
     def on_reclip_clicked(self, row):
         path = self.tbl_clip_result.item(row, column_def['path']).text()
@@ -131,6 +132,11 @@ class MainWindow(QMainWindow, form_class):
         else:
             print(err)
             QMessageBox.critical(self, 'error', 'encoding failed\n{}'.format(err))
+
+    def delete_path(self, path):
+        reply = QMessageBox.question(self, 'alert', 'Sure to delete?', QMessageBox.Yes, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            send2trash(path)
 
 
 if __name__ == "__main__":

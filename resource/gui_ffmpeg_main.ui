@@ -23,13 +23,6 @@
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="1" colspan="3">
-       <widget class="QLabel" name="lbl_src_file">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
@@ -87,7 +80,34 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0" colspan="2">
+      <item row="5" column="2" colspan="2">
+       <widget class="QCheckBox" name="chk_reencode">
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
+        </property>
+        <property name="text">
+         <string>re-encode?</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" colspan="2">
+       <widget class="QLabel" name="lbl_src_file">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QPushButton" name="btn_del_src">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
+        <property name="text">
+         <string>src delete</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0" colspan="2">
        <widget class="QPushButton" name="btn_encode">
         <property name="text">
          <string>do encode</string>
@@ -100,17 +120,14 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="2" colspan="2">
-       <widget class="QCheckBox" name="chk_reencode">
-        <property name="text">
-         <string>re-encode?</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </item>
     <item row="4" column="0">
-     <widget class="QTableWidget" name="tbl_clip_result"/>
+     <widget class="QTableWidget" name="tbl_clip_result">
+      <property name="focusPolicy">
+       <enum>Qt::ClickFocus</enum>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>

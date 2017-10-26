@@ -58,7 +58,7 @@ class MainWindow(QMainWindow, form_class):
             print(row, f)
 
             btn_open_dir = QPushButton(self.tbl_search_result)
-            btn_open_dir.setText('folder({}'.format(row))
+            btn_open_dir.setText('folder')
             btn_open_dir.clicked.connect(lambda state, x=row: self.on_open_dir_clicked(x))
             self.tbl_search_result.setCellWidget(row, column_def['dir'], btn_open_dir)
 
@@ -156,7 +156,6 @@ class MainWindow(QMainWindow, form_class):
                 self.txt_selected_src_dir.setText(path)
 
     def on_open_dir_clicked(self, row):
-        print(row)
         path = self.tbl_search_result.item(row, column_def['path']).text()
         subprocess.Popen('explorer /select,"{}"'.format(path))
 

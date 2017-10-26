@@ -28,8 +28,8 @@ class MainWindow(QMainWindow, form_class):
         self.btn_encode.clicked.connect(self.on_encode_clicked)
         self.btn_del_src.clicked.connect(self.on_del_src_clicked)
 
-        self.tbl_clip_result.setColumnCount(5)
-        self.tbl_clip_result.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.clip_model = QtGui.QStandardItemModel(0, 5)
+        self.tbl_clip_result.setModel(self.clip_model)
 
         # # test
         # self.txt_start_time.setText('000000')
@@ -53,6 +53,9 @@ class MainWindow(QMainWindow, form_class):
         self.delete_path(self.lbl_src_file.text())
 
     def run_ffmpeg_make_clip(self, start_time, end_time, out_clip_path):
+        # if os.path.exists(out_clip_path):
+        #     return False, 'already exists'
+
         src_file = self.lbl_src_file.text()
         command = ''
         if self.chk_reencode.isChecked():
@@ -63,53 +66,59 @@ class MainWindow(QMainWindow, form_class):
         print(command)
         try:
             subprocess.check_output(command, stderr=subprocess.STDOUT)
+            self.remove_old_same_result(out_clip_path)
             self.add_clip_result(out_clip_path)
             return True, None
         except subprocess.CalledProcessError as e:
             return False, e
 
     def add_clip_result(self, path):
-        row = self.tbl_clip_result.rowCount()
-        self.tbl_clip_result.insertRow(row)
+        row = self.clip_model.rowCount()
 
-        btn_open_dir = QPushButton(self.tbl_clip_result)
+        self.clip_model.setItem(self.clip_model.rowCount(), column_def['path'], QtGui.QStandardItem(path))
+
+        btn_open_dir = QPushButton()
         btn_open_dir.setText('folder')
-        btn_open_dir.clicked.connect(lambda state, x=row: self.on_open_dir_clicked(x))
-        self.tbl_clip_result.setCellWidget(row, column_def['dir'], btn_open_dir)
+        btn_open_dir.clicked.connect(self.on_open_dir_clicked)
+        self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['dir']), btn_open_dir)
 
         btn_open_file = QPushButton(self.tbl_clip_result)
         btn_open_file.setText('open')
-        btn_open_file.clicked.connect(lambda state, x=row: self.on_open_file_clicked(x))
-        self.tbl_clip_result.setCellWidget(row, column_def['open'], btn_open_file)
+        btn_open_file.clicked.connect(self.on_open_file_clicked)
+        self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['open']), btn_open_file)
 
         btn_delete_file = QPushButton(self.tbl_clip_result)
         btn_delete_file.setText('delete')
-        btn_delete_file.clicked.connect(lambda state, x=row: self.on_del_file_clicked(x))
-        self.tbl_clip_result.setCellWidget(row, column_def['del'], btn_delete_file)
+        btn_delete_file.clicked.connect(self.on_del_file_clicked)
+        self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['del']), btn_delete_file)
 
         btn_reclip = QPushButton(self.tbl_clip_result)
         btn_reclip.setText('reclip')
-        btn_reclip.clicked.connect(lambda state, x=row: self.on_reclip_clicked(x))
-        self.tbl_clip_result.setCellWidget(row, column_def['reclip'], btn_reclip)
-
-        self.tbl_clip_result.setItem(row, column_def['path'], QTableWidgetItem(path))
+        btn_reclip.clicked.connect(self.on_reclip_clicked)
+        self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['reclip']), btn_reclip)
 
         self.tbl_clip_result.resizeColumnsToContents()
         self.tbl_clip_result.resizeRowsToContents()
 
-    def on_open_dir_clicked(self, row):
-        path = self.tbl_clip_result.item(row, column_def['path']).text()
-        subprocess.Popen('explorer /select,"{}"'.format(path))
+    def remove_old_same_result(self, path):
+        for r in range(self.clip_model.rowCount()):
+            if self.clip_model.item(r, column_def['path']).text() == path:
+                self.clip_model.removeRow(r)
 
-    def on_open_file_clicked(self, row):
-        path = self.tbl_clip_result.item(row, column_def['path']).text()
-        subprocess.Popen('explorer "{}"'.format(path))
+    def on_open_dir_clicked(self):
+        subprocess.Popen('explorer /select,"{}"'.format(self.get_selected_path(self.sender())))
 
-    def on_del_file_clicked(self, row):
-        self.delete_path(self.tbl_clip_result.item(row, column_def['path']).text())
+    def on_open_file_clicked(self):
+        subprocess.Popen('explorer "{}"'.format(self.get_selected_path(self.sender())))
 
-    def on_reclip_clicked(self, row):
-        path = self.tbl_clip_result.item(row, column_def['path']).text()
+    def on_del_file_clicked(self):
+        row = self.get_table_row(self.sender())
+        ok = self.delete_path(self.clip_model.item(row, column_def['path']).text())
+        if ok:
+            self.clip_model.removeRow(row)
+
+    def on_reclip_clicked(self):
+        path = self.get_selected_path(self.sender())
 
         clip_name = os.path.splitext(path)[0]
         time_form_len = 6 + 1 + 6   # 000000_000000
@@ -136,7 +145,21 @@ class MainWindow(QMainWindow, form_class):
     def delete_path(self, path):
         reply = QMessageBox.question(self, 'alert', 'Sure to delete?', QMessageBox.Yes, QMessageBox.No)
         if reply == QMessageBox.Yes:
-            send2trash(path)
+            return send2trash(path) is None
+
+    def get_table_row(self, widget):
+        return self.tbl_clip_result.indexAt(widget.pos()).row()
+
+    def get_selected_path(self, widget):
+        row = self.get_table_row(self.sender())
+        return self.clip_model.item(row, column_def['path']).text()
+
+    def catch_exceptions(self, t, val, tb):
+        QMessageBox.critical(None, 'exception', '{}'.format(t))
+        old_hook(t, val, tb)
+
+    old_hook = sys.excepthook
+    sys.excepthook = catch_exceptions
 
 
 if __name__ == "__main__":

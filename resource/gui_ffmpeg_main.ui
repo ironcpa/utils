@@ -125,7 +125,10 @@
     <item row="4" column="0">
      <widget class="QTableView" name="tbl_clip_result">
       <property name="focusPolicy">
-       <enum>Qt::ClickFocus</enum>
+       <enum>Qt::NoFocus</enum>
+      </property>
+      <property name="editTriggers">
+       <set>QAbstractItemView::NoEditTriggers</set>
       </property>
      </widget>
     </item>

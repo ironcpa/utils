@@ -82,17 +82,17 @@ class MainWindow(QMainWindow, form_class):
         btn_open_dir.clicked.connect(self.on_open_dir_clicked)
         self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['dir']), btn_open_dir)
 
-        btn_open_file = QPushButton(self.tbl_clip_result)
+        btn_open_file = QPushButton()
         btn_open_file.setText('open')
         btn_open_file.clicked.connect(self.on_open_file_clicked)
         self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['open']), btn_open_file)
 
-        btn_delete_file = QPushButton(self.tbl_clip_result)
+        btn_delete_file = QPushButton()
         btn_delete_file.setText('delete')
         btn_delete_file.clicked.connect(self.on_del_file_clicked)
         self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['del']), btn_delete_file)
 
-        btn_reclip = QPushButton(self.tbl_clip_result)
+        btn_reclip = QPushButton()
         btn_reclip.setText('reclip')
         btn_reclip.clicked.connect(self.on_reclip_clicked)
         self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['reclip']), btn_reclip)

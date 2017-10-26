@@ -41,6 +41,7 @@ class MainWindow(QMainWindow, form_class):
         # self.btn_stop.clicked.connect(self.on_stop_clicked)       # it'll be called from worker's thread : so can't be stopped
         self.btn_stop.clicked.connect(lambda: self.search_worker.stop())  # called from main thread
         self.btn_clear_result.clicked.connect(self.on_clear_result)
+        self.btn_coll_data.clicked.connect(self.on_coll_data_clicked)
 
         self.tbl_search_result.setRowCount(10)
         self.tbl_search_result.setColumnCount(5)
@@ -180,6 +181,10 @@ class MainWindow(QMainWindow, form_class):
 
     def on_clear_result(self):
         self.tbl_search_result.clear()
+
+    def on_coll_data_clicked(self):
+        print('collect src dir data recursively and insert to db')
+
 
 
 class SearchWorker(QObject):

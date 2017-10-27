@@ -13,7 +13,7 @@ import gui_ffmpeg
 
 # form_class = uic.loadUiType("./resource/mainwindow.ui")[0]
 form_class = uic.loadUiType("C:/__devroot/utils/resource/mainwindow.ui")[0]
-column_def = {'checkbox': 0, 'dir': 1, 'open': 2, 'del': 3, 'clip': 4, 'copy name': 5, 'path': 6}
+column_def = {'checkbox': 0, 'dir': 1, 'open': 2, 'del': 3, 'clip': 4, 'copy name': 5, 'size':6, 'path': 7}
 
 
 class MainWindow(QMainWindow, form_class):
@@ -53,10 +53,13 @@ class MainWindow(QMainWindow, form_class):
 
     def update_result(self, files):
         self.model.clear()
-        for row, f in enumerate(files):
-            print(row, f)
+        for f in files:
+            row = self.model.rowCount()
 
-            self.model.setItem(self.model.rowCount(), column_def['path'], QtGui.QStandardItem(f))
+            size_item = QtGui.QStandardItem(str(os.path.getsize(f)))
+            size_item.setTextAlignment(Qt.AlignRight)
+            self.model.setItem(row, column_def['size'], size_item)
+            self.model.setItem(row, column_def['path'], QtGui.QStandardItem(f))
 
             chk_box = QCheckBox(self.tbl_search_result)
             chk_box.setText('')
@@ -200,13 +203,18 @@ class MainWindow(QMainWindow, form_class):
                 self.model.removeRow(src_row)
                 os.rename(tgt_path, src_path)
                 tgt_item.setText(src_path)
+                self.release_all_checkbox()
+
+    def release_all_checkbox(self):
+        for r in range(self.model.rowCount()):
+            self.tbl_search_result.indexWidget(self.model.index(r, column_def['checkbox'])).setChecked(False)
 
     def on_stop_clicked(self):
         print('stop clicked')
         self.search_stop_req.emit()
 
     def on_clear_result(self):
-        self.tbl_search_result.clear()
+        self.model.clear()
 
     def on_coll_data_clicked(self):
         print('collect src dir data recursively and insert to db')

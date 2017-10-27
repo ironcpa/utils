@@ -38,8 +38,13 @@ class MainWindow(QMainWindow, form_class):
         # self.txt_start_time.setText('000000')
         # self.txt_end_time.setText('000010')
 
-    def closeEvent(self, event: QtGui.QCloseEvent):
-        self.save_ini('last_pos', (self.pos().x(), self.pos().y()))
+    def keyPressEvent(self, event: QtGui.QKeyEvent):
+        key = event.key()
+        print(key)
+        if key == Qt.Key_Return:
+            self.on_encode_clicked()
+        else:
+            event.ignore()
 
     def on_encode_clicked(self):
         start_time = self.txt_start_time.text().replace(' ', '')

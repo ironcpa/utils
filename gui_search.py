@@ -17,8 +17,9 @@ column_def = {'checkbox': 0, 'dir': 1, 'open': 2, 'del': 3, 'clip': 4, 'copy nam
 
 
 class MainWindow(QMainWindow, form_class):
-    search_start_req = pyqtSignal(str, str)
-    search_stop_req = pyqtSignal()
+    search_req = pyqtSignal(str, str)
+    collect_req = pyqtSignal(str, str)
+    stop_req = pyqtSignal()
 
     def __init__(self, src_dir):
         super().__init__()
@@ -29,17 +30,19 @@ class MainWindow(QMainWindow, form_class):
 
         self.search_worker = SearchWorker()
         self.search_worker.moveToThread(self.thread)
-        self.search_worker.finished.connect(self.on_search_finished)
+        self.search_worker.search_finished.connect(self.on_search_finished)
+        self.search_worker.collect_finished.connect(self.on_collect_finished)
 
-        self.search_start_req.connect(self.search_worker.search)
-        self.search_stop_req.connect(self.search_worker.stop)
+        self.search_req.connect(self.search_worker.on_search_req)
+        self.collect_req.connect(self.search_worker.on_collect_req);
+        self.stop_req.connect(self.search_worker.on_stop_req)
 
         self.btn_search_dir.clicked.connect(self.on_search_dir_clicked)
         self.btn_search_all_drives.clicked.connect(self.on_search_all_drives_clicked)
         self.btn_select_src_dir.clicked.connect(lambda state: self.on_select_dir_clicked(False))
         self.btn_select_tgt_dir.clicked.connect(lambda state: self.on_select_dir_clicked(True))
         # self.btn_stop.clicked.connect(self.on_stop_clicked)       # it'll be called from worker's thread : so can't be stopped
-        self.btn_stop.clicked.connect(lambda: self.search_worker.stop())  # called from main thread
+        self.btn_stop.clicked.connect(lambda: self.search_worker.on_stop_req())  # called from main thread
         self.btn_clear_result.clicked.connect(self.on_clear_result)
         self.btn_coll_data.clicked.connect(self.on_coll_data_clicked)
 
@@ -137,10 +140,9 @@ class MainWindow(QMainWindow, form_class):
                     self.txt_selected_tgt_dir.setText(key_val[1].rstrip())
 
     def start_search(self, text, src_dir=''):
-        self.btn_search_dir.setEnabled(False)
-        self.btn_search_all_drives.setEnabled(False)
+        self.enable_req_buttons(False)
         # self.search_worker.search(text, src_dir)
-        self.search_start_req.emit(text, src_dir)
+        self.search_req.emit(text, src_dir)
 
     def get_search_re_text(self):
         src_text = self.txt_search_text.text()
@@ -166,11 +168,23 @@ class MainWindow(QMainWindow, form_class):
 
         self.start_search(self.get_search_re_text(), '')
 
+    def enable_req_buttons(self, t):
+        self.btn_search_dir.setEnabled(t)
+        self.btn_search_all_drives.setEnabled(t)
+
     def on_search_finished(self):
         self.update_result(self.search_worker.search_results)
-        self.btn_search_dir.setEnabled(True)
-        self.btn_search_all_drives.setEnabled(True)
+        self.enable_req_buttons(True)
         QMessageBox.information(self, 'info', 'complete results={}'.format(len(self.search_worker.search_results)))
+
+    def on_collect_finished(self):
+        results = self.search_worker.search_results
+        for f in results:
+            # prod_id, actor, desc, rating, location, tags = self.parse_filename(f)
+            parsed = self.parse_filename(f)
+            # for p in parsed:
+            print('p_id={}, actor={}, desc={}, rating={}, loc={}, tags={}'.format(*parsed))
+        self.enable_req_buttons(True)
 
     def on_select_dir_clicked(self, is_target):
         path = QFileDialog.getExistingDirectory(self, "select directory")
@@ -227,13 +241,20 @@ class MainWindow(QMainWindow, form_class):
 
     def on_stop_clicked(self):
         print('stop clicked')
-        self.search_stop_req.emit()
+        self.stop_req.emit()
 
     def on_clear_result(self):
         self.model.clear()
 
     def on_coll_data_clicked(self):
         print('collect src dir data recursively and insert to db')
+        self.enable_req_buttons(False)
+
+        src_dir = self.txt_selected_src_dir.text()
+        self.collect_req.emit('.', src_dir)
+
+    def parse_filename(self, fn):
+        return 'aaa-123', 'sara', 'good', 'xxxxxyyyyy', 'hgst nas 2', ['fase', 'hip', 'leg', 'thick']
 
     def get_table_row(self, widget):
         return self.tbl_search_result.indexAt(widget.pos()).row()
@@ -249,7 +270,8 @@ class MainWindow(QMainWindow, form_class):
 
 
 class SearchWorker(QObject):
-    finished = pyqtSignal()
+    search_finished = pyqtSignal()
+    collect_finished = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -272,9 +294,16 @@ class SearchWorker(QObject):
             self.search_results = self.find_file(self.src_dir, self.search_text)
 
         self.is_working = False
-        self.finished.emit()
 
-    def stop(self):
+    def on_search_req(self, text, src_dir=None):
+        self.search(text, src_dir)
+        self.search_finished.emit()
+
+    def on_collect_req(self, text, src_dir=None):
+        self.search(text, src_dir)
+        self.collect_finished.emit()
+
+    def on_stop_req(self):
         print('worker.stop')
         self.is_working = False
 

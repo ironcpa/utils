@@ -163,12 +163,13 @@ class MainWindow(QMainWindow, form_class):
     old_hook = sys.excepthook
     sys.excepthook = catch_exceptions
 
+
 def kill_same_script():
     for p in psutil.process_iter():
         if 'python' in p.name() and os.path.basename(p.cmdline()[1]) == os.path.basename(sys.argv[0]):
-            src_path = p.cmdline()[2] if len(p.cmdline()) > 2 else ''
-            if src_path != sys.argv[1]:
+            if os.getpid() != p.pid:
                 p.kill()
+
 
 if __name__ == "__main__":
     kill_same_script()

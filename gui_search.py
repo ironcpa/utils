@@ -142,6 +142,10 @@ class MainWindow(QMainWindow, form_class):
         # self.search_worker.search(text, src_dir)
         self.search_start_req.emit(text, src_dir)
 
+    def get_search_re_text(self):
+        src_text = self.txt_search_text.text()
+        return '(.*)'.join([x for x in src_text.split()])
+
     def on_search_dir_clicked(self):
         # # target_dir = 'c:\\__devroot\\utils\\sample_data'
         # src_dir = self.txt_selected_src_dir.text()
@@ -152,8 +156,7 @@ class MainWindow(QMainWindow, form_class):
         # self.update_result(results)
 
         src_dir = self.txt_selected_src_dir.text()
-        search_text = self.txt_search_text.text()
-        self.start_search(search_text, src_dir)
+        self.start_search(self.get_search_re_text(), src_dir)
 
     def on_search_all_drives_clicked(self):
         # search_text = self.txt_search_text.text()
@@ -161,8 +164,7 @@ class MainWindow(QMainWindow, form_class):
         # print(results)
         # self.update_result(results)
 
-        search_text = self.txt_search_text.text()
-        self.start_search(search_text, '')
+        self.start_search(self.get_search_re_text(), '')
 
     def on_search_finished(self):
         self.update_result(self.search_worker.search_results)

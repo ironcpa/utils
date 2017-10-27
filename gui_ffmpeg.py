@@ -16,8 +16,9 @@ column_def = {'dir': 0, 'open': 1, 'del': 2, 'reclip' : 3, 'path': 4}
 
 
 class MainWindow(QMainWindow, form_class):
-    def __init__(self, src_path):
-        super().__init__()
+    def __init__(self, parent, src_path):
+        super().__init__(parent)
+        self.parent = parent
         self.setupUi(self)
 
         self.lbl_src_file.setText(src_path)
@@ -36,6 +37,9 @@ class MainWindow(QMainWindow, form_class):
         # # test
         # self.txt_start_time.setText('000000')
         # self.txt_end_time.setText('000010')
+
+    def closeEvent(self, event: QtGui.QCloseEvent):
+        self.save_ini('last_pos', (self.pos().x(), self.pos().y()))
 
     def on_encode_clicked(self):
         start_time = self.txt_start_time.text().replace(' ', '')
@@ -184,6 +188,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     src_file = sys.argv[1] if len(sys.argv) > 1 else ''
-    mywindow = MainWindow(src_file)
+    mywindow = MainWindow(None, src_file)
     mywindow.show()
     app.exec_()

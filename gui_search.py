@@ -51,6 +51,14 @@ class MainWindow(QMainWindow, form_class):
         if src_dir is not '':
             self.txt_selected_src_dir.setText(src_dir)
 
+    def keyPressEvent(self, event):
+        key = event.key()
+        print(key)
+        if key == Qt.Key_Return:
+            self.on_search_dir_clicked()
+        else:
+            event.ignore()
+
     def update_result(self, files):
         self.model.clear()
         for f in files:
@@ -65,23 +73,29 @@ class MainWindow(QMainWindow, form_class):
             chk_box.setText('')
             self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['checkbox']), chk_box)
 
+            btn_w = 60
+
             btn_open_dir = QPushButton()
             btn_open_dir.setText('folder')
+            btn_open_dir.setFixedWidth(btn_w)
             btn_open_dir.clicked.connect(self.on_open_dir_clicked)
             self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['dir']), btn_open_dir)
 
             btn_open_file = QPushButton()
             btn_open_file.setText('open')
+            btn_open_file.setFixedWidth(btn_w)
             btn_open_file.clicked.connect(self.on_open_file_clicked)
             self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['open']), btn_open_file)
 
             btn_delete_file = QPushButton()
             btn_delete_file.setText('delete')
+            btn_delete_file.setFixedWidth(btn_w)
             btn_delete_file.clicked.connect(self.on_del_file_clicked)
             self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['del']), btn_delete_file)
 
             btn_open_ffmpeg = QPushButton()
             btn_open_ffmpeg.setText('clip')
+            btn_open_ffmpeg.setFixedWidth(btn_w)
             btn_open_ffmpeg.clicked.connect(self.on_open_ffmpeg_clicked)
             self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['clip']), btn_open_ffmpeg)
 
@@ -179,7 +193,7 @@ class MainWindow(QMainWindow, form_class):
             send2trash(path)
 
     def on_open_ffmpeg_clicked(self):
-        w = gui_ffmpeg.MainWindow(self.get_selected_path(self.sender()))
+        w = gui_ffmpeg.MainWindow(self, self.get_selected_path(self.sender()))
         w.show()
 
     def on_copy_name_clicked(self):

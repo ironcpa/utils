@@ -27,6 +27,7 @@ class MainWindow(QMainWindow, form_class):
         self.txt_clip_name.setText('c:\\__clips\\' + clip_name + '_{}_{}' + src_ext)
 
         self.btn_encode.clicked.connect(self.on_encode_clicked)
+        self.btn_open_src.clicked.connect(self.on_open_src_clicked)
         self.btn_del_src.clicked.connect(self.on_del_src_clicked)
 
         self.clip_model = QtGui.QStandardItemModel(0, 5)
@@ -49,6 +50,9 @@ class MainWindow(QMainWindow, form_class):
         else:
             print(err)
             QMessageBox.critical(self, 'error', 'encoding failed\n{}'.format(err))
+
+    def on_open_src_clicked(self):
+        self.open_path(self.lbl_src_file.text())
 
     def on_del_src_clicked(self):
         self.delete_path(self.lbl_src_file.text())
@@ -111,7 +115,7 @@ class MainWindow(QMainWindow, form_class):
         subprocess.Popen('explorer /select,"{}"'.format(self.get_selected_path(self.sender())))
 
     def on_open_file_clicked(self):
-        subprocess.Popen('explorer "{}"'.format(self.get_selected_path(self.sender())))
+        self.open_path(self.get_selected_path(self.sender()))
 
     def on_del_file_clicked(self):
         row = self.get_table_row(self.sender())
@@ -144,6 +148,9 @@ class MainWindow(QMainWindow, form_class):
             print(err)
             QMessageBox.critical(self, 'error', 'encoding failed\n{}'.format(err))
 
+    def open_path(self, path):
+        subprocess.Popen('explorer "{}"'.format(path))
+
     def delete_path(self, path):
         reply = QMessageBox.question(self, 'alert', 'Sure to delete?', QMessageBox.Yes, QMessageBox.No)
         if reply == QMessageBox.Yes:
@@ -153,7 +160,7 @@ class MainWindow(QMainWindow, form_class):
         return self.tbl_clip_result.indexAt(widget.pos()).row()
 
     def get_selected_path(self, widget):
-        row = self.get_table_row(self.sender())
+        row = self.get_table_row(widget)
         return self.clip_model.item(row, column_def['path']).text()
 
     def catch_exceptions(self, t, val, tb):

@@ -90,23 +90,6 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1" colspan="2">
-       <widget class="QLabel" name="lbl_src_file">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3">
-       <widget class="QPushButton" name="btn_del_src">
-        <property name="focusPolicy">
-         <enum>Qt::NoFocus</enum>
-        </property>
-        <property name="text">
-         <string>src delete</string>
-        </property>
-       </widget>
-      </item>
       <item row="5" column="0" colspan="2">
        <widget class="QPushButton" name="btn_encode">
         <property name="text">
@@ -117,6 +100,38 @@
         </property>
         <property name="default">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QPushButton" name="btn_del_src">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
+        <property name="text">
+         <string>src delete</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QPushButton" name="btn_open_src">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
+        <property name="text">
+         <string>src open</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" colspan="3">
+       <widget class="QLabel" name="lbl_src_file">
+        <property name="font">
+         <font>
+          <family>Agency FB</family>
+         </font>
+        </property>
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>

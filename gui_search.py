@@ -3,7 +3,7 @@
 import subprocess
 import sys
 
-from PyQt5 import uic
+from PyQt5 import uic, QtGui
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from send2trash import send2trash
@@ -13,7 +13,7 @@ import gui_ffmpeg
 
 # form_class = uic.loadUiType("./resource/mainwindow.ui")[0]
 form_class = uic.loadUiType("C:/__devroot/utils/resource/mainwindow.ui")[0]
-column_def = {'dir': 0, 'open': 1, 'del': 2, 'clip':3, 'path': 4}
+column_def = {'checkbox': 0, 'dir': 1, 'open': 2, 'del': 3, 'clip': 4, 'copy name': 5, 'path': 6}
 
 
 class MainWindow(QMainWindow, form_class):
@@ -43,9 +43,8 @@ class MainWindow(QMainWindow, form_class):
         self.btn_clear_result.clicked.connect(self.on_clear_result)
         self.btn_coll_data.clicked.connect(self.on_coll_data_clicked)
 
-        self.tbl_search_result.setRowCount(10)
-        self.tbl_search_result.setColumnCount(5)
-        self.tbl_search_result.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.model = QtGui.QStandardItemModel(0, len(column_def))
+        self.tbl_search_result.setModel(self.model)
 
         self.load_ini_file()
 
@@ -53,33 +52,40 @@ class MainWindow(QMainWindow, form_class):
             self.txt_selected_src_dir.setText(src_dir)
 
     def update_result(self, files):
-        self.tbl_search_result.clear()
-        self.tbl_search_result.setRowCount(len(files))
+        self.model.clear()
         for row, f in enumerate(files):
             print(row, f)
 
-            btn_open_dir = QPushButton(self.tbl_search_result)
+            self.model.setItem(self.model.rowCount(), column_def['path'], QtGui.QStandardItem(f))
+
+            chk_box = QCheckBox(self.tbl_search_result)
+            chk_box.setText('')
+            self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['checkbox']), chk_box)
+
+            btn_open_dir = QPushButton()
             btn_open_dir.setText('folder')
-            btn_open_dir.clicked.connect(lambda state, x=row: self.on_open_dir_clicked(x))
-            self.tbl_search_result.setCellWidget(row, column_def['dir'], btn_open_dir)
+            btn_open_dir.clicked.connect(self.on_open_dir_clicked)
+            self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['dir']), btn_open_dir)
 
-            btn_open_file = QPushButton(self.tbl_search_result)
+            btn_open_file = QPushButton()
             btn_open_file.setText('open')
-            btn_open_file.clicked.connect(lambda state, x=row: self.on_open_file_clicked(x))
-            self.tbl_search_result.setCellWidget(row, column_def['open'], btn_open_file)
+            btn_open_file.clicked.connect(self.on_open_file_clicked)
+            self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['open']), btn_open_file)
 
-            btn_delete_file = QPushButton(self.tbl_search_result)
+            btn_delete_file = QPushButton()
             btn_delete_file.setText('delete')
-            btn_delete_file.clicked.connect(lambda state, x=row: self.on_del_file_clicked(x))
-            self.tbl_search_result.setCellWidget(row, column_def['del'], btn_delete_file)
+            btn_delete_file.clicked.connect(self.on_del_file_clicked)
+            self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['del']), btn_delete_file)
 
-            btn_open_ffmpeg = QPushButton(self.tbl_search_result)
+            btn_open_ffmpeg = QPushButton()
             btn_open_ffmpeg.setText('clip')
-            btn_open_ffmpeg.clicked.connect(lambda state, x=row: self.on_open_ffmpeg_clicked(x))
-            self.tbl_search_result.setCellWidget(row, column_def['clip'], btn_open_ffmpeg)
+            btn_open_ffmpeg.clicked.connect(self.on_open_ffmpeg_clicked)
+            self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['clip']), btn_open_ffmpeg)
 
-            item = QTableWidgetItem(f)
-            self.tbl_search_result.setItem(row, column_def['path'], item)
+            btn_copy_name = QPushButton()
+            btn_copy_name.setText('copy name')
+            btn_copy_name.clicked.connect(self.on_copy_name_clicked)
+            self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['copy name']), btn_copy_name)
 
         self.tbl_search_result.resizeColumnsToContents()
         self.tbl_search_result.resizeRowsToContents()
@@ -156,24 +162,44 @@ class MainWindow(QMainWindow, form_class):
             else:
                 self.txt_selected_src_dir.setText(path)
 
-    def on_open_dir_clicked(self, row):
-        path = self.tbl_search_result.item(row, column_def['path']).text()
-        subprocess.Popen('explorer /select,"{}"'.format(path))
+    def on_open_dir_clicked(self):
+        subprocess.Popen('explorer /select,"{}"'.format(self.get_selected_path(self.sender())))
 
-    def on_open_file_clicked(self, row):
-        path = self.tbl_search_result.item(row, column_def['path']).text()
-        subprocess.Popen('explorer "{}"'.format(path))
+    def on_open_file_clicked(self):
+        subprocess.Popen('explorer "{}"'.format(self.get_selected_path(self.sender())))
 
-    def on_del_file_clicked(self, row):
-        reply = QMessageBox.question(self, 'alert', 'Sure to delete?', QMessageBox.Yes, QMessageBox.No)
-        if reply == QMessageBox.Yes:
+    def on_del_file_clicked(self):
+        row = self.get_table_row(self.sender())
+        ok = QMessageBox.question(self, 'alert', 'Sure to delete?', QMessageBox.Yes, QMessageBox.No)
+        if ok == QMessageBox.Yes:
             path = self.tbl_search_result.item(row, column_def['path']).text()
             send2trash(path)
 
-    def on_open_ffmpeg_clicked(self, row):
-        path = self.tbl_search_result.item(row, column_def['path']).text()
-        w = gui_ffmpeg.MainWindow(path)
+    def on_open_ffmpeg_clicked(self):
+        w = gui_ffmpeg.MainWindow(self.get_selected_path(self.sender()))
         w.show()
+
+    def on_copy_name_clicked(self):
+        path_col = column_def['path']
+
+        src_path = ''
+        tgt_path = self.get_selected_path(self.sender())
+        row = self.get_table_row(self.sender())
+        src_row = -1
+        tgt_item = self.model.item(row, path_col)
+
+        for r in range(self.model.rowCount()):
+            chkbox = self.tbl_search_result.indexWidget(self.model.index(r, column_def['checkbox']))
+            if r != row and chkbox is not None and chkbox.isChecked():
+                src_path = self.model.item(r, path_col).text()
+                src_row = r
+                break
+
+        if src_path != '' and src_row >= 0:
+            if self.delete_path(src_path):
+                self.model.removeRow(src_row)
+                os.rename(tgt_path, src_path)
+                tgt_item.setText(src_path)
 
     def on_stop_clicked(self):
         print('stop clicked')
@@ -185,6 +211,17 @@ class MainWindow(QMainWindow, form_class):
     def on_coll_data_clicked(self):
         print('collect src dir data recursively and insert to db')
 
+    def get_table_row(self, widget):
+        return self.tbl_search_result.indexAt(widget.pos()).row()
+
+    def get_selected_path(self, widget):
+        row = self.get_table_row(widget)
+        return self.model.item(row, column_def['path']).text()
+
+    def delete_path(self, path):
+        reply = QMessageBox.question(self, 'alert', 'Sure to delete?', QMessageBox.Yes, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            return send2trash(path) is None
 
 
 class SearchWorker(QObject):
@@ -260,6 +297,13 @@ class SearchWorker(QObject):
         print('found results : ' + str(len(all_founds)))
         return all_founds
 
+
+def catch_exceptions(self, t, val, tb):
+    QMessageBox.critical(None, 'exception', '{}'.format(t))
+    old_hook(t, val, tb)
+
+old_hook = sys.excepthook
+sys.excepthook = catch_exceptions
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import *
 from send2trash import send2trash
 
 form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_ffmpeg_main.ui")[0]
-column_def = {'dir': 0, 'open': 1, 'del': 2, 'reclip': 3, 'path': 4}
+column_def = {'dir': 0, 'open': 1, 'del': 2, 'reclip': 3, 'copy setting':4, 'path': 5}
 
 
 class MainWindow(QMainWindow, form_class):
@@ -31,7 +31,7 @@ class MainWindow(QMainWindow, form_class):
         self.btn_open_src.clicked.connect(self.on_open_src_clicked)
         self.btn_del_src.clicked.connect(self.on_del_src_clicked)
 
-        self.clip_model = QtGui.QStandardItemModel(0, 5)
+        self.clip_model = QtGui.QStandardItemModel(0, len(column_def))
         self.tbl_clip_result.setModel(self.clip_model)
 
         # # test
@@ -40,7 +40,6 @@ class MainWindow(QMainWindow, form_class):
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
-        print(key)
         if key == Qt.Key_Return:
             self.on_encode_clicked()
         else:
@@ -91,57 +90,63 @@ class MainWindow(QMainWindow, form_class):
 
         self.clip_model.setItem(self.clip_model.rowCount(), column_def['path'], QtGui.QStandardItem(path))
 
+        btn_w = 60
+
         btn_open_dir = QPushButton()
         btn_open_dir.setText('folder')
-        btn_open_dir.clicked.connect(self.on_open_dir_clicked)
+        btn_open_dir.setFixedWidth(btn_w)
+        btn_open_dir.clicked.connect(self.on_item_open_dir_clicked)
         self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['dir']), btn_open_dir)
 
         btn_open_file = QPushButton()
         btn_open_file.setText('open')
-        btn_open_file.clicked.connect(self.on_open_file_clicked)
+        btn_open_file.setFixedWidth(btn_w)
+        btn_open_file.clicked.connect(self.on_item_open_file_clicked)
         self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['open']), btn_open_file)
 
         btn_delete_file = QPushButton()
         btn_delete_file.setText('delete')
-        btn_delete_file.clicked.connect(self.on_del_file_clicked)
+        btn_delete_file.setFixedWidth(btn_w)
+        btn_delete_file.clicked.connect(self.on_item_del_file_clicked)
         self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['del']), btn_delete_file)
 
         btn_reclip = QPushButton()
         btn_reclip.setText('reclip')
-        btn_reclip.clicked.connect(self.on_reclip_clicked)
+        btn_reclip.setFixedWidth(btn_w)
+        btn_reclip.clicked.connect(self.on_item_reclip_clicked)
         self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['reclip']), btn_reclip)
+
+        btn_copy_setting = QPushButton()
+        btn_copy_setting.setText('copy setting')
+        btn_copy_setting.clicked.connect(self.on_item_copy_setting)
+        self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['copy setting']), btn_copy_setting)
 
         self.tbl_clip_result.resizeColumnsToContents()
         self.tbl_clip_result.resizeRowsToContents()
 
     def remove_old_same_result(self, path):
         for r in range(self.clip_model.rowCount()):
-            if self.clip_model.item(r, column_def['path']).text() == path:
-                self.clip_model.removeRow(r)
+            item_at = self.clip_model.item(r, column_def['path'])
+            if item_at and item_at.text() == path:
+                self.clip_model.removeRow(item_at.row())
 
-    def on_open_dir_clicked(self):
-        print('explorer /select,"{}"'.format(self.get_selected_path(self.sender())))
+    def on_item_open_dir_clicked(self):
         subprocess.Popen('explorer /select,"{}"'.format(self.get_selected_path(self.sender())))
 
-    def on_open_file_clicked(self):
+    def on_item_open_file_clicked(self):
         self.open_path(self.get_selected_path(self.sender()))
 
-    def on_del_file_clicked(self):
+    def on_item_del_file_clicked(self):
         row = self.get_table_row(self.sender())
         ok = self.delete_path(self.clip_model.item(row, column_def['path']).text())
         if ok:
             self.clip_model.removeRow(row)
 
-    def on_reclip_clicked(self):
+    def on_item_reclip_clicked(self):
         path = self.get_selected_path(self.sender())
 
-        clip_name = os.path.splitext(path)[0]
-        time_form_len = 6 + 1 + 6  # 000000_000000
-        if len(clip_name) < time_form_len + 1:  # at least 1 more than form
-            return False, None
-        time_form = clip_name[-time_form_len:]
-        p = re.compile('[0-9]{6}_[0-9]{6}')
-        if not p.match(clip_name[-time_form_len:]):
+        time_form = self.get_time_form(path)
+        if time_form is '':
             return False, None
 
         start_time = time_form[0:6]
@@ -156,6 +161,28 @@ class MainWindow(QMainWindow, form_class):
         else:
             print(err)
             QMessageBox.critical(self, 'error', 'encoding failed\n{}'.format(err))
+
+    def on_item_copy_setting(self):
+        path = self.get_selected_path(self.sender())
+        time_form = self.get_time_form(path)
+
+        if time_form is not '':
+            self.txt_start_time.setText(time_form[0:6])
+            self.txt_end_time.setText(time_form[-6:])
+
+    def get_time_form(self, path):
+        clip_name = os.path.splitext(path)[0]
+
+        time_form_len = 6 + 1 + 6  # 000000_000000
+        if len(clip_name) < time_form_len + 1:  # at least 1 more than form
+            return ''
+
+        time_form = clip_name[-time_form_len:]
+        p = re.compile('[0-9]{6}_[0-9]{6}')
+        if p.match(clip_name[-time_form_len:]):
+            return time_form
+
+        return ''
 
     def open_path(self, path):
         subprocess.Popen('explorer "{}"'.format(path))

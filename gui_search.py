@@ -56,7 +56,6 @@ class MainWindow(QMainWindow, form_class):
 
     def keyPressEvent(self, event):
         key = event.key()
-        print(key)
         if key == Qt.Key_Return:
             self.on_search_dir_clicked()
         else:

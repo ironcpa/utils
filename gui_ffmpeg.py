@@ -1,4 +1,4 @@
-#-*-coding:utf-8-*-
+# -*-coding:utf-8-*-
 
 import subprocess
 import sys
@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import *
 from send2trash import send2trash
 
 form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_ffmpeg_main.ui")[0]
-column_def = {'dir': 0, 'open': 1, 'del': 2, 'reclip' : 3, 'path': 4}
+column_def = {'dir': 0, 'open': 1, 'del': 2, 'reclip': 3, 'path': 4}
 
 
 class MainWindow(QMainWindow, form_class):
@@ -136,8 +136,8 @@ class MainWindow(QMainWindow, form_class):
         path = self.get_selected_path(self.sender())
 
         clip_name = os.path.splitext(path)[0]
-        time_form_len = 6 + 1 + 6   # 000000_000000
-        if len(clip_name) < time_form_len + 1: # at least 1 more than form
+        time_form_len = 6 + 1 + 6  # 000000_000000
+        if len(clip_name) < time_form_len + 1:  # at least 1 more than form
             return False, None
         time_form = clip_name[-time_form_len:]
         p = re.compile('[0-9]{6}_[0-9]{6}')

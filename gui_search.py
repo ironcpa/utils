@@ -13,7 +13,7 @@ import gui_ffmpeg
 
 # form_class = uic.loadUiType("./resource/mainwindow.ui")[0]
 form_class = uic.loadUiType("C:/__devroot/utils/resource/mainwindow.ui")[0]
-column_def = {'checkbox': 0, 'dir': 1, 'open': 2, 'del': 3, 'clip': 4, 'copy name': 5, 'size':6, 'path': 7}
+column_def = {'checkbox': 0, 'dir': 1, 'open': 2, 'del': 3, 'clip': 4, 'copy name': 5, 'size': 6, 'path': 7}
 
 
 class MainWindow(QMainWindow, form_class):
@@ -141,7 +141,6 @@ class MainWindow(QMainWindow, form_class):
 
     def start_search(self, text, src_dir=''):
         self.enable_req_buttons(False)
-        # self.search_worker.search(text, src_dir)
         self.search_req.emit(text, src_dir)
 
     def get_search_re_text(self):
@@ -149,23 +148,10 @@ class MainWindow(QMainWindow, form_class):
         return '(.*)'.join([x for x in src_text.split()])
 
     def on_search_dir_clicked(self):
-        # # target_dir = 'c:\\__devroot\\utils\\sample_data'
-        # src_dir = self.txt_selected_src_dir.text()
-        # search_text = self.txt_search_text.text()
-        # # results = find_file(target_dir, 'juy(.*)012')
-        # results = find_file(src_dir, search_text)
-        # print(results)
-        # self.update_result(results)
-
         src_dir = self.txt_selected_src_dir.text()
         self.start_search(self.get_search_re_text(), src_dir)
 
     def on_search_all_drives_clicked(self):
-        # search_text = self.txt_search_text.text()
-        # results = find_file_in_all_drives(search_text)
-        # print(results)
-        # self.update_result(results)
-
         self.start_search(self.get_search_re_text(), '')
 
     def enable_req_buttons(self, t):
@@ -240,14 +226,12 @@ class MainWindow(QMainWindow, form_class):
             self.tbl_search_result.indexWidget(self.model.index(r, column_def['checkbox'])).setChecked(False)
 
     def on_stop_clicked(self):
-        print('stop clicked')
         self.stop_req.emit()
 
     def on_clear_result(self):
         self.model.clear()
 
     def on_coll_data_clicked(self):
-        print('collect src dir data recursively and insert to db')
         self.enable_req_buttons(False)
 
         src_dir = self.txt_selected_src_dir.text()
@@ -335,7 +319,7 @@ class SearchWorker(QObject):
                         if full_path.endswith(SYMLINK_SUFFIX):
                             print('ignore symlink file ' + full_path)
                             continue
-                        founds.append(full_path.replace('/', '\\')) # for windows cmd call
+                        founds.append(full_path.replace('/', '\\'))  # for windows cmd call
                         print(full_path + ", size=" + format(os.path.getsize(full_path) / 1000, ','))
         return founds
 
@@ -354,6 +338,7 @@ class SearchWorker(QObject):
 def catch_exceptions(self, t, val, tb):
     QMessageBox.critical(None, 'exception', '{}'.format(t))
     old_hook(t, val, tb)
+
 
 old_hook = sys.excepthook
 sys.excepthook = catch_exceptions

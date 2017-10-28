@@ -199,8 +199,10 @@ class MainWindow(QMainWindow, form_class):
             self.model.removeRow(row)
 
     def on_open_ffmpeg_clicked(self):
-        w = gui_ffmpeg.MainWindow(self, self.get_selected_path(self.sender()))
-        w.show()
+        # w = gui_ffmpeg.MainWindow(self, self.get_selected_path(self.sender()))
+        # w.show()
+        command = 'pythonw gui_ffmpeg.py "{}"'.format(self.get_selected_path(self.sender()))
+        os.system(command)
 
     def on_copy_name_clicked(self):
         path_col = column_def['path']

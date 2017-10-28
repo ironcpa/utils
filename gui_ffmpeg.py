@@ -37,9 +37,23 @@ class MainWindow(QMainWindow, form_class):
         self.clip_model = QtGui.QStandardItemModel(0, len(column_def))
         self.tbl_clip_result.setModel(self.clip_model)
 
+        self.load_rel_clips()
+
         # # test
         # self.txt_start_time.setText('000000')
         # self.txt_end_time.setText('000010')
+
+    def src_path(self):
+        return self.lbl_src_file.text()
+
+    def load_rel_clips(self):
+        dir, fname = os.path.split(os.path.splitext(self.src_path())[0])
+        dir = '.' if dir == '' else dir
+        # rel_clip_paths = [x for x in os.listdir(dir) if x.startswith('clip_{}'.format(fname))]
+        clip_dir = 'c:\\__clips\\'
+        rel_clip_paths = [clip_dir + x for x in os.listdir(clip_dir) if x.startswith('clip_{}'.format(fname))]
+        for p in rel_clip_paths:
+            self.add_clip_result(p)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()

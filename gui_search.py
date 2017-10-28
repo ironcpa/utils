@@ -2,6 +2,7 @@
 
 import subprocess
 import sys
+import win32api
 
 from PyQt5 import uic, QtGui
 from PyQt5.QtCore import *
@@ -11,6 +12,7 @@ from send2trash import send2trash
 import ui_util
 from find_file import *
 import gui_ffmpeg
+from db_util import DB, Product
 
 # form_class = uic.loadUiType("./resource/mainwindow.ui")[0]
 form_class = uic.loadUiType("C:/__devroot/utils/resource/mainwindow.ui")[0]
@@ -47,7 +49,6 @@ class MainWindow(QMainWindow, form_class):
         self.btn_clear_result.clicked.connect(self.on_clear_result)
         self.btn_coll_data.clicked.connect(self.on_coll_data_clicked)
 
-        header = self.tbl_search_result.horizontalHeader()
         self.model = QtGui.QStandardItemModel(0, len(column_def))
         self.tbl_search_result.setModel(self.model)
 
@@ -55,6 +56,8 @@ class MainWindow(QMainWindow, form_class):
 
         if src_dir is not '':
             self.txt_selected_src_dir.setText(src_dir)
+
+        self.db = DB()
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -68,7 +71,7 @@ class MainWindow(QMainWindow, form_class):
         for f in files:
             row = self.model.rowCount()
 
-            size_item = QtGui.QStandardItem(str(os.path.getsize(f)))
+            size_item = QtGui.QStandardItem(format(os.path.getsize(f) / 1000, ','))
             size_item.setTextAlignment(Qt.AlignRight)
             self.model.setItem(row, column_def['size'], size_item)
             self.model.setItem(row, column_def['path'], QtGui.QStandardItem(f))
@@ -170,7 +173,8 @@ class MainWindow(QMainWindow, form_class):
             # prod_id, actor, desc, rating, location, tags = self.parse_filename(f)
             parsed = self.parse_filename(f)
             # for p in parsed:
-            print('p_id={}, actor={}, desc={}, rating={}, loc={}, tags={}'.format(*parsed))
+            print('p_id={}, desc={}, rate={}, disk={}, loc={}'.format(*parsed))
+            self.db.update_product(parsed)
         self.enable_req_buttons(True)
 
     def on_select_dir_clicked(self, is_target):
@@ -242,8 +246,21 @@ class MainWindow(QMainWindow, form_class):
         src_dir = self.txt_selected_src_dir.text()
         self.collect_req.emit('.', src_dir)
 
-    def parse_filename(self, fn):
-        return 'aaa-123', 'sara', 'good', 'xxxxxyyyyy', 'hgst nas 2', ['fase', 'hip', 'leg', 'thick']
+    def parse_filename(self, path):
+        drive_volume = win32api.GetVolumeInformation(os.path.splitdrive(path)[0] + '/')
+        dir = os.path.dirname(path)
+        filename = os.path.basename(path)
+
+        name_only = os.path.splitext(filename)[0]
+        tokens = name_only.split('_')
+
+        product_no = tokens[0]
+        desc = tokens[1] if len(tokens) > 1 else ''
+        rate = tokens[-1] if tokens[-1] != product_no else ''
+        disk_name = drive_volume[0]
+        location = dir
+
+        return Product(product_no, desc, rate, disk_name, location)
 
     def get_table_row(self, widget):
         return self.tbl_search_result.indexAt(widget.pos()).row()

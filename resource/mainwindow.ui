@@ -124,7 +124,7 @@
       <item row="9" column="0" colspan="5">
        <widget class="QTableView" name="tbl_search_result">
         <property name="focusPolicy">
-         <enum>Qt::NoFocus</enum>
+         <enum>Qt::ClickFocus</enum>
         </property>
         <property name="acceptDrops">
          <bool>false</bool>

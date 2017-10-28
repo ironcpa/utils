@@ -190,11 +190,9 @@ class MainWindow(QMainWindow, form_class):
 
     def on_del_file_clicked(self):
         row = self.get_table_row(self.sender())
-        ok = QMessageBox.question(self, 'alert', 'Sure to delete?', QMessageBox.Yes, QMessageBox.No)
-        if ok == QMessageBox.Yes:
-            path = self.model.item(row, column_def['path']).text()
-            if ui_util.delete_path(path):
-                self.model.removeRow(row)
+        path = self.model.item(row, column_def['path']).text()
+        if ui_util.delete_path(self, path):
+            self.model.removeRow(row)
 
     def on_open_ffmpeg_clicked(self):
         w = gui_ffmpeg.MainWindow(self, self.get_selected_path(self.sender()))

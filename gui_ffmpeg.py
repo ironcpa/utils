@@ -28,8 +28,11 @@ class MainWindow(QMainWindow, form_class):
         self.txt_clip_name.setText('c:\\__clips\\' + clip_name + '_{}_{}' + src_ext)
 
         self.btn_encode.clicked.connect(self.on_encode_clicked)
+        self.btn_dir_src.clicked.connect(self.on_dir_src_clicked)
         self.btn_open_src.clicked.connect(self.on_open_src_clicked)
         self.btn_del_src.clicked.connect(self.on_del_src_clicked)
+        self.btn_to_start_time.clicked.connect(self.copy_end_to_start_time)
+        self.btn_to_end_time.clicked.connect(self.copy_start_to_end_time)
 
         self.clip_model = QtGui.QStandardItemModel(0, len(column_def))
         self.tbl_clip_result.setModel(self.clip_model)
@@ -59,11 +62,20 @@ class MainWindow(QMainWindow, form_class):
             print(err)
             QMessageBox.critical(self, 'error', 'encoding failed\n{}'.format(err))
 
+    def on_dir_src_clicked(self):
+        self.open_dir(self.lbl_src_file.text())
+
     def on_open_src_clicked(self):
         self.open_path(self.lbl_src_file.text())
 
     def on_del_src_clicked(self):
         self.delete_path(self.lbl_src_file.text())
+
+    def copy_end_to_start_time(self):
+        self.txt_start_time.setText(self.txt_end_time.text())
+
+    def copy_start_to_end_time(self):
+        self.txt_end_time.setText(self.txt_start_time.text())
 
     def run_ffmpeg_make_clip(self, start_time, end_time, out_clip_path):
         # if os.path.exists(out_clip_path):
@@ -131,7 +143,7 @@ class MainWindow(QMainWindow, form_class):
                 self.clip_model.removeRow(item_at.row())
 
     def on_item_open_dir_clicked(self):
-        subprocess.Popen('explorer /select,"{}"'.format(self.get_selected_path(self.sender())))
+        self.open_dir(self.get_selected_path(self.sender()))
 
     def on_item_open_file_clicked(self):
         self.open_path(self.get_selected_path(self.sender()))
@@ -183,6 +195,9 @@ class MainWindow(QMainWindow, form_class):
             return time_form
 
         return ''
+
+    def open_dir(self, path):
+        subprocess.Popen('explorer /select,"{}"'.format(path))
 
     def open_path(self, path):
         subprocess.Popen('explorer "{}"'.format(path))

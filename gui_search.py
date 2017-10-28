@@ -46,6 +46,7 @@ class MainWindow(QMainWindow, form_class):
         self.btn_clear_result.clicked.connect(self.on_clear_result)
         self.btn_coll_data.clicked.connect(self.on_coll_data_clicked)
 
+        header = self.tbl_search_result.horizontalHeader()
         self.model = QtGui.QStandardItemModel(0, len(column_def))
         self.tbl_search_result.setModel(self.model)
 
@@ -216,8 +217,13 @@ class MainWindow(QMainWindow, form_class):
         if src_path != '' and src_row >= 0:
             if self.delete_path(src_path):
                 self.model.removeRow(src_row)
-                os.rename(tgt_path, src_path)
-                tgt_item.setText(src_path)
+
+                tgt_dir = os.path.dirname(tgt_path)
+                new_tgt_path = os.path.join(tgt_dir, os.path.basename(src_path))
+
+                os.rename(tgt_path, new_tgt_path)
+
+                tgt_item.setText(new_tgt_path)
                 self.release_all_checkbox()
 
     def release_all_checkbox(self):

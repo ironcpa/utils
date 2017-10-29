@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
 import capture_util
+import ui_util
 
 form_class = uic.loadUiType('C:/__devroot/utils/resource/gui_capture_tool.ui')[0]
 column_def = {'time': 0, 'duration': 1, 'del': 2, 'file':3}
@@ -64,6 +65,9 @@ class MainWindow(QMainWindow, form_class):
     def sync_miliseconds(self):
         return int(self.txt_sync_time.text()) * 1000
 
+    def get_table_row(self, widget):
+        return self.tbl_caps.indexAt(widget.pos()).row()
+
     def load_rel_caps(self):
         self.cap_model.clear()
 
@@ -89,7 +93,8 @@ class MainWindow(QMainWindow, form_class):
         capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), False)
 
     def open_clip_tool(self):
-        pass
+        command = 'pythonw gui_ffmpeg.py "{}"'.format(self.src_path())
+        os.system(command)
 
     def auto_sync_changed(self, int):
         if self.chk_auto_sync.isChecked():
@@ -107,7 +112,9 @@ class MainWindow(QMainWindow, form_class):
             duration = capture_util.get_duration_in_time_form(self.cap_model.item(row-1).text(), time)
             self.cap_model.setItem(row, column_def['duration'], QtGui.QStandardItem(str(duration)))
 
-        self.cap_model.setItem(row, column_def['file'], QtGui.QStandardItem(os.path.basename(cap_path)))
+        file_item = QtGui.QStandardItem(os.path.basename(cap_path))
+        file_item.setData(cap_path)
+        self.cap_model.setItem(row, column_def['file'], file_item)
 
         btn_w = 60
 
@@ -121,8 +128,19 @@ class MainWindow(QMainWindow, form_class):
         self.tbl_caps.resizeRowsToContents()
 
     def on_item_del_file_clicked(self):
-        pass
+        row = self.get_table_row(self.sender())
+        path = self.cap_model.item(row, column_def['file']).data()
+        if ui_util.delete_path(self, path):
+            self.cap_model.removeRow(row)
 
+
+def catch_exceptions(self, t, val, tb):
+    QMessageBox.critical(None, 'exception', '{}'.format(t))
+    old_hook(t, val, tb)
+
+
+old_hook = sys.excepthook
+sys.excepthook = catch_exceptions
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -5,11 +5,12 @@ import os
 
 from PyQt5 import uic, QtGui
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
 
 import capture_util
 
 form_class = uic.loadUiType('C:/__devroot/utils/resource/gui_capture_tool.ui')[0]
-column_def = {'time': 0, 'duration': 1, 'del': 2}
+column_def = {'time': 0, 'duration': 1, 'del': 2, 'file':3}
 
 
 class MainWindow(QMainWindow, form_class):
@@ -38,6 +39,16 @@ class MainWindow(QMainWindow, form_class):
 
         self.load_rel_caps()
 
+        self.txt_sync_time.setText(str(10))
+
+        self.chk_auto_sync.setChecked(True)
+        self.chk_auto_sync.stateChanged.connect(self.auto_sync_changed)
+
+        self.sync_timer = QTimer()
+        self.sync_timer.timeout.connect(self.load_rel_caps)
+        if self.sync_on():
+            self.sync_timer.start(self.sync_miliseconds())
+
     def src_path(self):
         return self.lbl_src_path.text()
 
@@ -47,7 +58,15 @@ class MainWindow(QMainWindow, form_class):
     def clip_dir(self):
         return self.txt_selected_clip_dir.text()
 
+    def sync_on(self):
+        return self.chk_auto_sync.isChecked()
+
+    def sync_miliseconds(self):
+        return int(self.txt_sync_time.text()) * 1000
+
     def load_rel_caps(self):
+        self.cap_model.clear()
+
         dir, fname = os.path.split(os.path.splitext(self.src_path())[0])
         dir = '.' if dir == '' else dir
         rel_cap_paths = [os.path.join(self.cap_dir(), x) for x in os.listdir(self.cap_dir()) if x.startswith(fname)]
@@ -67,10 +86,16 @@ class MainWindow(QMainWindow, form_class):
         pass
 
     def make_clips(self):
-        pass
+        capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), False)
 
     def open_clip_tool(self):
         pass
+
+    def auto_sync_changed(self, int):
+        if self.chk_auto_sync.isChecked():
+            self.sync_timer.start(self.sync_miliseconds())
+        else:
+            self.sync_timer.stop()
 
     def add_cap_result(self, cap_path):
         row = self.cap_model.rowCount()
@@ -81,6 +106,8 @@ class MainWindow(QMainWindow, form_class):
         if row % 2 == 1:
             duration = capture_util.get_duration_in_time_form(self.cap_model.item(row-1).text(), time)
             self.cap_model.setItem(row, column_def['duration'], QtGui.QStandardItem(str(duration)))
+
+        self.cap_model.setItem(row, column_def['file'], QtGui.QStandardItem(os.path.basename(cap_path)))
 
         btn_w = 60
 

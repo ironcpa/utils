@@ -30,3 +30,9 @@ Windows Registry Editor Version 5.00
 [HKEY_CLASSES_ROOT\*\shell\JAV Encode Clip\command]
 ;@="\"C:\\__devroot\\utils\\context_menu_encode_clip.bat\" \"%1\""
 @="\"C:\\__devenv\\anaconda3\\pythonw\" "\"C:\\__devroot\\utils\\gui_ffmpeg.py\" \"%1\""
+
+[HKEY_CLASSES_ROOT\*\shell\JAV Capture Tool]
+@="&JAV Capture Tool"
+
+[HKEY_CLASSES_ROOT\*\shell\JAV Capture Tool\command]
+@="\"C:\\__devenv\\anaconda3\\pythonw\" "\"C:\\__devroot\\utils\\gui_capture_manager.py\" \"%1\""

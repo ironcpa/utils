@@ -4,12 +4,13 @@ import subprocess
 import sys
 import os
 import re
-import psutil
 
 from PyQt5 import uic, QtGui
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from send2trash import send2trash
+
+import ui_util
 
 form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_ffmpeg_main.ui")[0]
 column_def = {'dir': 0, 'open': 1, 'del': 2, 'reclip': 3, 'copy setting':4, 'path': 5}
@@ -236,15 +237,8 @@ class MainWindow(QMainWindow, form_class):
     sys.excepthook = catch_exceptions
 
 
-def kill_same_script():
-    for p in psutil.process_iter():
-        if 'python' in p.name() and os.path.basename(p.cmdline()[1]) == os.path.basename(sys.argv[0]):
-            if os.getpid() != p.pid:
-                p.kill()
-
-
 if __name__ == "__main__":
-    kill_same_script()
+    ui_util.kill_same_script()
 
     app = QApplication(sys.argv)
 

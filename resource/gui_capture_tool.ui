@@ -13,7 +13,7 @@
   <property name="font">
    <font>
     <family>Agency FB</family>
-    <pointsize>20</pointsize>
+    <pointsize>24</pointsize>
    </font>
   </property>
   <property name="windowTitle">
@@ -202,7 +202,7 @@
      <x>0</x>
      <y>0</y>
      <width>1076</width>
-     <height>31</height>
+     <height>46</height>
     </rect>
    </property>
   </widget>

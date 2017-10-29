@@ -2,6 +2,7 @@
 
 import sys
 import os
+import re
 
 from PyQt5 import uic, QtGui
 from PyQt5.QtWidgets import *
@@ -73,7 +74,13 @@ class MainWindow(QMainWindow, form_class):
 
         dir, fname = os.path.split(os.path.splitext(self.src_path())[0])
         dir = '.' if dir == '' else dir
-        rel_cap_paths = [os.path.join(self.cap_dir(), x) for x in os.listdir(self.cap_dir()) if x.startswith(fname)]
+
+        name_only = os.path.splitext(fname)[0]
+        pos_under = name_only.find('_')
+        product_no = name_only[:pos_under] if pos_under > 0 else name_only
+        
+        # fname으로 찾는 옵션 고려
+        rel_cap_paths = [os.path.join(self.cap_dir(), x) for x in os.listdir(self.cap_dir()) if x.startswith(product_no)]
         for c in rel_cap_paths:
             self.add_cap_result(c)
 
@@ -106,14 +113,21 @@ class MainWindow(QMainWindow, form_class):
         row = self.cap_model.rowCount()
 
         time = capture_util.to_time_form(capture_util.get_time(cap_path))
-        self.cap_model.setItem(row, column_def['time'], QtGui.QStandardItem(time))
+        time_item = QtGui.QStandardItem(time)
+        font = time_item.font()
+        font.setPointSize(20)
+        time_item.setFont(font)
+        self.cap_model.setItem(row, column_def['time'], time_item)
 
         if row % 2 == 1:
             duration = capture_util.get_duration_in_time_form(self.cap_model.item(row-1).text(), time)
-            self.cap_model.setItem(row, column_def['duration'], QtGui.QStandardItem(str(duration)))
+            duration_item = QtGui.QStandardItem(str(duration))
+            duration_item.setFont(font)
+            self.cap_model.setItem(row, column_def['duration'], duration_item )
 
         file_item = QtGui.QStandardItem(os.path.basename(cap_path))
         file_item.setData(cap_path)
+        file_item.setFont(font)
         self.cap_model.setItem(row, column_def['file'], file_item)
 
         btn_w = 60
@@ -126,6 +140,7 @@ class MainWindow(QMainWindow, form_class):
 
         self.tbl_caps.resizeColumnsToContents()
         self.tbl_caps.resizeRowsToContents()
+        self.tbl_caps.scrollToBottom()
 
     def on_item_del_file_clicked(self):
         row = self.get_table_row(self.sender())
@@ -143,6 +158,8 @@ old_hook = sys.excepthook
 sys.excepthook = catch_exceptions
 
 if __name__ == "__main__":
+    ui_util.kill_same_script()
+
     app = QApplication(sys.argv)
 
     src_path = sys.argv[1]

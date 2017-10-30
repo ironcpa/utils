@@ -70,16 +70,6 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="2" colspan="2">
-       <widget class="QCheckBox" name="chk_reencode">
-        <property name="focusPolicy">
-         <enum>Qt::ClickFocus</enum>
-        </property>
-        <property name="text">
-         <string>re-encode?</string>
-        </property>
-       </widget>
-      </item>
       <item row="3" column="1">
        <widget class="QLineEdit" name="txt_end_time">
         <property name="sizePolicy">
@@ -208,6 +198,26 @@
         </property>
         <property name="text">
          <string>S</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="2">
+       <widget class="QCheckBox" name="chk_reencode">
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
+        </property>
+        <property name="text">
+         <string>re-encode?</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="3">
+       <widget class="QPushButton" name="btn_merge_all_clips">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
+        <property name="text">
+         <string>merge all</string>
         </property>
        </widget>
       </item>

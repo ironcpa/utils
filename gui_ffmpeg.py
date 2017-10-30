@@ -29,6 +29,7 @@ class MainWindow(QMainWindow, form_class):
         self.txt_clip_name.setText('c:\\__clips\\' + clip_name + '_{}_{}' + src_ext)
 
         self.btn_encode.clicked.connect(self.on_encode_clicked)
+        self.btn_merge_all_clips.clicked.connect(self.merge_all_clips)
         self.btn_dir_src.clicked.connect(self.on_dir_src_clicked)
         self.btn_open_src.clicked.connect(self.on_open_src_clicked)
         self.btn_del_src.clicked.connect(self.on_del_src_clicked)
@@ -76,6 +77,21 @@ class MainWindow(QMainWindow, form_class):
         else:
             print(err)
             QMessageBox.critical(self, 'error', 'encoding failed\n{}'.format(err))
+
+    def merge_all_clips(self):
+        if self.clip_model.rowCount() < 1:
+            return
+
+        tmp_list_file_name = 'tmp_list.txt'
+        with open(tmp_list_file_name, 'w') as tmp_list_file:
+            for r in range(self.clip_model.rowCount()):
+                path = self.clip_model.item(r, column_def['path']).text()
+                tmp_list_file.write("file '{}'\n".format(path))
+        merged_file = 'con_' + os.path.basename(self.src_path())
+
+        command = 'ffmpeg -f concat -safe 0 -i {} -c copy "{}" -y'.format(tmp_list_file_name, merged_file)
+        subprocess.check_output(command)
+        os.remove(tmp_list_file_name)
 
     def on_dir_src_clicked(self):
         self.open_dir(self.lbl_src_file.text())
@@ -229,12 +245,12 @@ class MainWindow(QMainWindow, form_class):
         row = self.get_table_row(widget)
         return self.clip_model.item(row, column_def['path']).text()
 
-    def catch_exceptions(self, t, val, tb):
-        QMessageBox.critical(None, 'exception', '{}'.format(t))
-        old_hook(t, val, tb)
+def catch_exceptions(self, t, val, tb):
+    QMessageBox.critical(None, 'exception', '{}'.format(t))
+    old_hook(t, val, tb)
 
-    old_hook = sys.excepthook
-    sys.excepthook = catch_exceptions
+old_hook = sys.excepthook
+sys.excepthook = catch_exceptions
 
 
 if __name__ == "__main__":

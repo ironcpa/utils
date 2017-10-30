@@ -2,7 +2,6 @@
 
 import sys
 import os
-import re
 
 from PyQt5 import uic, QtGui
 from PyQt5.QtWidgets import *
@@ -10,6 +9,7 @@ from PyQt5.QtCore import *
 
 import capture_util
 import ui_util
+import file_util
 
 form_class = uic.loadUiType('C:/__devroot/utils/resource/gui_capture_tool.ui')[0]
 column_def = {'time': 0, 'duration': 1, 'del': 2, 'file':3}
@@ -75,12 +75,8 @@ class MainWindow(QMainWindow, form_class):
         dir, fname = os.path.split(os.path.splitext(self.src_path())[0])
         dir = '.' if dir == '' else dir
 
-        name_only = os.path.splitext(fname)[0]
-        pos_under = name_only.find('_')
-        product_no = name_only[:pos_under] if pos_under > 0 else name_only
-        
         # fname으로 찾는 옵션 고려
-        rel_cap_paths = [os.path.join(self.cap_dir(), x) for x in os.listdir(self.cap_dir()) if x.startswith(product_no)]
+        rel_cap_paths = [os.path.join(self.cap_dir(), x) for x in os.listdir(self.cap_dir()) if x.startswith(file_util.get_product_no(fname))]
         for c in rel_cap_paths:
             self.add_cap_result(c)
 
@@ -100,7 +96,7 @@ class MainWindow(QMainWindow, form_class):
         capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), False)
 
     def open_clip_tool(self):
-        command = 'pythonw c:/__devroot/utils/gui_ffmpeg.py "{}"'.format(self.src_path())
+        command = 'python c:/__devroot/utils/gui_ffmpeg.py "{}"'.format(self.src_path())
         os.system(command)
 
     def auto_sync_changed(self, int):

@@ -95,6 +95,11 @@ def rename_files(path):
 #rename_files("D:/새 폴더")
 
 
+def get_product_no(formatted_name):
+    name_only = os.path.splitext(formatted_name)[0]
+    pos_under = name_only.find('_')
+    return name_only[:pos_under] if pos_under > 0 else name_only
+
 def copy_sample_to_test_area(dst_dir):
     src_dir = './sample_data'
 

@@ -1,6 +1,8 @@
 # -*-coding:utf-8-*-
 
+import os
 import sys
+import win32api
 
 from PyQt5 import uic, QtGui
 from PyQt5.QtWidgets import *
@@ -9,7 +11,7 @@ import ui_util
 from db_util import DB
 
 form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_db_search.ui")[0]
-column_def = {'no': 0, 'disk': 1, 'rate': 2, 'desc': 3, 'open': 4, 'dir': 5, 'location': 6}
+column_def = {'no': 0, 'disk': 1, 'rate': 2, 'desc': 3, 'open': 4, 'dir': 5, 'del db': 6, 'location': 7}
 
 
 class MainWindow(QMainWindow, form_class):
@@ -27,6 +29,13 @@ class MainWindow(QMainWindow, form_class):
     def get_search_text(self):
         return self.txt_search.text()
 
+    def get_table_row(self, widget):
+        return self.tbl_result.indexAt(widget.pos()).row()
+
+    def get_text_on_table_widget(self, widget, col):
+        row = self.get_table_row(widget)
+        return self.model.item(row, col).text()
+
     def search_db(self):
         products = self.db.search(self.get_search_text())
 
@@ -40,9 +49,43 @@ class MainWindow(QMainWindow, form_class):
             self.model.setItem(row, column_def['desc'], QtGui.QStandardItem(p.desc))
             self.model.setItem(row, column_def['location'], QtGui.QStandardItem(p.location))
 
+            self.add_btn_at_result(row, column_def['open'], 'open', 60, self.on_result_open_file_clciekd)
+            self.add_btn_at_result(row, column_def['dir'], 'dir', 60, self.on_result_open_dir_clciekd)
+            self.add_btn_at_result(row, column_def['del db'], 'del db', 80, self.on_result_delete_row_clciekd)
+
         self.tbl_result.resizeColumnsToContents()
         self.tbl_result.resizeRowsToContents()
         self.tbl_result.scrollToBottom()
+
+    def add_btn_at_result(self, row, col, label, width, slot):
+        button = QPushButton()
+        button.setText(label)
+        button.setFixedWidth(width)
+        button.clicked.connect(slot)
+        self.tbl_result.setIndexWidget(self.model.index(row, col), button)
+
+    def get_path_on_row(self, widget):
+        disk_label = self.get_text_on_table_widget(widget, column_def['disk'])
+        curr_drive = ''
+        for drive in win32api.GetLogicalDriveStrings().split('\000')[:-1]:
+            if disk_label == win32api.GetVolumeInformation(drive)[0]:
+                curr_drive = drive
+                break
+
+        if curr_drive == '':
+            return
+
+        path = curr_drive[0] + ':' + os.path.splitdrive(self.get_text_on_table_widget(widget, column_def['location']))[1]
+        return path
+
+    def on_result_open_file_clciekd(self):
+        ui_util.open_path(self.get_path_on_row(self.sender()))
+
+    def on_result_open_dir_clciekd(self):
+        ui_util.open_path_dir(self.get_path_on_row(self.sender()))
+
+    def on_result_delete_row_clciekd(self):
+        pass
 
 
 old_hook = sys.excepthook

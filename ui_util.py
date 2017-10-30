@@ -8,11 +8,13 @@ from send2trash import send2trash
 
 
 def open_path_dir(path):
-    subprocess.Popen('explorer /select,"{}"'.format(path.replace('/', '\\')))
+    cmd = 'explorer /select,"{}"'.format(path.replace('/', '\\'))
+    subprocess.Popen(cmd)
 
 
 def open_path(path):
-    subprocess.Popen('explorer "{}"'.format(path.replace('/', '\\')))
+    cmd = 'explorer "{}"'.format(path.replace('/', '\\'))
+    subprocess.Popen(cmd)
 
 
 def delete_path(widget, path):

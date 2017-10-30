@@ -250,7 +250,6 @@ class MainWindow(QMainWindow, form_class):
 
     def parse_filename(self, path):
         drive_volume = win32api.GetVolumeInformation(os.path.splitdrive(path)[0] + '/')
-        dir = os.path.dirname(path)
         filename = os.path.basename(path)
 
         name_only = os.path.splitext(filename)[0]
@@ -260,7 +259,7 @@ class MainWindow(QMainWindow, form_class):
         desc = tokens[1] if len(tokens) > 1 else ''
         rate = tokens[-1] if tokens[-1] != product_no else ''
         disk_name = drive_volume[0]
-        location = dir
+        location = path
 
         return Product(product_no, desc, rate, disk_name, location)
 

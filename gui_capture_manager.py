@@ -100,7 +100,7 @@ class MainWindow(QMainWindow, form_class):
         capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), False)
 
     def open_clip_tool(self):
-        command = 'pythonw gui_ffmpeg.py "{}"'.format(self.src_path())
+        command = 'pythonw c:/__devroot/utils/gui_ffmpeg.py "{}"'.format(self.src_path())
         os.system(command)
 
     def auto_sync_changed(self, int):
@@ -149,13 +149,13 @@ class MainWindow(QMainWindow, form_class):
             self.cap_model.removeRow(row)
 
 
-def catch_exceptions(self, t, val, tb):
-    QMessageBox.critical(None, 'exception', '{}'.format(t))
-    old_hook(t, val, tb)
+# def catch_exceptions(self, t, val, tb):
+#     QMessageBox.critical(None, 'exception', '{}'.format(t))
+#     old_hook(t, val, tb)
 
 
 old_hook = sys.excepthook
-sys.excepthook = catch_exceptions
+sys.excepthook = ui_util.catch_exceptions
 
 if __name__ == "__main__":
     ui_util.kill_same_script()

@@ -18,3 +18,8 @@ def kill_same_script():
         if 'python' in p.name() and os.path.basename(p.cmdline()[1]) == os.path.basename(sys.argv[0]):
             if os.getpid() != p.pid:
                 p.kill()
+
+
+def catch_exceptions(self, t, val, tb):
+    QMessageBox.critical(None, 'exception', '{}'.format(t))
+    old_hook(t, val, tb)

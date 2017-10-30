@@ -234,9 +234,11 @@ class MainWindow(QMainWindow, form_class):
         row = self.get_table_row(widget)
         return self.clip_model.item(row, column_def['path']).text()
 
+
 def catch_exceptions(self, t, val, tb):
     QMessageBox.critical(None, 'exception', '{}'.format(t))
     old_hook(t, val, tb)
+
 
 old_hook = sys.excepthook
 sys.excepthook = catch_exceptions

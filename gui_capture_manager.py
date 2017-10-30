@@ -26,8 +26,8 @@ class MainWindow(QMainWindow, form_class):
         self.btn_open_cap_dir.clicked.connect(self.open_cap_dir)
         self.btn_open_clip_dir.clicked.connect(self.open_clip_dir)
 
-        self.btn_select_cap_dir.clicked.connect(self.open_dir_dialog)
-        self.btn_select_clip_dir.clicked.connect(self.open_dir_dialog)
+        self.btn_select_cap_dir.clicked.connect(lambda state: self.open_dir_dialog(self.txt_selected_cap_dir))
+        self.btn_select_clip_dir.clicked.connect(lambda state: self.open_dir_dialog(self.txt_selected_cap_dir))
 
         self.btn_make_clips.clicked.connect(self.make_clips)
         self.btn_open_clip_tool.clicked.connect(self.open_clip_tool)
@@ -66,6 +66,9 @@ class MainWindow(QMainWindow, form_class):
     def sync_miliseconds(self):
         return int(self.txt_sync_time.text()) * 1000
 
+    def open_dir_dialog(self, widget):
+        ui_util.open_dir_dialog(self, widget)
+
     def get_table_row(self, widget):
         return self.tbl_caps.indexAt(widget.pos()).row()
 
@@ -81,16 +84,13 @@ class MainWindow(QMainWindow, form_class):
             self.add_cap_result(c)
 
     def open_src_path(self):
-        pass
+        ui_util.open_path(self.src_path())
 
     def open_cap_dir(self):
-        pass
+        ui_util.open_path(self.cap_dir())
 
     def open_clip_dir(self):
-        pass
-
-    def open_dir_dialog(self):
-        pass
+        ui_util.open_path(self.clip_dir())
 
     def make_clips(self):
         capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), False)

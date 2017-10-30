@@ -1,9 +1,18 @@
 import os
 import sys
 import psutil
+import subprocess
 
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QFileDialog
 from send2trash import send2trash
+
+
+def open_path_dir(path):
+    subprocess.Popen('explorer /select,"{}"'.format(path.replace('/', '\\')))
+
+
+def open_path(path):
+    subprocess.Popen('explorer "{}"'.format(path.replace('/', '\\')))
 
 
 def delete_path(widget, path):
@@ -11,6 +20,12 @@ def delete_path(widget, path):
     if ok == QMessageBox.Yes:
         return send2trash(path) is None
     return False
+
+
+def open_dir_dialog(widget, txt_widget):
+    path = QFileDialog.getExistingDirectory(widget, "select directory")
+    if path and os.path.isdir(path):
+        txt_widget.setText(path)
 
 
 def kill_same_script():

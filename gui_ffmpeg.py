@@ -94,13 +94,13 @@ class MainWindow(QMainWindow, form_class):
         os.remove(tmp_list_file_name)
 
     def on_dir_src_clicked(self):
-        self.open_dir(self.lbl_src_file.text())
+        ui_util.open_path_dir(self.lbl_src_file.text())
 
     def on_open_src_clicked(self):
-        self.open_path(self.lbl_src_file.text())
+        ui_util.open_path(self.lbl_src_file.text())
 
     def on_del_src_clicked(self):
-        self.delete_path(self.lbl_src_file.text())
+        ui_util.delete_path(self, self.lbl_src_file.text())
 
     def copy_end_to_start_time(self):
         self.txt_start_time.setText(self.txt_end_time.text())
@@ -174,10 +174,10 @@ class MainWindow(QMainWindow, form_class):
                 self.clip_model.removeRow(item_at.row())
 
     def on_item_open_dir_clicked(self):
-        self.open_dir(self.get_selected_path(self.sender()))
+        ui_util.open_path_dir(self.get_selected_path(self.sender()))
 
     def on_item_open_file_clicked(self):
-        self.open_path(self.get_selected_path(self.sender()))
+        ui_util.open_path(self.get_selected_path(self.sender()))
 
     def on_item_del_file_clicked(self):
         row = self.get_table_row(self.sender())
@@ -226,17 +226,6 @@ class MainWindow(QMainWindow, form_class):
             return time_form
 
         return ''
-
-    def open_dir(self, path):
-        subprocess.Popen('explorer /select,"{}"'.format(path))
-
-    def open_path(self, path):
-        subprocess.Popen('explorer "{}"'.format(path))
-
-    def delete_path(self, path):
-        reply = QMessageBox.question(self, 'alert', 'Sure to delete?', QMessageBox.Yes, QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            return send2trash(path) is None
 
     def get_table_row(self, widget):
         return self.tbl_clip_result.indexAt(widget.pos()).row()

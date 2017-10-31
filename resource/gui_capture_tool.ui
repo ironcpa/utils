@@ -177,6 +177,9 @@
           <height>16777215</height>
          </size>
         </property>
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -202,7 +205,7 @@
      <x>0</x>
      <y>0</y>
      <width>1076</width>
-     <height>46</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

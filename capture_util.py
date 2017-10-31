@@ -3,6 +3,8 @@
 import os
 import subprocess
 
+import file_util
+
 
 def get_time(cap_path):
     # need to have validation
@@ -44,7 +46,8 @@ def create_clips_from_captures(src_path, cap_dir, clip_dir, sort_by_time):
     src_name, src_ext = os.path.splitext(src_file)
     cap_ext = '.jpg'
 
-    captures = [os.path.join(cap_dir, x) for x in os.listdir(cap_dir) if x.startswith(src_file) and x.endswith(cap_ext)]
+    product_no = file_util.get_product_no(src_name)
+    captures = [os.path.join(cap_dir, x) for x in os.listdir(cap_dir) if x.startswith(product_no) and x.endswith(cap_ext)]
     if sort_by_time:
         captures = sorted(filter(os.path.isfile, captures), key=os.path.getmtime)
     print(captures)

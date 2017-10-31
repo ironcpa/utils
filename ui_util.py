@@ -3,7 +3,7 @@ import sys
 import psutil
 import subprocess
 
-from PyQt5.QtWidgets import QMessageBox, QFileDialog
+from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication
 from send2trash import send2trash
 
 
@@ -40,3 +40,7 @@ def kill_same_script():
 def catch_exceptions(self, t, val, tb):
     QMessageBox.critical(None, 'exception', '{}'.format(t))
     old_hook(t, val, tb)
+
+
+def copy_to_clipboard(text):
+    QApplication.clipboard().setText("sample clipboard copy")

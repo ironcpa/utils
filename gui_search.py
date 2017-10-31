@@ -173,7 +173,7 @@ class MainWindow(QMainWindow, form_class):
             # prod_id, actor, desc, rating, location, tags = self.parse_filename(f)
             parsed = self.parse_filename(f)
             # for p in parsed:
-            print('p_id={}, desc={}, rate={}, disk={}, loc={}'.format(*parsed))
+            # print('p_id={}, desc={}, rate={}, disk={}, loc={}'.format(*parsed))
             self.db.update_product(parsed)
         self.enable_req_buttons(True)
 
@@ -256,8 +256,8 @@ class MainWindow(QMainWindow, form_class):
         tokens = name_only.split('_')
 
         product_no = tokens[0]
-        desc = tokens[1] if len(tokens) > 1 else ''
-        rate = tokens[-1] if tokens[-1] != product_no else ''
+        rate = tokens[-1] if tokens[-1] != product_no and tokens[-1].startswith('xx') else ''
+        desc = ' '.join(tokens[1:]).replace(rate, '') if len(tokens) > 1 else ''
         disk_name = drive_volume[0]
         location = path
 
@@ -317,7 +317,7 @@ class SearchWorker(QObject):
     def find_file(self, root_folder, file_name, ignore_path=None):
         founds = []
         rex = re.compile(file_name, re.IGNORECASE)
-        print(root_folder)
+        # print(root_folder)
         for root, dirs, files in os.walk(root_folder):
             # for thread stop
             if not self.is_working:
@@ -343,7 +343,7 @@ class SearchWorker(QObject):
                             print('ignore symlink file ' + full_path)
                             continue
                         founds.append(full_path.replace('/', '\\'))  # for windows cmd call
-                        print(full_path + ", size=" + format(os.path.getsize(full_path) / 1000, ','))
+                        # print(full_path + ", size=" + format(os.path.getsize(full_path) / 1000, ','))
         return founds
 
     def find_file_in_all_drives(self, file_name, ignore_path=None):

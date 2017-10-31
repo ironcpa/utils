@@ -11,11 +11,13 @@ import file_util
 
 def open_path_dir(path):
     cmd = 'explorer /select,"{}"'.format(path.replace('/', '\\'))
+    print(cmd)
     subprocess.Popen(cmd)
 
 
 def open_path(path):
     cmd = 'explorer "{}"'.format(path.replace('/', '\\'))
+    print(cmd)
     subprocess.Popen(cmd)
 
 

@@ -6,6 +6,8 @@ import subprocess
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication
 from send2trash import send2trash
 
+import file_util
+
 
 def open_path_dir(path):
     cmd = 'explorer /select,"{}"'.format(path.replace('/', '\\'))
@@ -43,4 +45,4 @@ def catch_exceptions(self, t, val, tb):
 
 
 def copy_to_clipboard(text):
-    QApplication.clipboard().setText("sample clipboard copy")
+    QApplication.clipboard().setText(text)

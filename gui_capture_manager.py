@@ -51,8 +51,20 @@ class MainWindow(QMainWindow, form_class):
         if self.sync_on():
             self.sync_timer.start(self.sync_miliseconds())
 
+    def keyPressEvent(self, event: QtGui.QKeyEvent):
+        key = event.key()
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier and key == Qt.Key_C:
+            ui_util.copy_to_clipboard(self.src_product_no())
+        else:
+            event.ignore()
+
     def src_path(self):
         return self.lbl_src_path.text()
+
+    def src_product_no(self):
+        _, fname = os.path.split(os.path.splitext(self.src_path())[0])
+        return file_util.get_product_no(fname)
 
     def cap_dir(self):
         return self.txt_selected_cap_dir.text()
@@ -75,11 +87,8 @@ class MainWindow(QMainWindow, form_class):
     def load_rel_caps(self):
         self.cap_model.clear()
 
-        dir, fname = os.path.split(os.path.splitext(self.src_path())[0])
-        dir = '.' if dir == '' else dir
-
         # fname으로 찾는 옵션 고려
-        rel_cap_paths = [os.path.join(self.cap_dir(), x) for x in os.listdir(self.cap_dir()) if x.startswith(file_util.get_product_no(fname))]
+        rel_cap_paths = [os.path.join(self.cap_dir(), x) for x in os.listdir(self.cap_dir()) if x.startswith(self.src_product_no())]
         for c in rel_cap_paths:
             self.add_cap_result(c)
 

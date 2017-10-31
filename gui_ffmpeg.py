@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import *
 from send2trash import send2trash
 
 import ui_util
+import file_util
 
 form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_ffmpeg_main.ui")[0]
 column_def = {'dir': 0, 'open': 1, 'del': 2, 'reclip': 3, 'copy setting':4, 'path': 5}
@@ -48,6 +49,10 @@ class MainWindow(QMainWindow, form_class):
     def src_path(self):
         return self.lbl_src_file.text()
 
+    def src_product_no(self):
+        _, fname = os.path.split(os.path.splitext(self.src_path())[0])
+        return file_util.get_product_no(fname)
+
     def load_rel_clips(self):
         dir, fname = os.path.split(os.path.splitext(self.src_path())[0])
         dir = '.' if dir == '' else dir
@@ -59,8 +64,11 @@ class MainWindow(QMainWindow, form_class):
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
+        modifiers = QApplication.keyboardModifiers()
         if key == Qt.Key_Return:
             self.on_encode_clicked()
+        elif modifiers == Qt.ControlModifier and key == Qt.Key_C:
+            ui_util.copy_to_clipboard(self.src_product_no())
         else:
             event.ignore()
 
@@ -181,8 +189,7 @@ class MainWindow(QMainWindow, form_class):
 
     def on_item_del_file_clicked(self):
         row = self.get_table_row(self.sender())
-        ok = self.delete_path(self.clip_model.item(row, column_def['path']).text())
-        if ok:
+        if ui_util.delete_path(self, self.clip_model.item(row, column_def['path']).text()):
             self.clip_model.removeRow(row)
 
     def on_item_reclip_clicked(self):

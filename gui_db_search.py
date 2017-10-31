@@ -21,11 +21,24 @@ class MainWindow(QMainWindow, form_class):
         self.setupUi(self)
 
         self.btn_search.clicked.connect(self.search_db)
+        self.btn_filter.clicked.connect(self.filter_result)
 
         self.model = QtGui.QStandardItemModel(0, len(column_def))
+        self.model.setHorizontalHeaderLabels([*column_def])
         self.tbl_result.setModel(self.model)
 
+        self.product_filter_model = QtCore.QSortFilterProxyModel()
+        self.product_filter_model.setSourceModel(self.model)
+        self.product_filter_model.setFilterKeyColumn(column_def['no'])
+
         self.db = DB()
+
+    def keyPressEvent(self, event: QtGui.QKeyEvent):
+        key = event.key()
+        if key == Qt.Key_Return:
+            self.search_db()
+        else:
+            event.ignore()
 
     def get_search_text(self):
         return self.txt_search.text()
@@ -47,7 +60,7 @@ class MainWindow(QMainWindow, form_class):
         return self.get_drive(disk) is not None
 
     def search_db(self):
-        self.model.clear()
+        self.model.removeRows(0, self.model.rowCount())
 
         products = self.db.search(self.get_search_text())
 
@@ -72,6 +85,9 @@ class MainWindow(QMainWindow, form_class):
         self.tbl_result.resizeColumnsToContents()
         self.tbl_result.resizeRowsToContents()
         self.tbl_result.scrollToBottom()
+
+    def filter_result(self):
+        self.product_filter_model.setFilterRegExp(self.get_search_text())
 
     def add_btn_at_result(self, row, col, label, width, slot):
         button = QPushButton()

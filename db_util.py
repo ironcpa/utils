@@ -41,23 +41,26 @@ class DB:
         return products
 
     def search(self, text):
+        # # test
+        # return [Product('aaa-123', 'ddd', 'xxx', 'disk', 'c:/aaa.txt'),
+        #         Product('bbb-456', 'bbb', 'xxx', 'disk', 'c:/aaa.txt')]
+
         if text == '':
             return self.search_all()
 
         tokens = text.split()
-        if len(tokens) > 1:
+        if len(tokens) > 0:
             return self.search_tokens(tokens)
 
-        # return [Product('aaa-123', 'ddd', 'xxx', 'disk', 'c:/aaa.txt'),
-        #         Product('bbb-456', 'bbb', 'xxx', 'disk', 'c:/aaa.txt')]
-        with sqlite.connect(self.db_file) as c:
-            cur = c.cursor()
-            sql = "select p_no, desc, rate, disk, location from product\n"\
-                  "where p_no || desc like ?"
-            cur.execute(sql, ('%' + text + '%',))
-            result = cur.fetchall()
-
-            return self.to_product(result)
+        # # test multi field search
+        # with sqlite.connect(self.db_file) as c:
+        #     cur = c.cursor()
+        #     sql = "select p_no, desc, rate, disk, location from product\n"\
+        #           "where p_no || desc like ?"
+        #     cur.execute(sql, ('%' + text + '%',))
+        #     result = cur.fetchall()
+        #
+        #     return self.to_product(result)
 
     def search_tokens(self, tokens):
         with sqlite.connect(self.db_file) as c:

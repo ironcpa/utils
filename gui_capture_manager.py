@@ -2,6 +2,7 @@
 
 import sys
 import os
+import subprocess
 
 from PyQt5 import uic, QtGui
 from PyQt5.QtWidgets import *
@@ -106,7 +107,7 @@ class MainWindow(QMainWindow, form_class):
 
     def open_clip_tool(self):
         command = 'pythonw c:/__devroot/utils/gui_ffmpeg.py "{}"'.format(self.src_path())
-        os.system(command)
+        subprocess.Popen(command)
 
     def auto_sync_changed(self, int):
         if self.chk_auto_sync.isChecked():

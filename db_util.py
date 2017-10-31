@@ -13,8 +13,9 @@ class DB:
         print('db_file', self.db_file)
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
-            sql = "select count(*) from product where p_no = '{}'".format(product.product_no)
-            cur.execute(sql)
+            sql = "select count(*) from product\n"\
+                  "where p_no = ?"
+            cur.execute(sql, (product.product_no,))
 
             result = cur.fetchone()[0]
             print('fetch', result)
@@ -33,15 +34,59 @@ class DB:
                 cur.execute(sql, (product.product_no, product.desc, product.rate, product.disk_name, product.location))
                 c.commit()
 
+    def to_product(self, db_rows):
+        products = []
+        for r in db_rows:
+            products.append(Product(*r))
+        return products
+
     def search(self, text):
+        if text == '':
+            return self.search_all()
+
+        tokens = text.split()
+        if len(tokens) > 1:
+            return self.search_tokens(tokens)
+
+        # return [Product('aaa-123', 'ddd', 'xxx', 'disk', 'c:/aaa.txt'),
+        #         Product('bbb-456', 'bbb', 'xxx', 'disk', 'c:/aaa.txt')]
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
-            sql = "select p_no, desc, rate, disk, location from product"
+            sql = "select p_no, desc, rate, disk, location from product\n"\
+                  "where p_no || desc like ?"
+            cur.execute(sql, ('%' + text + '%',))
+            result = cur.fetchall()
+
+            return self.to_product(result)
+
+    def search_tokens(self, tokens):
+        with sqlite.connect(self.db_file) as c:
+            cur = c.cursor()
+            sql, params = self.make_union_sql(['p_no', 'desc', 'location'], tokens)
+            cur.execute(sql, tuple(params))
+            result = cur.fetchall()
+
+            return self.to_product(result)
+
+    def make_union_sql(self, target_fields, tokens):
+        sql = ''
+        params = []
+        for i, f in enumerate(target_fields):
+            for j, t in enumerate(tokens):
+                if not(i == 0 and j == 0):
+                    sql += "union\n"
+                sql += "select p_no, desc, rate, disk, location from product\n" \
+                       "where {} like ?\n".format(f)
+            for t in tokens:
+                params.append('%' + t + '%')
+
+        return sql, params
+
+    def search_all(self):
+        with sqlite.connect(self.db_file) as c:
+            cur = c.cursor()
+            sql = "select p_no, desc, rate, disk, location from product limit 100"
             cur.execute(sql)
             result = cur.fetchall()
 
-            # return result
-            products = []
-            for r in result:
-                products.append(Product(*r))
-            return products
+            return self.to_product(result)

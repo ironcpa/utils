@@ -4,8 +4,9 @@ import os
 import sys
 import win32api
 
-from PyQt5 import uic, QtGui
+from PyQt5 import uic, QtGui, QtCore
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt
 
 import ui_util
 from db_util import DB
@@ -36,21 +37,36 @@ class MainWindow(QMainWindow, form_class):
         row = self.get_table_row(widget)
         return self.model.item(row, col).text()
 
+    def get_drive(self, disk_label):
+        for drive in win32api.GetLogicalDriveStrings().split('\000')[:-1]:
+            if disk_label == win32api.GetVolumeInformation(drive)[0]:
+                return drive
+        return None
+
+    def is_disk_online(self, disk):
+        return self.get_drive(disk) is not None
+
     def search_db(self):
+        self.model.clear()
+
         products = self.db.search(self.get_search_text())
 
         for p in products:
-            print(p)
             row = self.model.rowCount()
+            is_disk_online = self.is_disk_online(p.disk_name)
 
             self.model.setItem(row, column_def['no'], QtGui.QStandardItem(p.product_no))
-            self.model.setItem(row, column_def['disk'], QtGui.QStandardItem(p.disk_name))
+            item_disk = QtGui.QStandardItem(p.disk_name)
+            if is_disk_online:
+                item_disk.setBackground(QtGui.QBrush(Qt.yellow))
+            self.model.setItem(row, column_def['disk'], item_disk)
             self.model.setItem(row, column_def['rate'], QtGui.QStandardItem(p.rate))
             self.model.setItem(row, column_def['desc'], QtGui.QStandardItem(p.desc))
             self.model.setItem(row, column_def['location'], QtGui.QStandardItem(p.location))
 
-            self.add_btn_at_result(row, column_def['open'], 'open', 60, self.on_result_open_file_clciekd)
-            self.add_btn_at_result(row, column_def['dir'], 'dir', 60, self.on_result_open_dir_clciekd)
+            if is_disk_online:
+                self.add_btn_at_result(row, column_def['open'], 'open', 60, self.on_result_open_file_clciekd)
+                self.add_btn_at_result(row, column_def['dir'], 'dir', 60, self.on_result_open_dir_clciekd)
             self.add_btn_at_result(row, column_def['del db'], 'del db', 80, self.on_result_delete_row_clciekd)
 
         self.tbl_result.resizeColumnsToContents()
@@ -66,13 +82,13 @@ class MainWindow(QMainWindow, form_class):
 
     def get_path_on_row(self, widget):
         disk_label = self.get_text_on_table_widget(widget, column_def['disk'])
-        curr_drive = ''
-        for drive in win32api.GetLogicalDriveStrings().split('\000')[:-1]:
-            if disk_label == win32api.GetVolumeInformation(drive)[0]:
-                curr_drive = drive
-                break
-
-        if curr_drive == '':
+        # curr_drive = ''
+        # for drive in win32api.GetLogicalDriveStrings().split('\000')[:-1]:
+        #     if disk_label == win32api.GetVolumeInformation(drive)[0]:
+        #         curr_drive = drive
+        #         break
+        curr_drive = self.get_drive(disk_label)
+        if curr_drive is None:
             return
 
         path = curr_drive[0] + ':' + os.path.splitdrive(self.get_text_on_table_widget(widget, column_def['location']))[1]

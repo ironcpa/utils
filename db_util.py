@@ -91,6 +91,7 @@ class DB:
                        "where {} like ?\n".format(f)
             for t in tokens:
                 params.append('%' + t + '%')
+        sql += ' order by p_no'
 
         return sql, params
 
@@ -105,6 +106,7 @@ class DB:
                 where_cond += ' {} like ?'.format(f)
                 params.append('%' + t + '%')
             sql += where_cond + ')\n'
+        sql += ' order by p_no'
 
         return sql, params
 
@@ -116,3 +118,7 @@ class DB:
             result = cur.fetchall()
 
             return self.to_product(result)
+
+    def better_filename(self, product):
+        p = product
+        return '{}_{}_{}'.format(p.p_no, p.desc.replace(' ', '_'), p.rate)

@@ -86,11 +86,12 @@ class MainWindow(QMainWindow, form_class):
             if is_disk_online:
                 self.add_btn_at_result(row, column_def['open'], 'open', 60, self.on_result_open_file_clciekd)
                 self.add_btn_at_result(row, column_def['dir'], 'dir', 60, self.on_result_open_dir_clciekd)
-            self.add_btn_at_result(row, column_def['del db'], 'del db', 80, self.on_result_delete_row_clciekd)
+                self.add_btn_at_result(row, column_def['del file'], 'del file', 100, self.on_result_del_file_clicked)
+            self.add_btn_at_result(row, column_def['del db'], 'del db', 80, self.on_result_delete_row_clicked)
 
         self.tbl_result.resizeColumnsToContents()
         self.tbl_result.resizeRowsToContents()
-        self.tbl_result.scrollToBottom()
+        # self.tbl_result.scrollToBottom()
 
     def filter_result(self):
         self.product_filter_model.setFilterRegExp(self.get_search_text())
@@ -122,7 +123,10 @@ class MainWindow(QMainWindow, form_class):
     def on_result_open_dir_clciekd(self):
         ui_util.open_path_dir(self.get_path_on_row(self.sender()))
 
-    def on_result_delete_row_clciekd(self):
+    def on_result_del_file_clicked(self):
+        ui_util.delete_path(self.get_path_on_row(self.sender()))
+
+    def on_result_delete_row_clicked(self):
         pass
 
 

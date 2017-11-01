@@ -202,6 +202,9 @@
           <property name="acceptDrops">
            <bool>false</bool>
           </property>
+          <property name="sortingEnabled">
+           <bool>false</bool>
+          </property>
          </widget>
         </item>
        </layout>

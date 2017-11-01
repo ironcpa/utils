@@ -14,7 +14,7 @@ import ui_util
 import file_util
 
 form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_clip_tool.ui")[0]
-column_def = {'dir': 0, 'open': 1, 'del': 2, 'reclip': 3, 'copy setting':4, 'path': 5}
+column_def = {'dir': 0, 'open': 1, 'del': 2, 'reclip': 3, 'copy setting':4, 'size':5, 'path': 6}
 
 
 class MainWindow(QMainWindow, form_class):
@@ -36,6 +36,7 @@ class MainWindow(QMainWindow, form_class):
         self.btn_del_src.clicked.connect(self.on_del_src_clicked)
         self.btn_to_start_time.clicked.connect(self.copy_end_to_start_time)
         self.btn_to_end_time.clicked.connect(self.copy_start_to_end_time)
+        self.btn_reload.clicked.connect(self.load_rel_clips)
 
         self.clip_model = QtGui.QStandardItemModel(0, len(column_def))
         self.tbl_clip_result.setModel(self.clip_model)
@@ -58,9 +59,20 @@ class MainWindow(QMainWindow, form_class):
         dir = '.' if dir == '' else dir
         # rel_clip_paths = [x for x in os.listdir(dir) if x.startswith('clip_{}'.format(fname))]
         clip_dir = 'c:\\__clips\\'
-        rel_clip_paths = [clip_dir + x for x in os.listdir(clip_dir) if x.startswith('clip_{}'.format(fname))]
-        for p in rel_clip_paths:
-            self.add_clip_result(p)
+        rel_clip_infos = [(clip_dir + x, file_util.get_file_size(clip_dir + x)) for x in os.listdir(clip_dir) if x.startswith('clip_{}'.format(fname))]
+
+        self.clip_model.removeRows(0, self.clip_model.rowCount())
+        for p in rel_clip_infos:
+            self.add_clip_result(p[0], p[1])
+        self.show_total_clip_size()
+
+    def show_total_clip_size(self):
+        total = 0
+        for r in range(self.clip_model.rowCount()):
+            s = self.clip_model.item(r, column_def['size']).text()
+            if len(s) > 0:
+                total += int(s.split('.')[0].replace(',', ''))
+        self.lbl_clip_total_size.setText(format(total, ','))
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
@@ -131,15 +143,19 @@ class MainWindow(QMainWindow, form_class):
         try:
             subprocess.check_output(command, stderr=subprocess.STDOUT)
             self.remove_old_same_result(out_clip_path)
-            self.add_clip_result(out_clip_path)
+            self.add_clip_result(out_clip_path, file_util.get_file_size(out_clip_path))
+            self.show_total_clip_size()
             return True, None
         except subprocess.CalledProcessError as e:
             return False, e
 
-    def add_clip_result(self, path):
+    def add_clip_result(self, path, size):
         row = self.clip_model.rowCount()
 
-        self.clip_model.setItem(self.clip_model.rowCount(), column_def['path'], QtGui.QStandardItem(path))
+        size_item = QtGui.QStandardItem(size)
+        size_item.setTextAlignment(Qt.AlignRight)
+        self.clip_model.setItem(row, column_def['size'], size_item)
+        self.clip_model.setItem(row, column_def['path'], QtGui.QStandardItem(path))
 
         btn_w = 60
 

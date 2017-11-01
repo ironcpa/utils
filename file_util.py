@@ -116,6 +116,10 @@ def copy_sample_to_test_area(dst_dir):
             shutil.copy(full_fn, dst_dir)
 
 
+def get_file_size(full_path):
+    return format(os.path.getsize(full_path) / 1000, ',')
+
+
 if __name__ == '__main__':
     test_dir = './test_area'
     # test_dir = 'c:/__devroot/util/test_area'

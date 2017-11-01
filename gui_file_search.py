@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import *
 from send2trash import send2trash
 
 import ui_util
+import file_util
 from find_file import *
 import gui_clip_tool
 from db_util import DB, Product
@@ -359,7 +360,7 @@ class SearchWorker(QObject):
                         if full_path.endswith(SYMLINK_SUFFIX):
                             print('ignore symlink file ' + full_path)
                             continue
-                        founds.append(FileInfo(full_path.replace('/', '\\'), format(os.path.getsize(full_path) / 1000, ',')))  # for windows cmd call
+                        founds.append(FileInfo(full_path.replace('/', '\\'), file_util.get_file_size(full_path)))  # for windows cmd call
                         # print(full_path + ", size=" + format(os.path.getsize(full_path) / 1000, ','))
         return founds
 

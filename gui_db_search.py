@@ -12,7 +12,7 @@ import ui_util
 from db_util import DB
 
 form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_db_search.ui")[0]
-column_def = {'no': 0, 'disk': 1, 'size': 2, 'rate': 3, 'desc': 4, 'open': 5, 'dir': 6, 'del db': 7, 'location': 8}
+column_def = {'no': 0, 'disk': 1, 'size': 2, 'rate': 3, 'desc': 4, 'open': 5, 'dir': 6, 'del file': 7, 'del db': 8, 'location': 9}
 
 
 class MainWindow(QMainWindow, form_class):
@@ -73,15 +73,17 @@ class MainWindow(QMainWindow, form_class):
             row = self.model.rowCount()
             is_disk_online = self.is_disk_online(p.disk_name)
 
-            self.model.setItem(row, column_def['no'], QtGui.QStandardItem(p.product_no))
-            item_disk = QtGui.QStandardItem(p.disk_name)
+            self.model.setItem(row, column_def['no'], QtGui.QStandardItem(p.product_no[:10] + '...' if len(p.product_no) > 10 else p.product_no))
+            disk_item = QtGui.QStandardItem(p.disk_name)
             if is_disk_online:
-                item_disk.setBackground(QtGui.QBrush(Qt.yellow))
-            self.model.setItem(row, column_def['disk'], item_disk)
+                disk_item.setBackground(QtGui.QBrush(Qt.yellow))
+            self.model.setItem(row, column_def['disk'], disk_item)
             self.model.setItem(row, column_def['rate'], QtGui.QStandardItem(p.rate))
             self.model.setItem(row, column_def['desc'], QtGui.QStandardItem(p.desc))
             self.model.setItem(row, column_def['location'], QtGui.QStandardItem(p.location))
-            self.model.setItem(row, column_def['size'], QtGui.QStandardItem(p.size))
+            size_item = QtGui.QStandardItem(p.size)
+            size_item.setTextAlignment(Qt.AlignRight)
+            self.model.setItem(row, column_def['size'], size_item)
 
             if is_disk_online:
                 self.add_btn_at_result(row, column_def['open'], 'open', 60, self.on_result_open_file_clciekd)
@@ -124,7 +126,7 @@ class MainWindow(QMainWindow, form_class):
         ui_util.open_path_dir(self.get_path_on_row(self.sender()))
 
     def on_result_del_file_clicked(self):
-        ui_util.delete_path(self.get_path_on_row(self.sender()))
+        ui_util.delete_path(self, self.get_path_on_row(self.sender()))
 
     def on_result_delete_row_clicked(self):
         pass

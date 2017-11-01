@@ -11,10 +11,10 @@ def get_clip_infos(clip_dir, filename):
 
 def get_clip_paths(clip_dir, filename):
     return [clip_dir + x for x in os.listdir(clip_dir)
-            if x.startswith('clip_{}'.format(filename))]
+            if x.startswith('clip_{}'.format(file_util.get_product_no(filename)))]
 
 
-def merge_all_clips(src_path, clip_paths, is_async = True):
+def merge_all_clips(src_path, clip_paths, is_async = False):
     if len(clip_paths) < 1:
         return
 
@@ -22,7 +22,7 @@ def merge_all_clips(src_path, clip_paths, is_async = True):
     with open(tmp_list_file_name, 'w') as tmp_list_file:
         for p in clip_paths:
             tmp_list_file.write("file '{}'\n".format(p))
-    merged_file = 'con_' + os.path.basename(src_path)
+    merged_file = os.path.dirname(src_path) + '\\con_' + os.path.basename(src_path)
 
     command = 'ffmpeg -f concat -safe 0 -i {} -c copy "{}" -y'.format(tmp_list_file_name, merged_file)
     if is_async:

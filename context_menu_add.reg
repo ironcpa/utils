@@ -4,19 +4,22 @@ Windows Registry Editor Version 5.00
 @="&JAV Format Names"
 
 [HKEY_CLASSES_ROOT\Directory\shell\JAV Format Names\command]
-@="\"C:\\__devroot\\utils\\context_menu.bat\" \"%1\""
+;@="\"C:\\__devroot\\utils\\context_menu.bat\" \"%1\""
+@="\"C:\\__devenv\\anaconda3\\python\" "\"C:\\__devroot\\utils\\product_no_formatter.py\" \"%1\""
 
 [HKEY_CLASSES_ROOT\Directory\shell\JAV Run Search]
 @="&JAV Run Search"
 
 [HKEY_CLASSES_ROOT\Directory\shell\JAV Run Search\command]
-@="\"C:\\__devroot\\utils\\context_menu_run_search.bat\" \"%1\""
+;@="\"C:\\__devroot\\utils\\context_menu_run_search.bat\" \"%1\""
+@="\"C:\\__devenv\\anaconda3\\pythonw\" "\"C:\\__devroot\\utils\\gui_file_search.py\" \"%1\""
 
 [HKEY_CLASSES_ROOT\Drive\shell\JAV Run Search]
 @="&JAV Run Search"
 
 [HKEY_CLASSES_ROOT\Drive\shell\JAV Run Search\command]
-@="\"C:\\__devroot\\utils\\context_menu_run_search.bat\" \"%1\""
+;@="\"C:\\__devroot\\utils\\context_menu_run_search.bat\" \"%1\""
+@="\"C:\\__devenv\\anaconda3\\pythonw\" "\"C:\\__devroot\\utils\\gui_file_search.py\" \"%1\""
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\JAV Run Search]
 @="&JAV Run Search"
@@ -29,10 +32,10 @@ Windows Registry Editor Version 5.00
 
 [HKEY_CLASSES_ROOT\*\shell\JAV Encode Clip\command]
 ;@="\"C:\\__devroot\\utils\\context_menu_encode_clip.bat\" \"%1\""
-@="\"C:\\__devenv\\anaconda3\\pythonw\" "\"C:\\__devroot\\utils\\gui_ffmpeg.py\" \"%1\""
+@="\"C:\\__devenv\\anaconda3\\pythonw\" "\"C:\\__devroot\\utils\\gui_clip_tool.py\" \"%1\""
 
 [HKEY_CLASSES_ROOT\*\shell\JAV Capture Tool]
 @="&JAV Capture Tool"
 
 [HKEY_CLASSES_ROOT\*\shell\JAV Capture Tool\command]
-@="\"C:\\__devenv\\anaconda3\\pythonw\" "\"C:\\__devroot\\utils\\gui_capture_manager.py\" \"%1\""
+@="\"C:\\__devenv\\anaconda3\\pythonw\" "\"C:\\__devroot\\utils\\gui_capture_tool.py\" \"%1\""

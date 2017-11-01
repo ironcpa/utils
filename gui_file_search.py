@@ -11,11 +11,11 @@ from send2trash import send2trash
 
 import ui_util
 from find_file import *
-import gui_ffmpeg
+import gui_clip_tool
 from db_util import DB, Product
 
-# form_class = uic.loadUiType("./resource/mainwindow.ui")[0]
-form_class = uic.loadUiType("C:/__devroot/utils/resource/mainwindow.ui")[0]
+# form_class = uic.loadUiType("./resource/gui_file_search.ui")[0]
+form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_file_search.ui")[0]
 column_def = {'checkbox': 0, 'dir': 1, 'open': 2, 'del': 3, 'clip': 4, 'copy name': 5, 'size': 6, 'path': 7}
 
 
@@ -201,7 +201,7 @@ class MainWindow(QMainWindow, form_class):
     def on_open_ffmpeg_clicked(self):
         # w = gui_ffmpeg.MainWindow(self, self.get_selected_path(self.sender()))
         # w.show()
-        command = 'pythonw gui_ffmpeg.py "{}"'.format(self.get_selected_path(self.sender()))
+        command = 'pythonw gui_clip_tool.py "{}"'.format(self.get_selected_path(self.sender()))
         os.system(command)
 
     def on_copy_name_clicked(self):

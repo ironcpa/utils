@@ -106,7 +106,7 @@ class MainWindow(QMainWindow, form_class):
         capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), False)
 
     def open_clip_tool(self):
-        command = 'pythonw c:/__devroot/utils/gui_ffmpeg.py "{}"'.format(self.src_path())
+        command = 'pythonw c:/__devroot/utils/gui_clip_tool.py "{}"'.format(self.src_path())
         subprocess.Popen(command)
 
     def auto_sync_changed(self, int):

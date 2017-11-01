@@ -100,6 +100,7 @@ def get_product_no(formatted_name):
     pos_under = name_only.find('_')
     return name_only[:pos_under] if pos_under > 0 else name_only
 
+
 def copy_sample_to_test_area(dst_dir):
     src_dir = './sample_data'
 
@@ -116,9 +117,6 @@ def copy_sample_to_test_area(dst_dir):
 
 
 if __name__ == '__main__':
-    valid_name = make_valid_product_name("1020dvdes012awefaw23242_한글_xx.txt")
-    print(valid_name)
-
     test_dir = './test_area'
     # test_dir = 'c:/__devroot/util/test_area'
     copy_sample_to_test_area(test_dir)

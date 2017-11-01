@@ -13,7 +13,7 @@ from send2trash import send2trash
 import ui_util
 import file_util
 
-form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_ffmpeg_main.ui")[0]
+form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_clip_tool.ui")[0]
 column_def = {'dir': 0, 'open': 1, 'del': 2, 'reclip': 3, 'copy setting':4, 'path': 5}
 
 

@@ -107,11 +107,6 @@ class MainWindow(QMainWindow, form_class):
 
     def get_path_on_row(self, widget):
         disk_label = self.get_text_on_table_widget(widget, column_def['disk'])
-        # curr_drive = ''
-        # for drive in win32api.GetLogicalDriveStrings().split('\000')[:-1]:
-        #     if disk_label == win32api.GetVolumeInformation(drive)[0]:
-        #         curr_drive = drive
-        #         break
         curr_drive = self.get_drive(disk_label)
         if curr_drive is None:
             return

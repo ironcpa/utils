@@ -43,6 +43,9 @@ class MainWindow(QMainWindow, form_class):
     def get_search_text(self):
         return self.txt_search.text()
 
+    def is_and_checked(self):
+        return self.chk_is_and_condition.isChecked()
+
     def get_table_row(self, widget):
         return self.tbl_result.indexAt(widget.pos()).row()
 
@@ -62,7 +65,7 @@ class MainWindow(QMainWindow, form_class):
     def search_db(self):
         self.model.removeRows(0, self.model.rowCount())
 
-        products = self.db.search(self.get_search_text())
+        products = self.db.search(self.get_search_text(), self.is_and_checked())
 
         for p in products:
             row = self.model.rowCount()

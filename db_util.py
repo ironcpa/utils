@@ -36,7 +36,7 @@ class DB:
             products.append(Product(*r))
         return products
 
-    def search(self, text):
+    def search(self, text, is_all_match = False):
         # # test
         # return [Product('aaa-123', 'ddd', 'xxx', 'disk', 'c:/aaa.txt'),
         #         Product('bbb-456', 'bbb', 'xxx', 'disk', 'c:/aaa.txt')]
@@ -46,7 +46,10 @@ class DB:
 
         tokens = text.split()
         if len(tokens) > 0:
-            return self.search_tokens(tokens)
+            if is_all_match:
+                return self.search_all_tokens(tokens)
+            else:
+                return self.search_any_tokens(tokens)
 
         # # test multi field search
         # with sqlite.connect(self.db_file) as c:
@@ -58,10 +61,20 @@ class DB:
         #
         #     return self.to_product(result)
 
-    def search_tokens(self, tokens):
+    def search_any_tokens(self, tokens):
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
             sql, params = self.make_union_sql(['p_no', 'desc', 'location'], tokens)
+            cur.execute(sql, tuple(params))
+            result = cur.fetchall()
+
+            return self.to_product(result)
+
+    def search_all_tokens(self, tokens):
+        with sqlite.connect(self.db_file) as c:
+            cur = c.cursor()
+            sql, params = self.make_all_match_sql(['p_no', 'desc', 'location'], tokens)
+            print(sql)
             cur.execute(sql, tuple(params))
             result = cur.fetchall()
 
@@ -78,6 +91,20 @@ class DB:
                        "where {} like ?\n".format(f)
             for t in tokens:
                 params.append('%' + t + '%')
+
+        return sql, params
+
+    def make_all_match_sql(self, target_fields, tokens):
+        sql = "select p_no, desc, rate, disk, location from product\n" \
+              "where "
+        params = []
+        for i, f in enumerate(target_fields):
+            where_cond = '(' if i == 0 else ' or ('
+            for j, t in enumerate(tokens):
+                where_cond += '' if j == 0 else ' and'
+                where_cond += ' {} like ?'.format(f)
+                params.append('%' + t + '%')
+            sql += where_cond + ')\n'
 
         return sql, params
 

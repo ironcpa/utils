@@ -67,6 +67,7 @@ def create_clips_from_captures(src_path, cap_dir, clip_dir, sort_by_time):
             command = ffmpeg_cmd.format(src_path, to_time_form(start_time), to_time_form(end_time), out_clip_path)
             print(command)
             subprocess.Popen(command.format(src_path, times[i - 1], t, out_clip_path))
+            # subprocess.check_output(command.format(src_path, times[i - 1], t, out_clip_path))
 
 
 if __name__ == '__main__':

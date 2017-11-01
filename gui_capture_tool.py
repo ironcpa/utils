@@ -11,9 +11,11 @@ from PyQt5.QtCore import *
 import capture_util
 import ui_util
 import file_util
+import ffmpeg_util
+import gui_clip_tool
 
 form_class = uic.loadUiType('C:/__devroot/utils/resource/gui_capture_tool.ui')[0]
-column_def = {'time': 0, 'duration': 1, 'del': 2, 'file':3}
+cap_col_def = {'time': 0, 'duration': 1, 'del': 2, 'file':3}
 
 
 class MainWindow(QMainWindow, form_class):
@@ -31,9 +33,10 @@ class MainWindow(QMainWindow, form_class):
         self.btn_select_clip_dir.clicked.connect(lambda state: self.open_dir_dialog(self.txt_selected_cap_dir))
 
         self.btn_make_clips.clicked.connect(self.make_clips)
+        self.btn_merge.clicked.connect(self.make_direct_merge)
         self.btn_open_clip_tool.clicked.connect(self.open_clip_tool)
 
-        self.cap_model = QtGui.QStandardItemModel(0, len(column_def))
+        self.cap_model = QtGui.QStandardItemModel(0, len(cap_col_def))
         self.tbl_caps.setModel(self.cap_model)
 
         #init setting
@@ -42,7 +45,7 @@ class MainWindow(QMainWindow, form_class):
 
         self.load_rel_caps()
 
-        self.txt_sync_time.setText(str(10))
+        self.txt_sync_time.setText(str(5))
 
         self.chk_auto_sync.setChecked(True)
         self.chk_auto_sync.stateChanged.connect(self.auto_sync_changed)
@@ -105,6 +108,12 @@ class MainWindow(QMainWindow, form_class):
     def make_clips(self):
         capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), False)
 
+    def make_direct_merge(self):
+        # self.make_clips()
+        src_filename = os.path.splitext(os.path.basename(self.src_path()))[0]
+        merged_name = ffmpeg_util.merge_all_clips(self.src_path(), ffmpeg_util.get_clip_paths('c:\\__clips\\', src_filename))
+        QMessageBox.information(self, 'job', 'merge complete : {}'.format(merged_name))
+
     def open_clip_tool(self):
         command = 'pythonw c:/__devroot/utils/gui_clip_tool.py "{}"'.format(self.src_path())
         subprocess.Popen(command)
@@ -123,18 +132,18 @@ class MainWindow(QMainWindow, form_class):
         font = time_item.font()
         font.setPointSize(20)
         time_item.setFont(font)
-        self.cap_model.setItem(row, column_def['time'], time_item)
+        self.cap_model.setItem(row, cap_col_def['time'], time_item)
 
         if row % 2 == 1:
             duration = capture_util.get_duration_in_time_form(self.cap_model.item(row-1).text(), time)
             duration_item = QtGui.QStandardItem(str(duration))
             duration_item.setFont(font)
-            self.cap_model.setItem(row, column_def['duration'], duration_item )
+            self.cap_model.setItem(row, cap_col_def['duration'], duration_item)
 
         file_item = QtGui.QStandardItem(os.path.basename(cap_path))
         file_item.setData(cap_path)
         file_item.setFont(font)
-        self.cap_model.setItem(row, column_def['file'], file_item)
+        self.cap_model.setItem(row, cap_col_def['file'], file_item)
 
         btn_w = 60
 
@@ -142,7 +151,7 @@ class MainWindow(QMainWindow, form_class):
         btn_delete_file.setText('delete')
         btn_delete_file.setFixedWidth(btn_w)
         btn_delete_file.clicked.connect(self.on_item_del_file_clicked)
-        self.tbl_caps.setIndexWidget(self.cap_model.index(row, column_def['del']), btn_delete_file)
+        self.tbl_caps.setIndexWidget(self.cap_model.index(row, cap_col_def['del']), btn_delete_file)
 
         self.tbl_caps.resizeColumnsToContents()
         self.tbl_caps.resizeRowsToContents()
@@ -150,7 +159,7 @@ class MainWindow(QMainWindow, form_class):
 
     def on_item_del_file_clicked(self):
         row = self.get_table_row(self.sender())
-        path = self.cap_model.item(row, column_def['file']).data()
+        path = self.cap_model.item(row, cap_col_def['file']).data()
         if ui_util.delete_path(self, path):
             self.cap_model.removeRow(row)
 

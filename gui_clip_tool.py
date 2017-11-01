@@ -12,6 +12,7 @@ from send2trash import send2trash
 
 import ui_util
 import file_util
+import ffmpeg_util
 
 form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_clip_tool.ui")[0]
 column_def = {'dir': 0, 'open': 1, 'del': 2, 'reclip': 3, 'copy setting':4, 'size':5, 'path': 6}
@@ -57,13 +58,11 @@ class MainWindow(QMainWindow, form_class):
     def load_rel_clips(self):
         dir, fname = os.path.split(os.path.splitext(self.src_path())[0])
         dir = '.' if dir == '' else dir
-        # rel_clip_paths = [x for x in os.listdir(dir) if x.startswith('clip_{}'.format(fname))]
         clip_dir = 'c:\\__clips\\'
-        rel_clip_infos = [(clip_dir + x, file_util.get_file_size(clip_dir + x)) for x in os.listdir(clip_dir) if x.startswith('clip_{}'.format(fname))]
 
         self.clip_model.removeRows(0, self.clip_model.rowCount())
-        for p in rel_clip_infos:
-            self.add_clip_result(p[0], p[1])
+        for i in ffmpeg_util.get_clip_infos(clip_dir, fname):
+            self.add_clip_result(i[0], i[1])
         self.show_total_clip_size()
 
     def show_total_clip_size(self):
@@ -99,19 +98,8 @@ class MainWindow(QMainWindow, form_class):
             QMessageBox.critical(self, 'error', 'encoding failed\n{}'.format(err))
 
     def merge_all_clips(self):
-        if self.clip_model.rowCount() < 1:
-            return
-
-        tmp_list_file_name = 'tmp_list.txt'
-        with open(tmp_list_file_name, 'w') as tmp_list_file:
-            for r in range(self.clip_model.rowCount()):
-                path = self.clip_model.item(r, column_def['path']).text()
-                tmp_list_file.write("file '{}'\n".format(path))
-        merged_file = 'con_' + os.path.basename(self.src_path())
-
-        command = 'ffmpeg -f concat -safe 0 -i {} -c copy "{}" -y'.format(tmp_list_file_name, merged_file)
-        subprocess.check_output(command)
-        os.remove(tmp_list_file_name)
+        model_clip_paths = [self.clip_model.item(r, column_def['path']).text() for r in range(self.clip_model.rowCount())]
+        ffmpeg_util.merge_all_clips(self.src_path(), model_clip_paths)
 
     def on_dir_src_clicked(self):
         ui_util.open_path_dir(self.lbl_src_file.text())

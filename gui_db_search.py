@@ -12,7 +12,7 @@ import ui_util
 from db_util import DB
 
 form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_db_search.ui")[0]
-column_def = {'no': 0, 'disk': 1, 'rate': 2, 'desc': 3, 'open': 4, 'dir': 5, 'del db': 6, 'location': 7}
+column_def = {'no': 0, 'disk': 1, 'size': 2, 'rate': 3, 'desc': 4, 'open': 5, 'dir': 6, 'del db': 7, 'location': 8}
 
 
 class MainWindow(QMainWindow, form_class):
@@ -79,6 +79,7 @@ class MainWindow(QMainWindow, form_class):
             self.model.setItem(row, column_def['rate'], QtGui.QStandardItem(p.rate))
             self.model.setItem(row, column_def['desc'], QtGui.QStandardItem(p.desc))
             self.model.setItem(row, column_def['location'], QtGui.QStandardItem(p.location))
+            self.model.setItem(row, column_def['size'], QtGui.QStandardItem(p.size))
 
             if is_disk_online:
                 self.add_btn_at_result(row, column_def['open'], 'open', 60, self.on_result_open_file_clciekd)

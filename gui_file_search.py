@@ -16,7 +16,7 @@ from db_util import DB, Product
 
 # form_class = uic.loadUiType("./resource/gui_file_search.ui")[0]
 form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_file_search.ui")[0]
-column_def = {'checkbox': 0, 'dir': 1, 'open': 2, 'del': 3, 'clip': 4, 'copy name': 5, 'size': 6, 'path': 7}
+column_def = {'checkbox': 0, 'dir': 1, 'open': 2, 'del': 3, 'capture': 4, 'clip': 5, 'copy name': 6, 'size': 7, 'path': 8}
 
 
 class MainWindow(QMainWindow, form_class):
@@ -66,15 +66,17 @@ class MainWindow(QMainWindow, form_class):
         else:
             event.ignore()
 
-    def update_result(self, files):
+    def update_result(self, file_infos):
         self.model.clear()
-        for f in files:
+        for fi in file_infos:
+            path = fi.path
+            size = fi.size
             row = self.model.rowCount()
 
-            size_item = QtGui.QStandardItem(format(os.path.getsize(f) / 1000, ','))
+            size_item = QtGui.QStandardItem(size)
             size_item.setTextAlignment(Qt.AlignRight)
             self.model.setItem(row, column_def['size'], size_item)
-            self.model.setItem(row, column_def['path'], QtGui.QStandardItem(f))
+            self.model.setItem(row, column_def['path'], QtGui.QStandardItem(path))
 
             chk_box = QCheckBox(self.tbl_search_result)
             chk_box.setText('')
@@ -100,11 +102,17 @@ class MainWindow(QMainWindow, form_class):
             btn_delete_file.clicked.connect(self.on_del_file_clicked)
             self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['del']), btn_delete_file)
 
-            btn_open_ffmpeg = QPushButton()
-            btn_open_ffmpeg.setText('clip')
-            btn_open_ffmpeg.setFixedWidth(btn_w)
-            btn_open_ffmpeg.clicked.connect(self.on_open_ffmpeg_clicked)
-            self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['clip']), btn_open_ffmpeg)
+            btn_open_capture_tool = QPushButton()
+            btn_open_capture_tool.setText('capture')
+            btn_open_capture_tool.setFixedWidth(btn_w + 20)
+            btn_open_capture_tool.clicked.connect(self.on_open_capture_tool_clicked)
+            self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['capture']), btn_open_capture_tool)
+
+            btn_open_clip_tool = QPushButton()
+            btn_open_clip_tool.setText('clip')
+            btn_open_clip_tool.setFixedWidth(btn_w)
+            btn_open_clip_tool.clicked.connect(self.on_open_clip_tool_clicked)
+            self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['clip']), btn_open_clip_tool)
 
             btn_copy_name = QPushButton()
             btn_copy_name.setText('copy name')
@@ -168,10 +176,10 @@ class MainWindow(QMainWindow, form_class):
         QMessageBox.information(self, 'info', 'complete results={}'.format(len(self.search_worker.search_results)))
 
     def on_collect_finished(self):
-        results = self.search_worker.search_results
-        for f in results:
+        file_infos = self.search_worker.search_results
+        for fi in file_infos:
             # prod_id, actor, desc, rating, location, tags = self.parse_filename(f)
-            parsed = self.parse_filename(f)
+            parsed = self.parse_filename(fi)
             # for p in parsed:
             # print('p_id={}, desc={}, rate={}, disk={}, loc={}'.format(*parsed))
             self.db.update_product(parsed)
@@ -198,11 +206,16 @@ class MainWindow(QMainWindow, form_class):
         if ui_util.delete_path(self, path):
             self.model.removeRow(row)
 
-    def on_open_ffmpeg_clicked(self):
-        # w = gui_ffmpeg.MainWindow(self, self.get_selected_path(self.sender()))
-        # w.show()
-        command = 'pythonw gui_clip_tool.py "{}"'.format(self.get_selected_path(self.sender()))
-        os.system(command)
+    def on_open_capture_tool_clicked(self):
+        command = 'pythonw c:/__devroot/utils/gui_capture_tool.py "{}"'.format(self.get_selected_path(self.sender()))
+        # this is not call on pycharm debug mode : don't know why, os.command(command) is fine but has pyqt -> pyqt problem
+        subprocess.Popen(command)
+
+    def on_open_clip_tool_clicked(self):
+        # command = 'pythonw gui_clip_tool.py "{}"'.format(self.get_selected_path(self.sender()))
+        # os.system(command)
+        command = 'pythonw c:/__devroot/utils/gui_clip_tool.py "{}"'.format(self.get_selected_path(self.sender()))
+        subprocess.Popen(command)
 
     def on_copy_name_clicked(self):
         path_col = column_def['path']
@@ -248,7 +261,9 @@ class MainWindow(QMainWindow, form_class):
         src_dir = self.txt_selected_src_dir.text()
         self.collect_req.emit('.', src_dir)
 
-    def parse_filename(self, path):
+    def parse_filename(self, file_info):
+        path = file_info.path
+
         drive_volume = win32api.GetVolumeInformation(os.path.splitdrive(path)[0] + '/')
         filename = os.path.basename(path)
 
@@ -261,7 +276,7 @@ class MainWindow(QMainWindow, form_class):
         disk_name = drive_volume[0]
         location = path
 
-        return Product(product_no, desc, rate, disk_name, location)
+        return Product(product_no, desc, rate, disk_name, location, file_info.size)
 
     def get_table_row(self, widget):
         return self.tbl_search_result.indexAt(widget.pos()).row()
@@ -342,7 +357,7 @@ class SearchWorker(QObject):
                         if full_path.endswith(SYMLINK_SUFFIX):
                             print('ignore symlink file ' + full_path)
                             continue
-                        founds.append(full_path.replace('/', '\\'))  # for windows cmd call
+                        founds.append(FileInfo(full_path.replace('/', '\\'), format(os.path.getsize(full_path) / 1000, ',')))  # for windows cmd call
                         # print(full_path + ", size=" + format(os.path.getsize(full_path) / 1000, ','))
         return founds
 

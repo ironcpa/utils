@@ -8,6 +8,9 @@ import fnmatch
 import stat
 from symlink import *
 import subprocess
+import collections
+
+FileInfo = collections.namedtuple('FileInfo', ['path', 'size'])
 
 
 def get_file_size(file):

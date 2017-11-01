@@ -41,10 +41,15 @@ def kill_same_script():
                 p.kill()
 
 
+def copy_to_clipboard(text):
+    QApplication.clipboard().setText(text)
+
+
+def focus_to_text(lineedit):
+    lineedit.setFocus()
+    lineedit.selectAll()
+
+
 def catch_exceptions(self, t, val, tb):
     QMessageBox.critical(None, 'exception', '{}'.format(t))
     old_hook(t, val, tb)
-
-
-def copy_to_clipboard(text):
-    QApplication.clipboard().setText(text)

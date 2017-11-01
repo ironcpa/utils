@@ -37,6 +37,8 @@ class MainWindow(QMainWindow, form_class):
         key = event.key()
         if key == Qt.Key_Return:
             self.search_db()
+        elif key == Qt.Key_Escape:
+            ui_util.focus_to_text(self.txt_search)
         else:
             event.ignore()
 

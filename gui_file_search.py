@@ -63,6 +63,8 @@ class MainWindow(QMainWindow, form_class):
         key = event.key()
         if key == Qt.Key_Return:
             self.on_search_dir_clicked()
+        elif key == Qt.Key_Escape:
+            ui_util.focus_to_txt(self.txt_search_text)
         else:
             event.ignore()
 

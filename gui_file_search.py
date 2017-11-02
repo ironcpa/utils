@@ -187,6 +187,7 @@ class MainWindow(QMainWindow, form_class):
             # print('p_id={}, desc={}, rate={}, disk={}, loc={}'.format(*parsed))
             self.db.update_product(parsed)
         self.enable_req_buttons(True)
+        QMessageBox.information(self, 'info', 'collect finished : {}'.format(len(file_infos)))
 
     def on_select_dir_clicked(self, is_target):
         path = QFileDialog.getExistingDirectory(self, "select directory")

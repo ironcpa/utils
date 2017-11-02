@@ -66,7 +66,7 @@ class DB:
     def search_any_tokens(self, tokens):
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
-            sql, params = self.make_union_sql(['p_no', 'desc', 'rate', 'location'], tokens)
+            sql, params = self.make_union_sql(['p_no', 'desc', 'rate', 'location', 'disk'], tokens)
             cur.execute(sql, tuple(params))
             result = cur.fetchall()
 
@@ -75,7 +75,7 @@ class DB:
     def search_all_tokens(self, tokens):
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
-            sql, params = self.make_all_match_sql(['p_no', 'desc', 'rate', 'location'], tokens)
+            sql, params = self.make_all_match_sql(['p_no', 'desc', 'rate', 'location', 'disk'], tokens)
             print(sql)
             cur.execute(sql, tuple(params))
             result = cur.fetchall()

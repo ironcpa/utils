@@ -8,9 +8,28 @@ import time
 MIN_BRAND_LEN = 2
 REMOVE_STRS = ["[Thz.la]",
                "[thz.la]",
-               "21bt.net-"
+               "[HD]",
+               "[FHD]",
+               "21bt.net-",
+               "-AV9.CC",
+               "99BT工厂-",
+               "www.u-15.info-",
+               "www.youiv.net-",
+               "3xplanet_",
+               "206.108.51.3-",
+               "206.108.51.2-",
+               "5032.ifei.com.tw-",
+               "avbtdown.com-",
+               "www.av-9.cc-",
+               "javfile.org_",
+               "javbo.net_",
+               "big-cup.tv-",
                "1203-javbo.net_",
+               "youiv.net-"
               ]
+REMOVE_STRS_3PLENET = ['{:03d}_'.format(x) + '3xplanet_' for x in range(1, 100)]
+REMOVE_STRS.extend(REMOVE_STRS_3PLENET)
+
 TIME_FORMAT = '%Y%m%d-%H%M%S'
 
 
@@ -55,18 +74,24 @@ def make_valid_product_name(src_name):
     brand = src_name[0:num_pos].lower()
     number_n_other = src_name[num_pos:]
 
+    # 20171102
+    if len(brand) > 0 and brand[0] == '-':
+        brand = brand[1:]
+
     if brand.endswith('-'):
+        return brand + number_n_other
+    elif not number_n_other[0].isdigit():
         return brand + number_n_other
     else:
         return brand + '-' + number_n_other
 
 
 def create_log_name(root_path):
-    return os.path.join(root_path, 'log_' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.txt')
+    return os.path.join(root_path, 'rename_log_' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.txt')
 
 
 def backup_file_name(log_name, old_path, new_path):
-    with open(log_name, 'a') as f:
+    with open(log_name, 'a', encoding='utf-8') as f:
         f.write("{} <- {}\n".format(new_path, old_path))
 
 
@@ -78,11 +103,14 @@ def rename_files(path):
             if file_name.startswith('log'):
                 continue
 
-            new_name = file_name
+            name, ext = os.path.splitext(file_name)
+            new_name = name
 
-            new_name = remove_date_prefix(new_name)
+            if not ('1pon' in name and 'carib' in name):
+                new_name = remove_date_prefix(new_name)
             new_name = remove_unused(new_name)
             new_name = make_valid_product_name(new_name)
+            new_name += ext
 
             if new_name == file_name:
                 continue
@@ -141,8 +169,17 @@ def get_cmd_path_arg(arg):
 
 
 if __name__ == '__main__':
-    test_dir = './test_area'
-    # test_dir = 'c:/__devroot/util/test_area'
-    copy_sample_to_test_area(test_dir)
+    file_name = "The Bourne Identity.mp4"
+    name, ext = os.path.splitext(file_name)
+    new_name = name
+    # if not ('1pon' in file_name and 'carib' in file_name):
+    #     new_name = remove_date_prefix(new_name)
+    # new_name = remove_unused(new_name)
+    new_name = make_valid_product_name(new_name) + ext
+    print(new_name)
 
-    rename_files(test_dir)
+    # test_dir = './test_area'
+    # # test_dir = 'c:/__devroot/util/test_area'
+    # copy_sample_to_test_area(test_dir)
+    #
+    # rename_files(test_dir)

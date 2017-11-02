@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 
 import file_util
@@ -18,11 +19,18 @@ def merge_all_clips(src_path, clip_paths, is_async = False):
     if len(clip_paths) < 1:
         return
 
+    merged_file = os.path.dirname(src_path) + '\\con_' + os.path.basename(src_path)
+
+    if len(clip_paths) == 1:
+        tmp_copy_path = os.path.dirname(src_path) + os.sep + os.path.basename(clip_paths[0])
+        os.rename(clip_paths[0], tmp_copy_path)
+        os.rename(tmp_copy_path, merged_file)
+        return merged_file
+
     tmp_list_file_name = 'tmp_list.txt'
     with open(tmp_list_file_name, 'w') as tmp_list_file:
         for p in clip_paths:
             tmp_list_file.write("file '{}'\n".format(p))
-    merged_file = os.path.dirname(src_path) + '\\con_' + os.path.basename(src_path)
 
     command = 'ffmpeg -f concat -safe 0 -i {} -c copy "{}" -y'.format(tmp_list_file_name, merged_file)
     if is_async:

@@ -55,7 +55,7 @@ class MainWindow(QMainWindow, form_class):
 
         self.load_ini_file()
 
-        if src_dir is not '':
+        if src_dir:
             self.txt_selected_src_dir.setText(src_dir)
 
         self.db = DB()
@@ -65,7 +65,7 @@ class MainWindow(QMainWindow, form_class):
         if key == Qt.Key_Return:
             self.on_search_dir_clicked()
         elif key == Qt.Key_Escape:
-            ui_util.focus_to_txt(self.txt_search_text)
+            ui_util.focus_to_text(self.txt_search_text)
         else:
             event.ignore()
 
@@ -182,7 +182,7 @@ class MainWindow(QMainWindow, form_class):
         file_infos = self.search_worker.search_results
         for fi in file_infos:
             # prod_id, actor, desc, rating, location, tags = self.parse_filename(f)
-            parsed = self.parse_filename(fi)
+            parsed = self.conv_fileinfo_to_product(fi)
             # for p in parsed:
             # print('p_id={}, desc={}, rate={}, disk={}, loc={}'.format(*parsed))
             self.db.update_product(parsed)
@@ -264,7 +264,7 @@ class MainWindow(QMainWindow, form_class):
         src_dir = self.txt_selected_src_dir.text()
         self.collect_req.emit('.', src_dir)
 
-    def parse_filename(self, file_info):
+    def conv_fileinfo_to_product(self, file_info):
         path = file_info.path
 
         drive_volume = win32api.GetVolumeInformation(os.path.splitdrive(path)[0] + '/')
@@ -279,7 +279,7 @@ class MainWindow(QMainWindow, form_class):
         disk_name = drive_volume[0]
         location = path
 
-        return Product(product_no, desc, rate, disk_name, location, file_info.size)
+        return Product(product_no, desc, rate, disk_name, location, file_info.size, file_info.cdate)
 
     def get_table_row(self, widget):
         return self.tbl_search_result.indexAt(widget.pos()).row()
@@ -360,7 +360,7 @@ class SearchWorker(QObject):
                         if full_path.endswith(SYMLINK_SUFFIX):
                             print('ignore symlink file ' + full_path)
                             continue
-                        founds.append(FileInfo(full_path.replace('/', '\\'), file_util.get_file_size(full_path)))  # for windows cmd call
+                        founds.append(FileInfo(full_path.replace('/', '\\'), file_util.get_file_size(full_path), file_util.get_ctime(full_path)))  # for windows cmd call
                         # print(full_path + ", size=" + format(os.path.getsize(full_path) / 1000, ','))
         return founds
 
@@ -385,13 +385,11 @@ old_hook = sys.excepthook
 sys.excepthook = catch_exceptions
 
 if __name__ == "__main__":
+    ui_util.kill_same_script()
+
     app = QApplication(sys.argv)
 
-    src_path = ''
-    print('arg', sys.argv)
-    # if len(sys.argv) > 1 and os.path.isdir(sys.argv[1]):
-    if len(sys.argv) > 1 and os.path.isdir(sys.argv[1]):
-        src_path = sys.argv[1]
+    src_path = file_util.get_cmd_path_arg(sys.argv[1]) if len(sys.argv) > 1 else ''
     mywindow = MainWindow(src_path)
     mywindow.show()
     app.exec_()

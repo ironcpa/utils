@@ -15,7 +15,7 @@ import ffmpeg_util
 import gui_clip_tool
 
 form_class = uic.loadUiType('C:/__devroot/utils/resource/gui_capture_tool.ui')[0]
-cap_col_def = {'time': 0, 'duration': 1, 'del': 2, 'file':3}
+cap_col_def = {'seq':0, 'time': 1, 'duration': 2, 'del': 3, 'file':4}
 
 
 class MainWindow(QMainWindow, form_class):
@@ -135,10 +135,15 @@ class MainWindow(QMainWindow, form_class):
         self.cap_model.setItem(row, cap_col_def['time'], time_item)
 
         if row % 2 == 1:
-            duration = capture_util.get_duration_in_time_form(self.cap_model.item(row-1).text(), time)
+            duration = capture_util.get_duration_in_time_form(self.cap_model.item(row-1, cap_col_def['time']).text(), time)
             duration_item = QtGui.QStandardItem(str(duration))
             duration_item.setFont(font)
-            self.cap_model.setItem(row, cap_col_def['duration'], duration_item)
+            self.cap_model.setItem(row - 1, cap_col_def['duration'], duration_item)
+            self.set_duration_color(capture_util.to_second(duration), duration_item)
+        else:
+            seq_item = QtGui.QStandardItem(str(row // 2 + 1))
+            seq_item.setFont(font)
+            self.cap_model.setItem(row, cap_col_def['seq'], seq_item)
 
         file_item = QtGui.QStandardItem(os.path.basename(cap_path))
         file_item.setData(cap_path)
@@ -156,6 +161,15 @@ class MainWindow(QMainWindow, form_class):
         self.tbl_caps.resizeColumnsToContents()
         self.tbl_caps.resizeRowsToContents()
         self.tbl_caps.scrollToBottom()
+
+    def set_duration_color(self, play_time, item):
+        if play_time > 10 * 60:
+            item.setBackground(QtGui.QBrush(Qt.red))
+            item.setForeground(QtGui.QBrush(Qt.white))
+        elif play_time > 5 * 60:
+            item.setBackground(QtGui.QBrush(Qt.green))
+        elif play_time > 2 * 60:
+            item.setBackground(QtGui.QBrush(Qt.yellow))
 
     def on_item_del_file_clicked(self):
         row = self.get_table_row(self.sender())

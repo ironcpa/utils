@@ -2,7 +2,7 @@ import collections
 import os
 import sqlite3 as sqlite
 
-Product = collections.namedtuple('Product', ['product_no', 'desc', 'rate', 'disk_name', 'location', 'size'])
+Product = collections.namedtuple('Product', ['product_no', 'desc', 'rate', 'disk_name', 'location', 'size', 'cdate'])
 
 
 class DB:
@@ -10,24 +10,26 @@ class DB:
         self.db_file = os.path.dirname(__file__) + '\\data\\product.db'
 
     def update_product(self, product):
+        p = product
+
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
             sql = "select count(*) from product\n"\
-                  "where p_no = ? and disk = ? and location = ? and size = ?"
-            cur.execute(sql, (product.product_no, product.disk_name, product.location, product.size))
+                  "where p_no = ? and disk = ? and location = ? and size = ? and cdate = ?"
+            cur.execute(sql, (p.product_no, p.disk_name, p.location, p.size, p.cdate))
 
             result = cur.fetchone()[0]
 
             if result > 0:
                 sql = "update product\n" \
                       "set desc=?, rate=?\n" \
-                      "where p_no = ? and disk = ? and location = ? and size = ?"
-                cur.execute(sql, (product.desc, product.rate, product.product_no, product.disk_name, product.location, product.size))
+                      "where p_no = ? and disk = ? and location = ? and size = ? and cdate = ?"
+                cur.execute(sql, (p.desc, p.rate, p.product_no, p.disk_name, p.location, p.size, p.cdate))
                 c.commit()
             else:
-                sql = 'insert into product(p_no, desc, rate, disk, location, size)\n'\
-                      'values(?, ?, ?, ?, ?, ?)'
-                cur.execute(sql, (product.product_no, product.desc, product.rate, product.disk_name, product.location, product.size))
+                sql = 'insert into product(p_no, desc, rate, disk, location, size, cdate)\n'\
+                      'values(?, ?, ?, ?, ?, ?, ?)'
+                cur.execute(sql, (p.product_no, p.desc, p.rate, p.disk_name, p.location, p.size, p.cdate))
                 c.commit()
 
     def to_product(self, db_rows):
@@ -38,8 +40,8 @@ class DB:
 
     def search(self, text, is_all_match = False):
         # # test
-        # return [Product('aaa-123', 'ddd', 'xxx', 'disk', 'c:/aaa.txt', '10.00'),
-        #         Product('bbb-456', 'bbb', 'xxx', 'disk', 'c:/aaa.txt', '5.00')]
+        # return [Product('aaa-123', 'ddd', 'xxx', 'disk', 'c:/aaa.txt', '10.00', '2017-07-11'),
+        #         Product('bbb-456', 'bbb', 'xxx', 'disk', 'c:/aaa.txt', '5.00', '2017-08-01aa)]
 
         if text == '':
             return self.search_all()
@@ -87,7 +89,7 @@ class DB:
             for j, t in enumerate(tokens):
                 if not(i == 0 and j == 0):
                     sql += "union\n"
-                sql += "select p_no, desc, rate, disk, location, size from product\n" \
+                sql += "select p_no, desc, rate, disk, location, size, cdate from product\n" \
                        "where {} like ?\n".format(f)
             for t in tokens:
                 params.append('%' + t + '%')
@@ -96,7 +98,7 @@ class DB:
         return sql, params
 
     def make_all_match_sql(self, target_fields, tokens):
-        sql = "select p_no, desc, rate, disk, location, size from product\n" \
+        sql = "select p_no, desc, rate, disk, location, size, cdate from product\n" \
               "where "
         params = []
         for i, f in enumerate(target_fields):
@@ -113,7 +115,7 @@ class DB:
     def search_all(self):
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
-            sql = "select p_no, desc, rate, disk, location, size from product limit 100"
+            sql = "select p_no, desc, rate, disk, location, size, cdate from product limit 100"
             cur.execute(sql)
             result = cur.fetchall()
 

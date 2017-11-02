@@ -2,6 +2,7 @@
 import os
 import shutil
 import datetime
+import time
 
 
 MIN_BRAND_LEN = 2
@@ -10,6 +11,7 @@ REMOVE_STRS = ["[Thz.la]",
                "21bt.net-"
                "1203-javbo.net_",
               ]
+TIME_FORMAT = '%Y%m%d-%H%M%S'
 
 
 def remove_unused(src_name):
@@ -118,6 +120,24 @@ def copy_sample_to_test_area(dst_dir):
 
 def get_file_size(full_path):
     return format(os.path.getsize(full_path) / 1000, ',')
+
+
+def get_ctime(full_path):
+    return time.strftime(TIME_FORMAT, time.localtime(os.path.getctime(full_path)))
+
+
+def is_drive(letter):
+    return len(letter) == 2 and letter[0].isalpha() and letter[1] == ':'
+
+
+def get_cmd_path_arg(arg):
+    # os.path.join 이 cmd에서 C: 로 들어오는 루트 경로를 C:\\로 변환하지 못하는 문제 해결 
+    # join('C:', os.sep) 로 되지만, 'C:\\aaa', os.sep 는 C: 가 나옴
+    if is_drive(arg):
+        return arg + os.sep
+    elif os.path.isdir(arg):
+        return arg
+    return None
 
 
 if __name__ == '__main__':

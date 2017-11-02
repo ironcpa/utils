@@ -10,7 +10,7 @@ from symlink import *
 import subprocess
 import collections
 
-FileInfo = collections.namedtuple('FileInfo', ['path', 'size'])
+FileInfo = collections.namedtuple('FileInfo', ['path', 'size', 'cdate'])
 
 
 def get_file_size(file):

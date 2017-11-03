@@ -37,6 +37,7 @@ class MainWindow(QMainWindow, form_class):
         self.btn_open_clip_tool.clicked.connect(self.open_clip_tool)
 
         self.btn_del_all.clicked.connect(self.del_all_capture_files)
+        self.btn_recapture.clicked.connect(self.recapture_all)
 
         self.cap_model = QtGui.QStandardItemModel(0, len(cap_col_def))
         self.tbl_caps.setModel(self.cap_model)
@@ -187,6 +188,30 @@ class MainWindow(QMainWindow, form_class):
                 ui_util.send2trash(path)
         self.load_rel_caps()
 
+    def recapture_all(self):
+        if self.cap_model.rowCount() == 0:
+            return
+
+        o_start = capture_util.to_second(self.cap_model.item(0, cap_col_def['time']).text())
+        n_start = capture_util.to_second(self.txt_new_start_time.text().replace(' ', ''))
+        offset_sec = n_start - o_start
+
+        if o_start + offset_sec < 0:
+            QMessageBox.warning(self, 'warning', 'start time is under zero')
+            return
+
+        ok = QMessageBox.question(self, 'alert', 'Sure to delete all old captures?', QMessageBox.Yes, QMessageBox.No)
+        if ok != QMessageBox.Yes:
+            return
+
+        for r in range(self.cap_model.rowCount()):
+            o_time = self.cap_model.item(r, cap_col_def['time']).text()
+            n_time = capture_util.second_to_time_from(capture_util.to_second(o_time) + offset_sec)
+            ui_util.send2trash(self.cap_model.item(r, cap_col_def['file']).data())
+            ffmpeg_util.capture(self.src_path(), n_time, 'recap', self.cap_dir())
+
+        self.load_rel_caps()
+
     def get_path_on_widget(self, widget):
         return self.cap_model.item(self.get_table_row(widget), cap_col_def['file']).data()
 
@@ -198,7 +223,7 @@ class MainWindow(QMainWindow, form_class):
 
     def on_item_del_file_clicked(self):
         row = self.get_table_row(self.sender())
-        if ui_util.delete_path(self.get_path_on_widget(self.sender())):
+        if ui_util.delete_path(self, self.get_path_on_widget(self.sender())):
             self.cap_model.removeRow(row)
 
 

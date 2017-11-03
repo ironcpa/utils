@@ -5,6 +5,8 @@ import subprocess
 
 import file_util
 
+START_TIME_PAD = 1
+
 
 def get_time(cap_path):
     # need to have validation
@@ -59,14 +61,16 @@ def create_clips_from_captures(src_path, cap_dir, clip_dir, sort_by_time):
     ffmpeg_cmd = 'ffmpeg -i "{}" -ss {} -to {} -c copy "{}" -y'
     for i, t in enumerate(times):
         if i % 2 == 1:
-            start_time = '{:06d}'.format(int(times[i - 1]) - 1)
+            s = times[i - 1]
+            start_pad = START_TIME_PAD if int(s) > 0 else 0
+            start_time = '{:06d}'.format(int(s) - start_pad)
             end_time = t
             out_file = 'clip_{}_{}_{}{}'.format(src_name, start_time, end_time, src_ext)
             out_clip_path = os.path.join(clip_dir, out_file)
 
             command = ffmpeg_cmd.format(src_path, to_time_form(start_time), to_time_form(end_time), out_clip_path)
             print(command)
-            subprocess.Popen(command.format(src_path, times[i - 1], t, out_clip_path))
+            subprocess.Popen(command.format(src_path, s, t, out_clip_path))
             # subprocess.check_output(command.format(src_path, times[i - 1], t, out_clip_path))
 
 

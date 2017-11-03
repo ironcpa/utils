@@ -38,6 +38,7 @@ class MainWindow(QMainWindow, form_class):
         self.btn_to_start_time.clicked.connect(self.copy_end_to_start_time)
         self.btn_to_end_time.clicked.connect(self.copy_start_to_end_time)
         self.btn_reload.clicked.connect(self.load_rel_clips)
+        self.btn_del_all.clicked.connect(self.delete_all_clips)
 
         self.clip_model = QtGui.QStandardItemModel(0, len(column_def))
         self.tbl_clip_result.setModel(self.clip_model)
@@ -64,6 +65,14 @@ class MainWindow(QMainWindow, form_class):
         for i in ffmpeg_util.get_clip_infos(clip_dir, fname):
             self.add_clip_result(i[0], i[1])
         self.show_total_clip_size()
+
+    def delete_all_clips(self):
+        ok = QMessageBox.question(self, 'alert', 'Sure to delete all?', QMessageBox.Yes, QMessageBox.No)
+        if ok == QMessageBox.Yes:
+            for r in range(self.clip_model.rowCount()):
+                path = self.clip_model.item(r, column_def['path']).text()
+                ui_util.send2trash(path)
+        self.load_rel_clips()
 
     def show_total_clip_size(self):
         total = 0

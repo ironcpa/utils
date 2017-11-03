@@ -32,11 +32,19 @@ def merge_all_clips(src_path, clip_paths, is_async = False):
         for p in clip_paths:
             tmp_list_file.write("file '{}'\n".format(p))
 
-    command = 'ffmpeg -f concat -safe 0 -i {} -c copy "{}" -y'.format(tmp_list_file_name, merged_file)
+    cmd = 'ffmpeg -f concat -safe 0 -i {} -c copy "{}" -y'.format(tmp_list_file_name, merged_file)
     if is_async:
-        subprocess.Popen(command)
+        subprocess.Popen(cmd)
     else:
-        subprocess.check_output(command)
+        subprocess.check_output(cmd)
     os.remove(tmp_list_file_name)
 
     return merged_file
+
+
+def capture(src_path, time_form, recap_tag, out_dir):
+    # based on pot player capture format
+    out_path = '{}\\{}_{}_{}.000.jpg'.format(out_dir, os.path.basename(src_path), recap_tag, time_form.replace(':', ''))
+    cmd = 'ffmpeg -ss {} -i "{}" -vframes 1 -q:v 2 "{}" -y'.format(time_form, src_path, out_path)
+    print(cmd)
+    subprocess.Popen(cmd)

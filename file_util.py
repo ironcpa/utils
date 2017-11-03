@@ -34,6 +34,9 @@ TIME_FORMAT = '%Y%m%d-%H%M%S'
 
 
 def remove_unused(src_name):
+    if src_name.endswith('4M'):
+        return src_name
+
     new_name = src_name
     for rs in REMOVE_STRS:
         if src_name.find(rs) >= 0:

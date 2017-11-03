@@ -49,6 +49,13 @@ class MainWindow(QMainWindow, form_class):
         # self.txt_start_time.setText('000000')
         # self.txt_end_time.setText('000010')
 
+        ui_util.load_settings(self, 'clip_tool')
+
+    def closeEvent(self, e: QtGui.QCloseEvent):
+        ui_util.save_settings(self, 'clip_tool')
+
+        e.accept()
+
     def src_path(self):
         return self.lbl_src_file.text()
 

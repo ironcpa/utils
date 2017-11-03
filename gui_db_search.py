@@ -33,6 +33,13 @@ class MainWindow(QMainWindow, form_class):
 
         self.db = DB()
 
+        ui_util.load_settings(self, 'db_search')
+
+    def closeEvent(self, e: QtGui.QCloseEvent):
+        ui_util.save_settings(self, 'db_search')
+
+        e.accept()
+
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
         if key == Qt.Key_Return:

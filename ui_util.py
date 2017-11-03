@@ -4,6 +4,7 @@ import psutil
 import subprocess
 
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication, QPushButton
+from PyQt5.QtCore import QSettings, QPoint
 from send2trash import send2trash
 
 import file_util
@@ -58,6 +59,15 @@ def add_button_on_tableview(tableview, row, col, label, font, width, slot):
         button.setFont(font)
     button.clicked.connect(slot)
     tableview.setIndexWidget(tableview.model().index(row, col), button)
+
+
+def load_settings(self, app_name):
+    self.settings = QSettings('hjchoi', 'util')
+    self.move(self.settings.value(app_name + '_pos', QPoint(0, 0)))
+
+
+def save_settings(self, app_name):
+    self.settings.setValue(app_name + '_pos', self.pos())
 
 
 def catch_exceptions(self, t, val, tb):

@@ -58,6 +58,13 @@ class MainWindow(QMainWindow, form_class):
         if self.sync_on():
             self.sync_timer.start(self.sync_miliseconds())
 
+        ui_util.load_settings(self, 'capture_tool')
+
+    def closeEvent(self, e: QtGui.QCloseEvent):
+        ui_util.save_settings(self, 'capture_tool')
+
+        e.accept()
+
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
         modifiers = QApplication.keyboardModifiers()

@@ -87,10 +87,10 @@ class MainWindow(QMainWindow, form_class):
             self.model.setItem(row, column_def['date'], QtGui.QStandardItem(p.cdate))
 
             if is_disk_online:
-                self.add_btn_at_result(row, column_def['open'], 'open', 60, self.on_result_open_file_clciekd)
-                self.add_btn_at_result(row, column_def['dir'], 'dir', 60, self.on_result_open_dir_clciekd)
-                self.add_btn_at_result(row, column_def['del file'], 'del file', 100, self.on_result_del_file_clicked)
-            self.add_btn_at_result(row, column_def['del db'], 'del db', 80, self.on_result_delete_row_clicked)
+                ui_util.add_button_on_tableview(self.tbl_result, row, column_def['open'], 'open', 60, self.on_result_open_file_clciekd)
+                ui_util.add_button_on_tableview(self.tbl_result, row, column_def['dir'], 'dir', 60, self.on_result_open_dir_clciekd)
+                ui_util.add_button_on_tableview(self.tbl_result, row, column_def['del file'], 'del file', 100, self.on_result_del_file_clicked)
+            ui_util.add_button_on_tableview(self.tbl_result, row, column_def['del db'], 'del db', 80, self.on_result_delete_row_clicked)
 
         self.tbl_result.resizeColumnsToContents()
         self.tbl_result.resizeRowsToContents()
@@ -98,13 +98,6 @@ class MainWindow(QMainWindow, form_class):
 
     def filter_result(self):
         self.product_filter_model.setFilterRegExp(self.get_search_text())
-
-    def add_btn_at_result(self, row, col, label, width, slot):
-        button = QPushButton()
-        button.setText(label)
-        button.setFixedWidth(width)
-        button.clicked.connect(slot)
-        self.tbl_result.setIndexWidget(self.model.index(row, col), button)
 
     def get_path_on_row(self, widget):
         disk_label = self.get_text_on_table_widget(widget, column_def['disk'])

@@ -15,7 +15,7 @@ import ffmpeg_util
 import gui_clip_tool
 
 form_class = uic.loadUiType('C:/__devroot/utils/resource/gui_capture_tool.ui')[0]
-cap_col_def = {'seq':0, 'time': 1, 'duration': 2, 'del': 3, 'file':4}
+cap_col_def = {'seq':0, 'time': 1, 'duration': 2, 'dir':3, 'open':4, 'del': 5, 'file':6}
 
 
 class MainWindow(QMainWindow, form_class):
@@ -150,13 +150,9 @@ class MainWindow(QMainWindow, form_class):
         file_item.setFont(font)
         self.cap_model.setItem(row, cap_col_def['file'], file_item)
 
-        btn_w = 60
-
-        btn_delete_file = QPushButton()
-        btn_delete_file.setText('delete')
-        btn_delete_file.setFixedWidth(btn_w)
-        btn_delete_file.clicked.connect(self.on_item_del_file_clicked)
-        self.tbl_caps.setIndexWidget(self.cap_model.index(row, cap_col_def['del']), btn_delete_file)
+        ui_util.add_button_on_tableview(self.tbl_caps, row, cap_col_def['dir'], 'dir', 60, self.on_item_dir_file_clicked)
+        ui_util.add_button_on_tableview(self.tbl_caps, row, cap_col_def['open'], 'open', 60, self.on_item_open_file_clicked)
+        ui_util.add_button_on_tableview(self.tbl_caps, row, cap_col_def['del'], 'del', 60, self.on_item_del_file_clicked)
 
         self.tbl_caps.resizeColumnsToContents()
         self.tbl_caps.resizeRowsToContents()
@@ -171,10 +167,18 @@ class MainWindow(QMainWindow, form_class):
         elif play_time > 2 * 60:
             item.setBackground(QtGui.QBrush(Qt.yellow))
 
+    def get_path_on_widget(self, widget):
+        return self.cap_model.item(self.get_table_row(widget), cap_col_def['file']).data()
+
+    def on_item_dir_file_clicked(self):
+        ui_util.open_path_dir(self.get_path_on_widget(self.sender()))
+
+    def on_item_open_file_clicked(self):
+        ui_util.open_path(self.get_path_on_widget(self.sender()))
+
     def on_item_del_file_clicked(self):
         row = self.get_table_row(self.sender())
-        path = self.cap_model.item(row, cap_col_def['file']).data()
-        if ui_util.delete_path(self, path):
+        if ui_util.delete_path(self.get_path_on_widget(self.sender())):
             self.cap_model.removeRow(row)
 
 

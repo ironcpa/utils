@@ -3,7 +3,7 @@ import sys
 import psutil
 import subprocess
 
-from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication
+from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication, QPushButton
 from send2trash import send2trash
 
 import file_util
@@ -48,6 +48,14 @@ def copy_to_clipboard(text):
 def focus_to_text(lineedit):
     lineedit.setFocus()
     lineedit.selectAll()
+
+
+def add_button_on_tableview(tableview, row, col, label, width, slot):
+    button = QPushButton()
+    button.setText(label)
+    button.setFixedWidth(width)
+    button.clicked.connect(slot)
+    tableview.setIndexWidget(tableview.model().index(row, col), button)
 
 
 def catch_exceptions(self, t, val, tb):

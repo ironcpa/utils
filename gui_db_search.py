@@ -3,6 +3,7 @@
 import os
 import sys
 import win32api
+import subprocess
 
 from PyQt5 import uic, QtGui, QtCore
 from PyQt5.QtWidgets import *
@@ -12,7 +13,7 @@ import ui_util
 from db_util import DB
 
 form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_db_search.ui")[0]
-column_def = {'no': 0, 'disk': 1, 'size': 2, 'date': 3, 'rate': 4, 'desc': 5, 'open': 6, 'dir': 7, 'del file': 8, 'del db': 9, 'location': 10}
+column_def = {'no': 0, 'disk': 1, 'size': 2, 'date': 3, 'rate': 4, 'desc': 5, 'open': 6, 'dir': 7, 'tool':8 ,'del file': 9, 'del db': 10, 'location': 11}
 
 
 class MainWindow(QMainWindow, form_class):
@@ -94,10 +95,11 @@ class MainWindow(QMainWindow, form_class):
             self.model.setItem(row, column_def['date'], QtGui.QStandardItem(p.cdate))
 
             if is_disk_online:
-                ui_util.add_button_on_tableview(self.tbl_result, row, column_def['open'], 'open', 60, self.on_result_open_file_clciekd)
-                ui_util.add_button_on_tableview(self.tbl_result, row, column_def['dir'], 'dir', 60, self.on_result_open_dir_clciekd)
-                ui_util.add_button_on_tableview(self.tbl_result, row, column_def['del file'], 'del file', 100, self.on_result_del_file_clicked)
-            ui_util.add_button_on_tableview(self.tbl_result, row, column_def['del db'], 'del db', 80, self.on_result_delete_row_clicked)
+                ui_util.add_button_on_tableview(self.tbl_result, row, column_def['open'], 'open', None, 60, self.on_result_open_file_clciekd)
+                ui_util.add_button_on_tableview(self.tbl_result, row, column_def['dir'], 'dir', None, 60, self.on_result_open_dir_clciekd)
+                ui_util.add_button_on_tableview(self.tbl_result, row, column_def['tool'], 'tool', None, 60, self.on_result_open_tool_clciekd)
+                ui_util.add_button_on_tableview(self.tbl_result, row, column_def['del file'], 'del file', None, 100, self.on_result_del_file_clicked)
+            ui_util.add_button_on_tableview(self.tbl_result, row, column_def['del db'], 'del db', None, 80, self.on_result_delete_row_clicked)
 
         self.tbl_result.resizeColumnsToContents()
         self.tbl_result.resizeRowsToContents()
@@ -120,6 +122,10 @@ class MainWindow(QMainWindow, form_class):
 
     def on_result_open_dir_clciekd(self):
         ui_util.open_path_dir(self.get_path_on_row(self.sender()))
+
+    def on_result_open_tool_clciekd(self):
+        command = 'pythonw c:/__devroot/utils/gui_capture_tool.py "{}"'.format(self.get_path_on_row(self.sender()))
+        subprocess.Popen(command)
 
     def on_result_del_file_clicked(self):
         ui_util.delete_path(self, self.get_path_on_row(self.sender()))

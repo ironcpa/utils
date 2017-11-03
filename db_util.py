@@ -7,7 +7,7 @@ Product = collections.namedtuple('Product', ['product_no', 'desc', 'rate', 'disk
 
 class DB:
     def __init__(self):
-        self.db_file = os.path.dirname(__file__) + '\\data\\product.db'
+        self.db_file = os.path.dirname(__file__) + '\\data\\product_real.db'
 
     def update_product(self, product):
         p = product

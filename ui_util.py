@@ -50,10 +50,12 @@ def focus_to_text(lineedit):
     lineedit.selectAll()
 
 
-def add_button_on_tableview(tableview, row, col, label, width, slot):
+def add_button_on_tableview(tableview, row, col, label, font, width, slot):
     button = QPushButton()
     button.setText(label)
     button.setFixedWidth(width)
+    if font is not None:
+        button.setFont(font)
     button.clicked.connect(slot)
     tableview.setIndexWidget(tableview.model().index(row, col), button)
 

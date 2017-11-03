@@ -36,6 +36,8 @@ class MainWindow(QMainWindow, form_class):
         self.btn_merge.clicked.connect(self.make_direct_merge)
         self.btn_open_clip_tool.clicked.connect(self.open_clip_tool)
 
+        self.btn_del_all.clicked.connect(self.del_all_capture_files)
+
         self.cap_model = QtGui.QStandardItemModel(0, len(cap_col_def))
         self.tbl_caps.setModel(self.cap_model)
 
@@ -96,6 +98,15 @@ class MainWindow(QMainWindow, form_class):
         for c in rel_cap_paths:
             self.add_cap_result(c)
 
+        self.show_total_time()
+
+    def show_total_time(self):
+        total_time = 0
+        for r in range(self.cap_model.rowCount()):
+            du_item = self.cap_model.item(r, cap_col_def['duration'])
+            total_time += capture_util.to_second(du_item.text()) if du_item is not None else 0
+        self.lbl_total_time.setText('total time : {}'.format(capture_util.second_to_time_from((total_time))))
+
     def open_src_path(self):
         ui_util.open_path(self.src_path())
 
@@ -109,7 +120,6 @@ class MainWindow(QMainWindow, form_class):
         capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), False)
 
     def make_direct_merge(self):
-        # self.make_clips()
         src_filename = os.path.splitext(os.path.basename(self.src_path()))[0]
         merged_name = ffmpeg_util.merge_all_clips(self.src_path(), ffmpeg_util.get_clip_paths('c:\\__clips\\', src_filename))
         QMessageBox.information(self, 'job', 'merge complete : {}'.format(merged_name))
@@ -150,9 +160,11 @@ class MainWindow(QMainWindow, form_class):
         file_item.setFont(font)
         self.cap_model.setItem(row, cap_col_def['file'], file_item)
 
-        ui_util.add_button_on_tableview(self.tbl_caps, row, cap_col_def['dir'], 'dir', 60, self.on_item_dir_file_clicked)
-        ui_util.add_button_on_tableview(self.tbl_caps, row, cap_col_def['open'], 'open', 60, self.on_item_open_file_clicked)
-        ui_util.add_button_on_tableview(self.tbl_caps, row, cap_col_def['del'], 'del', 60, self.on_item_del_file_clicked)
+        btn_font = font
+        btn_font.setPointSize(14)
+        ui_util.add_button_on_tableview(self.tbl_caps, row, cap_col_def['dir'], 'dir', btn_font, 60, self.on_item_dir_file_clicked)
+        ui_util.add_button_on_tableview(self.tbl_caps, row, cap_col_def['open'], 'open', btn_font, 70, self.on_item_open_file_clicked)
+        ui_util.add_button_on_tableview(self.tbl_caps, row, cap_col_def['del'], 'del', btn_font, 60, self.on_item_del_file_clicked)
 
         self.tbl_caps.resizeColumnsToContents()
         self.tbl_caps.resizeRowsToContents()
@@ -167,6 +179,14 @@ class MainWindow(QMainWindow, form_class):
         elif play_time > 2 * 60:
             item.setBackground(QtGui.QBrush(Qt.yellow))
 
+    def del_all_capture_files(self):
+        ok = QMessageBox.question(self, 'alert', 'Sure to delete all?', QMessageBox.Yes, QMessageBox.No)
+        if ok == QMessageBox.Yes:
+            for r in range(self.cap_model.rowCount()):
+                path = self.cap_model.item(r, cap_col_def['file']).data()
+                ui_util.send2trash(path)
+        self.load_rel_caps()
+
     def get_path_on_widget(self, widget):
         return self.cap_model.item(self.get_table_row(widget), cap_col_def['file']).data()
 
@@ -180,11 +200,6 @@ class MainWindow(QMainWindow, form_class):
         row = self.get_table_row(self.sender())
         if ui_util.delete_path(self.get_path_on_widget(self.sender())):
             self.cap_model.removeRow(row)
-
-
-# def catch_exceptions(self, t, val, tb):
-#     QMessageBox.critical(None, 'exception', '{}'.format(t))
-#     old_hook(t, val, tb)
 
 
 old_hook = sys.excepthook

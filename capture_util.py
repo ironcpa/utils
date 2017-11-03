@@ -11,9 +11,9 @@ def get_time(cap_path):
     return cap_path[-14:][:6]
 
 
-def to_time_form(time):
+def to_time_form(time_str):
     # assumption : time's like '102030'
-    return ':'.join(time[i:i + 2] for i in range(0, len(time), 2))
+    return ':'.join(time_str[i:i + 2] for i in range(0, len(time_str), 2))
 
 
 def second_to_time_from(seconds):

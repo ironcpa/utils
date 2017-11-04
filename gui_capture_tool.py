@@ -32,7 +32,7 @@ class MainWindow(QMainWindow, form_class):
         self.btn_select_cap_dir.clicked.connect(lambda state: self.open_dir_dialog(self.txt_selected_cap_dir))
         self.btn_select_clip_dir.clicked.connect(lambda state: self.open_dir_dialog(self.txt_selected_cap_dir))
 
-        self.btn_make_clips.clicked.connect(self.make_clips)
+        self.btn_make_clips.clicked.connect(self.make_clips_from_model)
         self.btn_merge.clicked.connect(self.make_direct_merge)
         self.btn_open_clip_tool.clicked.connect(self.open_clip_tool)
 
@@ -124,8 +124,20 @@ class MainWindow(QMainWindow, form_class):
     def open_clip_dir(self):
         ui_util.open_path(self.clip_dir())
 
-    def make_clips(self):
-        capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), False)
+    def make_clips_from_files(self):
+        src_dir, src_file = os.path.split(self.src_path())
+        src_name, src_ext = os.path.splitext(src_file)
+        cap_ext = '.jpg'
+
+        product_no = file_util.get_product_no(src_name)
+        captures = [os.path.join(self.cap_dir(), x) for x in os.listdir(self.cap_dir())
+                                    if x.startswith(product_no) and x.endswith(cap_ext)]
+
+        capture_util.create_clips_from_captures2(self.src_path(), self.cap_dir(), self.clip_dir(), captures)
+
+    def make_clips_from_model(self):
+        captures = [self.cap_model.item(r, cap_col_def['file']).data() for r in range(self.cap_model.rowCount())]
+        capture_util.create_clips_from_captures2(self.src_path(), self.cap_dir(), self.clip_dir(), captures)
 
     def make_direct_merge(self):
         src_filename = os.path.splitext(os.path.basename(self.src_path()))[0]

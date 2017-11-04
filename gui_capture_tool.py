@@ -133,11 +133,11 @@ class MainWindow(QMainWindow, form_class):
         captures = [os.path.join(self.cap_dir(), x) for x in os.listdir(self.cap_dir())
                                     if x.startswith(product_no) and x.endswith(cap_ext)]
 
-        capture_util.create_clips_from_captures2(self.src_path(), self.cap_dir(), self.clip_dir(), captures)
+        capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), captures)
 
     def make_clips_from_model(self):
         captures = [self.cap_model.item(r, cap_col_def['file']).data() for r in range(self.cap_model.rowCount())]
-        capture_util.create_clips_from_captures2(self.src_path(), self.cap_dir(), self.clip_dir(), captures)
+        capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), captures)
 
     def make_direct_merge(self):
         src_filename = os.path.splitext(os.path.basename(self.src_path()))[0]

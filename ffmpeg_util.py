@@ -5,6 +5,7 @@ import shutil
 import subprocess
 
 import file_util
+import capture_util
 
 
 def get_clip_infos(clip_dir, filename):
@@ -15,6 +16,13 @@ def get_clip_infos(clip_dir, filename):
 def get_clip_paths(clip_dir, filename):
     return [clip_dir + x for x in os.listdir(clip_dir)
             if x.startswith('clip_{}'.format(file_util.get_product_no(filename)))]
+
+
+def create_clip(src_path, start_time, end_time, out_clip_path):
+    command = 'ffmpeg -i "{}" -ss {} -to {} -c copy "{}" -y'.format(src_path, capture_util.to_time_form(start_time),
+                                                            capture_util.to_time_form(end_time), out_clip_path)
+    print(command)
+    subprocess.Popen(command)
 
 
 def merge_all_clips(src_path, clip_paths, is_async = False):

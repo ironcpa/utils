@@ -10,6 +10,8 @@ from symlink import *
 import subprocess
 import collections
 
+import file_util
+
 FileInfo = collections.namedtuple('FileInfo', ['path', 'size', 'cdate'])
 
 
@@ -65,7 +67,9 @@ def find_file(root_folder, file_name, ignore_path = None):
                     if full_path.endswith(SYMLINK_SUFFIX):
                         print('ignore symlink file ' + full_path)
                         continue
-                    founds.append(full_path)
+                    founds.append(FileInfo(full_path.replace('/', '\\'), file_util.get_file_size(full_path),
+                                           file_util.get_ctime(full_path)))  # for windows cmd call
+                    # founds.append(full_path)
                     print(full_path + ", size=" + format(os.path.getsize(full_path) / 1000, ','))
     return founds
 

@@ -4,7 +4,25 @@ Windows Registry Editor Version 5.00
 @="&JAV Format Names"
 
 [HKEY_CLASSES_ROOT\Directory\shell\JAV Format Names\command]
-@="\"C:\\__devroot\\utils\\product_no_formatter.bat\" \"%1\""
+@="\"C:\\__devroot\\utils\\context_menu_launcher.bat\" \"format\" \"%1\""
+
+[HKEY_CLASSES_ROOT\Directory\Backgroun\shell\JAV Format Names]
+@="&JAV Format Names"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\JAV Format Names\command]
+@="\"C:\\__devroot\\utils\\context_menu_launcher.bat\" \"format\" \"%V\""
+
+[HKEY_CLASSES_ROOT\Directory\shell\JAV DB Collect]
+@="&JAV DB Collect"
+
+[HKEY_CLASSES_ROOT\Directory\shell\JAV DB Collect\command]
+@="\"C:\\__devroot\\utils\\context_menu_launcher.bat\" \"collect\" \"%1\""
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\JAV DB Collect]
+@="&JAV DB Collect"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\JAV DB Collect\command]
+@="\"C:\\__devroot\\utils\\context_menu_launcher.bat\" \"collect\" \"%V\""
 
 [HKEY_CLASSES_ROOT\Directory\shell\JAV File Search]
 @="&JAV File Search"

@@ -1,13 +1,32 @@
 import collections
 import os
 import sqlite3 as sqlite
+import win32api
 
 Product = collections.namedtuple('Product', ['product_no', 'desc', 'rate', 'disk_name', 'location', 'size', 'cdate'])
 
 
+def conv_fileinfo_to_product(file_info):
+    path = file_info.path
+
+    drive_volume = win32api.GetVolumeInformation(os.path.splitdrive(path)[0] + '/')
+    filename = os.path.basename(path)
+
+    name_only = os.path.splitext(filename)[0]
+    tokens = name_only.split('_')
+
+    product_no = tokens[0]
+    rate = tokens[-1] if tokens[-1] != product_no and tokens[-1].startswith('xx') else ''
+    desc = ' '.join(tokens[1:]).replace(rate, '') if len(tokens) > 1 else ''
+    disk_name = drive_volume[0]
+    location = path
+
+    return Product(product_no, desc, rate, disk_name, location, file_info.size, file_info.cdate)
+
+
 class DB:
     def __init__(self):
-        self.db_file = os.path.dirname(__file__) + '\\data\\product_real.db'
+        self.db_file = os.path.dirname(__file__) + '\\data\\product_using.db'
 
     def update_product(self, product):
         p = product
@@ -31,6 +50,14 @@ class DB:
                       'values(?, ?, ?, ?, ?, ?, ?)'
                 cur.execute(sql, (p.product_no, p.desc, p.rate, p.disk_name, p.location, p.size, p.cdate))
                 c.commit()
+
+    def update_product_w_fileinfos(self, fileinfos):
+        for fi in fileinfos:
+            # prod_id, actor, desc, rating, location, tags = self.parse_filename(f)
+            parsed = conv_fileinfo_to_product(fi)
+            # for p in parsed:
+            # print('p_id={}, desc={}, rate={}, disk={}, loc={}'.format(*parsed))
+            self.update_product(parsed)
 
     def to_product(self, db_rows):
         products = []

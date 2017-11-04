@@ -81,7 +81,8 @@ class MainWindow(QMainWindow, form_class):
             row = self.model.rowCount()
             is_disk_online = self.is_disk_online(p.disk_name)
 
-            self.model.setItem(row, column_def['no'], QtGui.QStandardItem(p.product_no[:10] + '...' if len(p.product_no) > 10 else p.product_no))
+            # self.model.setItem(row, column_def['no'], QtGui.QStandardItem(p.product_no[:15] + '...' if len(p.product_no) > 10 else p.product_no))
+            self.model.setItem(row, column_def['no'], QtGui.QStandardItem(p.product_no))
             disk_item = QtGui.QStandardItem(p.disk_name)
             if is_disk_online:
                 disk_item.setBackground(QtGui.QBrush(Qt.yellow))
@@ -103,6 +104,7 @@ class MainWindow(QMainWindow, form_class):
 
         self.tbl_result.resizeColumnsToContents()
         self.tbl_result.resizeRowsToContents()
+        self.tbl_result.setColumnWidth(0, 150)
         # self.tbl_result.scrollToBottom()
 
     def filter_result(self):

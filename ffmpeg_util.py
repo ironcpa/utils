@@ -4,8 +4,8 @@ import os
 import shutil
 import subprocess
 
+import common_util as co
 import file_util
-import capture_util
 
 
 def get_clip_infos(clip_dir, filename):
@@ -19,8 +19,8 @@ def get_clip_paths(clip_dir, filename):
 
 
 def create_clip(src_path, start_time, end_time, out_clip_path):
-    command = 'ffmpeg -i "{}" -ss {} -to {} -c copy "{}" -y'.format(src_path, capture_util.to_time_form(start_time),
-                                                            capture_util.to_time_form(end_time), out_clip_path)
+    command = 'ffmpeg -i "{}" -ss {} -to {} -c copy "{}" -y'.format(src_path, co.to_time_form(start_time),
+                                                                    co.to_time_form(end_time), out_clip_path)
     print(command)
     subprocess.Popen(command)
 

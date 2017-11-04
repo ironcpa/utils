@@ -55,7 +55,7 @@ Windows Registry Editor Version 5.00
 @="\"C:\\__devenv\\anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_db_search.py\""
 
 [HKEY_CLASSES_ROOT\*\shell\JAV Clip Tool]
-@="&JAV Clip Clip"
+@="&JAV Clip Tool"
 
 [HKEY_CLASSES_ROOT\*\shell\JAV Clip Tool\command]
 @="\"C:\\__devenv\\anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_clip_tool.py\" \"%1\""

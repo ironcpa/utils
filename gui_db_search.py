@@ -148,7 +148,6 @@ class MainWindow(QMainWindow, form_class):
 old_hook = sys.excepthook
 sys.excepthook = ui_util.catch_exceptions
 
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 

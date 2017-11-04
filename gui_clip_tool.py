@@ -262,14 +262,8 @@ class MainWindow(QMainWindow, form_class):
         return self.clip_model.item(row, column_def['path']).text()
 
 
-def catch_exceptions(self, t, val, tb):
-    QMessageBox.critical(None, 'exception', '{}'.format(t))
-    old_hook(t, val, tb)
-
-
 old_hook = sys.excepthook
-sys.excepthook = catch_exceptions
-
+sys.excepthook = ui_util.catch_exceptions
 
 if __name__ == "__main__":
     ui_util.kill_same_script()

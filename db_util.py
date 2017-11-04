@@ -3,7 +3,8 @@ import os
 import sqlite3 as sqlite
 import win32api
 
-Product = collections.namedtuple('Product', ['product_no', 'desc', 'rate', 'disk_name', 'location', 'size', 'cdate'])
+import common_util as cu
+from common_util import Product
 
 
 def conv_fileinfo_to_product(file_info):
@@ -158,7 +159,3 @@ class DB:
             result = cur.fetchall()
 
             return self.to_product(result)
-
-    def better_filename(self, product):
-        p = product
-        return '{}_{}_{}'.format(p.p_no, p.desc.replace(' ', '_'), p.rate)

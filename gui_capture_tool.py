@@ -8,11 +8,11 @@ from PyQt5 import uic, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
+import common_util as co
 import capture_util
 import ui_util
 import file_util
 import ffmpeg_util
-import gui_clip_tool
 
 form_class = uic.loadUiType('C:/__devroot/utils/resource/gui_capture_tool.ui')[0]
 cap_col_def = {'seq':0, 'time': 1, 'duration': 2, 'dir':3, 'open':4, 'del': 5, 'file':6}
@@ -112,8 +112,8 @@ class MainWindow(QMainWindow, form_class):
         total_time = 0
         for r in range(self.cap_model.rowCount()):
             du_item = self.cap_model.item(r, cap_col_def['duration'])
-            total_time += capture_util.to_second(du_item.text()) if du_item is not None else 0
-        self.lbl_total_time.setText('total time : {}'.format(capture_util.second_to_time_from((total_time))))
+            total_time += co.to_second(du_item.text()) if du_item is not None else 0
+        self.lbl_total_time.setText('total time : {}'.format(co.second_to_time_from((total_time))))
 
     def open_src_path(self):
         ui_util.open_path(self.src_path())
@@ -157,7 +157,7 @@ class MainWindow(QMainWindow, form_class):
     def add_cap_result(self, cap_path):
         row = self.cap_model.rowCount()
 
-        time = capture_util.to_time_form(capture_util.get_time(cap_path))
+        time = co.to_time_form(co.get_time(cap_path))
         time_item = QtGui.QStandardItem(time)
         font = time_item.font()
         font.setPointSize(20)
@@ -165,11 +165,11 @@ class MainWindow(QMainWindow, form_class):
         self.cap_model.setItem(row, cap_col_def['time'], time_item)
 
         if row % 2 == 1:
-            duration = capture_util.get_duration_in_time_form(self.cap_model.item(row-1, cap_col_def['time']).text(), time)
+            duration = co.get_duration_in_time_form(self.cap_model.item(row - 1, cap_col_def['time']).text(), time)
             duration_item = QtGui.QStandardItem(str(duration))
             duration_item.setFont(font)
             self.cap_model.setItem(row - 1, cap_col_def['duration'], duration_item)
-            self.set_duration_color(capture_util.to_second(duration), duration_item)
+            self.set_duration_color(co.to_second(duration), duration_item)
         else:
             seq_item = QtGui.QStandardItem(str(row // 2 + 1))
             seq_item.setFont(font)
@@ -211,8 +211,8 @@ class MainWindow(QMainWindow, form_class):
         if self.cap_model.rowCount() == 0:
             return
 
-        o_start = capture_util.to_second(self.cap_model.item(0, cap_col_def['time']).text())
-        n_start = capture_util.to_second(self.txt_new_start_time.text().replace(' ', ''))
+        o_start = co.to_second(self.cap_model.item(0, cap_col_def['time']).text())
+        n_start = co.to_second(self.txt_new_start_time.text().replace(' ', ''))
         offset_sec = n_start - o_start
 
         if o_start + offset_sec < 0:
@@ -225,7 +225,7 @@ class MainWindow(QMainWindow, form_class):
 
         for r in range(self.cap_model.rowCount()):
             o_time = self.cap_model.item(r, cap_col_def['time']).text()
-            n_time = capture_util.second_to_time_from(capture_util.to_second(o_time) + offset_sec)
+            n_time = co.second_to_time_from(co.to_second(o_time) + offset_sec)
             ui_util.send2trash(self.cap_model.item(r, cap_col_def['file']).data())
             ffmpeg_util.capture(self.src_path(), n_time, 'recap', self.cap_dir())
 

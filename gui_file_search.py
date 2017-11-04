@@ -343,12 +343,12 @@ class SearchWorker(QObject):
         # print(root_folder)
         for root, dirs, files in os.walk(root_folder):
             # for thread stop
-            if not self.is_working:
-                break
-
             for extension in ('*.avi', '*.wmv', '*.mp4', '*.mpg', '*.asf', '*.mov', '*.mkv', '*.iso'):
                 # for f in files:
                 for f in fnmatch.filter(files, extension):
+                    if not self.is_working:
+                        return founds
+
                     result = rex.search(f)
                     if result:
                         full_path = os.path.join(root, f)

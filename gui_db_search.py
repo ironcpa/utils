@@ -63,6 +63,10 @@ class MainWindow(QMainWindow, form_class):
         row = self.get_table_row(widget)
         return self.model.item(row, col).text()
 
+    def get_data_on_table_widget(self, widget, col):
+        row = self.get_table_row(widget)
+        return self.model.item(row, col).data()
+
     def get_drive(self, disk_label):
         for drive in win32api.GetLogicalDriveStrings().split('\000')[:-1]:
             if disk_label == win32api.GetVolumeInformation(drive)[0]:
@@ -82,7 +86,9 @@ class MainWindow(QMainWindow, form_class):
             is_disk_online = self.is_disk_online(p.disk_name)
 
             # self.model.setItem(row, column_def['no'], QtGui.QStandardItem(p.product_no[:15] + '...' if len(p.product_no) > 10 else p.product_no))
-            self.model.setItem(row, column_def['no'], QtGui.QStandardItem(p.product_no))
+            no_item = QtGui.QStandardItem(p.product_no)
+            no_item.setData(p)
+            self.model.setItem(row, column_def['no'], no_item)
             disk_item = QtGui.QStandardItem(p.disk_name)
             if is_disk_online:
                 disk_item.setBackground(QtGui.QBrush(Qt.yellow))
@@ -130,7 +136,10 @@ class MainWindow(QMainWindow, form_class):
         subprocess.Popen(command)
 
     def on_result_del_file_clicked(self):
-        ui_util.delete_path(self, self.get_path_on_row(self.sender()))
+        s = self
+        if ui_util.delete_path(s, s.get_path_on_row(s.sender())):
+            if s.db.delete_product(s.get_data_on_table_widget(s.sender(), column_def['no'])) == 1:
+                s.model.removeRow(s.get_table_row(s.sender()))
 
     def on_result_delete_row_clicked(self):
         pass

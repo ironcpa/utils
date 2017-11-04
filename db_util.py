@@ -59,6 +59,17 @@ class DB:
             # print('p_id={}, desc={}, rate={}, disk={}, loc={}'.format(*parsed))
             self.update_product(parsed)
 
+    def delete_product(self, product):
+        p = product
+        with sqlite.connect(self.db_file) as c:
+            cur = c.cursor()
+            sql = "delete from product\n" \
+                  "where p_no = ? and disk = ? and location = ? and size = ? and cdate = ?"
+            rows = cur.execute(sql, (p.product_no, p.disk_name, p.location, p.size, p.cdate))
+            c.commit()
+
+            return rows.rowcount
+
     def to_product(self, db_rows):
         products = []
         for r in db_rows:

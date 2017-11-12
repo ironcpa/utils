@@ -32,6 +32,7 @@ class MainWindow(QMainWindow, form_class):
         self.btn_select_cap_dir.clicked.connect(lambda state: self.open_dir_dialog(self.txt_selected_cap_dir))
         self.btn_select_clip_dir.clicked.connect(lambda state: self.open_dir_dialog(self.txt_selected_cap_dir))
 
+        self.btn_make_sample_clips.clicked.connect(self.make_sample_clips_from_model)
         self.btn_make_clips.clicked.connect(self.make_clips_from_model)
         self.btn_merge.clicked.connect(self.make_direct_merge)
         self.btn_open_clip_tool.clicked.connect(self.open_clip_tool)
@@ -139,6 +140,10 @@ class MainWindow(QMainWindow, form_class):
         captures = [self.cap_model.item(r, cap_col_def['file']).data() for r in range(self.cap_model.rowCount())]
         capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), captures)
 
+    def make_sample_clips_from_model(self):
+        captures = [self.cap_model.item(r, cap_col_def['file']).data() for r in range(self.cap_model.rowCount())]
+        capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), captures, 'sample_')
+
     def make_direct_merge(self):
         src_filename = os.path.splitext(os.path.basename(self.src_path()))[0]
         merged_name = ffmpeg_util.merge_all_clips(self.src_path(), ffmpeg_util.get_clip_paths('c:\\__clips\\', src_filename))
@@ -211,13 +216,23 @@ class MainWindow(QMainWindow, form_class):
         if self.cap_model.rowCount() == 0:
             return
 
-        o_start = co.to_second(self.cap_model.item(0, cap_col_def['time']).text())
-        n_start = co.to_second(self.txt_new_start_time.text().replace(' ', ''))
-        offset_sec = n_start - o_start
+        # o_start = co.to_second(self.cap_model.item(0, cap_col_def['time']).text())
+        # n_start = co.to_second(self.txt_new_start_time.text().replace(' ', ''))
+        # offset_sec = n_start - o_start
+        #
+        # if o_start + offset_sec < 0:
+        #     QMessageBox.warning(self, 'warning', 'start time is under zero')
+        #     return
 
-        if o_start + offset_sec < 0:
-            QMessageBox.warning(self, 'warning', 'start time is under zero')
+        offset_str = self.txt_new_start_time.text().replace(' ', '')
+        offset_sec = co.to_second(offset_str[1:])
+
+        if offset_str[0] != '+' and offset_str[0] != '-':
+            QMessageBox.warning(self, 'warning', 'offset seconds need to start with "+" or "-"')
             return
+
+        if offset_str[0] == '-':
+            offset_sec *= -1
 
         ok = QMessageBox.question(self, 'alert', 'Sure to delete all old captures?', QMessageBox.Yes, QMessageBox.No)
         if ok != QMessageBox.Yes:

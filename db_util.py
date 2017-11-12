@@ -71,6 +71,26 @@ class DB:
 
             return rows.rowcount
 
+    def delete_by_disk(self, disk):
+        with sqlite.connect(self.db_file) as c:
+            cur = c.cursor()
+            sql = "delete from product\n" \
+                  "where disk = ?"
+            rows = cur.execute(sql, (disk,))
+            c.commit()
+
+            return rows.rowcount
+
+    def delete_by_dir(self, dir):
+        with sqlite.connect(self.db_file) as c:
+            cur = c.cursor()
+            sql = "delete from product\n" \
+                  "where location like ?"
+            rows = cur.execute(sql, (dir + '%',))
+            c.commit()
+
+            return rows.rowcount
+
     def to_product(self, db_rows):
         products = []
         for r in db_rows:

@@ -403,8 +403,6 @@ if __name__ == "__main__":
         src_file = sys.argv[2]
     elif src_type == 'dir':
         src_dir = sys.argv[2]
-    elif src_type == 'drive':
-        src_dir = sys.argv[2] + os.path.sep
     # src_path = file_util.get_cmd_path_arg(sys.argv[1]) if len(sys.argv) > 1 else ''
     mywindow = MainWindow(src_dir, src_file)
     mywindow.show()

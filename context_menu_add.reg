@@ -24,6 +24,12 @@ Windows Registry Editor Version 5.00
 [HKEY_CLASSES_ROOT\Directory\Background\shell\JAV DB Collect\command]
 @="\"C:\\__devroot\\utils\\context_menu_launcher.bat\" \"collect\" \"%V\""
 
+[HKEY_CLASSES_ROOT\Drive\shell\JAV DB Collect]
+@="&JAV DB Collect"
+
+[HKEY_CLASSES_ROOT\Drive\shell\JAV DB Collect\command]
+@="\"C:\\__devroot\\utils\\context_menu_launcher.bat\" \"collect\" %1"
+
 [HKEY_CLASSES_ROOT\*\shell\JAV File Search]
 @="&JAV File Search"
 
@@ -46,7 +52,7 @@ Windows Registry Editor Version 5.00
 @="&JAV File Search"
 
 [HKEY_CLASSES_ROOT\Drive\shell\JAV File Search\command]
-@="\"C:\\ProgramData\\Anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_file_search.py\" \"drive\" \"%1\""
+@="\"C:\\ProgramData\\Anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_file_search.py\" \"dir\" %1"
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\JAV DB Search]
 @="&JAV DB Search"

@@ -8,6 +8,7 @@ import time
 MIN_BRAND_LEN = 2
 REMOVE_STRS = ["[Thz.la]",
                "[thz.la]",
+               "[thz.tw]",
                "[HD]",
                "[FHD]",
                "21bt.net-",
@@ -25,7 +26,7 @@ REMOVE_STRS = ["[Thz.la]",
                "javbo.net_",
                "big-cup.tv-",
                "1203-javbo.net_",
-               "youiv.net-"
+               "youiv.net-",
               ]
 REMOVE_STRS_3PLENET = ['{:03d}_'.format(x) + '3xplanet_' for x in range(1, 100)]
 REMOVE_STRS.extend(REMOVE_STRS_3PLENET)

@@ -1,7 +1,7 @@
 # -*-coding:utf-8-*-
 
 import collections
-
+import win32api
 
 Product = collections.namedtuple('Product', ['product_no', 'desc', 'rate', 'disk_name', 'location', 'size', 'cdate'])
 
@@ -44,3 +44,14 @@ def get_duration(start_time, end_time):
 
 def get_duration_in_time_form(start_time, end_time):
     return second_to_time_from(get_duration(start_time, end_time))
+
+
+def get_drive(disk_label):
+    for drive in win32api.GetLogicalDriveStrings().split('\000')[:-1]:
+        if disk_label == win32api.GetVolumeInformation(drive)[0]:
+            return drive
+    return None
+
+
+def is_disk_online(disk):
+    return get_drive(disk) is not None

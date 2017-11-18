@@ -57,8 +57,12 @@ class MainWindow(QMainWindow):
 
         gridlayout.addLayout(controllayout, 0, 0)
 
-        self.tbl_result = QTableView()
+        # self.tbl_result = QTableView()
+        self.tbl_result = SearchView()
         gridlayout.addWidget(self.tbl_result)
+
+        # for i, cd in enumerate(column_def):
+        #     self.tbl_result.setColumnWidth(i, 100)
 
     def closeEvent(self, e: QtGui.QCloseEvent):
         ui_util.save_settings(self, 'db_search')

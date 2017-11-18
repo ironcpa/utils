@@ -1,5 +1,6 @@
 import os
 
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
@@ -66,7 +67,28 @@ class FileChooser(QWidget):
         return self.txt_path.text()
 
 
+class SearchViewDelegate(QStyledItemDelegate):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.color_curr_highlight = Qt.green
+
+    def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QModelIndex):
+        if index.row() == self.parent().currentIndex().row():
+            painter.fillRect(option.rect, self.color_curr_highlight)
+
+        super(SearchViewDelegate, self).paint(painter, option, index)
+
+
 class SearchView(QTableView):
     def __init__(self):
         super().__init__()
+        self.setItemDelegate(SearchViewDelegate(self))
+
+    def currentChanged(self, current: QModelIndex, previous: QModelIndex):
+        for c in range(self.model().columnCount()):
+            self.update(self.model().index(previous.row(), c))
+        for c in range(self.model().columnCount()):
+            self.update(self.model().index(current.row(), c))
+        super().currentChanged(current, previous)
 

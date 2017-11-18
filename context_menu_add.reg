@@ -33,7 +33,7 @@ Windows Registry Editor Version 5.00
 [HKEY_CLASSES_ROOT\Directory\Background\shell\JAV File Search]
 @="&JAV File Search"
 
-[HKEY_CLASSES_ROOT\Directory\Background\shell\JAV File Search\command]
+[HKEY_CLASSES_ROOT\Directory\BAckground\shell\JAV File Search\command]
 @="\"C:\\__devenv\\anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_file_search.py\" \"%V\""
 
 [HKEY_CLASSES_ROOT\Drive\shell\JAV File Search]
@@ -65,9 +65,3 @@ Windows Registry Editor Version 5.00
 
 [HKEY_CLASSES_ROOT\*\shell\JAV Capture Tool\command]
 @="\"C:\\__devenv\\anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_capture_tool.py\" \"%1\""
-
-[HKEY_CLASSES_ROOT\Directory\Background\shell\Cmd Here]
-@="&Cmd Here"
-
-[HKEY_CLASSES_ROOT\Directory\Background\shell\Cmd Here\command]
-@="cmd"

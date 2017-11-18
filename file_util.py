@@ -8,6 +8,7 @@ import time
 MIN_BRAND_LEN = 2
 REMOVE_STRS = ["[Thz.la]",
                "[thz.la]",
+               "[thz.tw]",
                "[HD]",
                "[FHD]",
                "21bt.net-",
@@ -25,7 +26,7 @@ REMOVE_STRS = ["[Thz.la]",
                "javbo.net_",
                "big-cup.tv-",
                "1203-javbo.net_",
-               "youiv.net-"
+               "youiv.net-",
               ]
 REMOVE_STRS_3PLENET = ['{:03d}_'.format(x) + '3xplanet_' for x in range(1, 100)]
 REMOVE_STRS.extend(REMOVE_STRS_3PLENET)
@@ -80,6 +81,10 @@ def make_valid_product_name(src_name):
     # 20171102
     if len(brand) > 0 and brand[0] == '-':
         brand = brand[1:]
+    if number_n_other.endswith('FHD'):
+        number_n_other = number_n_other[:-3]
+    if number_n_other.endswith('MP4'):
+        number_n_other = number_n_other[:-3]
 
     if brand.endswith('-'):
         return brand + number_n_other
@@ -103,7 +108,7 @@ def rename_files(path):
 
     for root, dirs, files in os.walk(path):
         for file_name in files:
-            if file_name.startswith('log'):
+            if file_name.startswith('rename_log'):
                 continue
 
             name, ext = os.path.splitext(file_name)
@@ -172,7 +177,7 @@ def get_cmd_path_arg(arg):
 
 
 if __name__ == '__main__':
-    file_name = "The Bourne Identity.mp4"
+    file_name = "pppd-605FHD.mp4"
     name, ext = os.path.splitext(file_name)
     new_name = name
     # if not ('1pon' in file_name and 'carib' in file_name):

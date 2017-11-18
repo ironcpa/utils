@@ -9,7 +9,7 @@ import ffmpeg_util
 START_TIME_PAD = 1
 
 
-def create_clips_from_captures(src_path, cap_dir, clip_dir, captures):
+def create_clips_from_captures(src_path, cap_dir, clip_dir, captures, header = ''):
     src_dir, src_file = os.path.split(src_path)
     src_name, src_ext = os.path.splitext(src_file)
     times = [cu.get_time(f) for f in captures]
@@ -20,7 +20,7 @@ def create_clips_from_captures(src_path, cap_dir, clip_dir, captures):
             start_pad = START_TIME_PAD if int(s) > 0 else 0
             start_time = '{:06d}'.format(int(s) - start_pad)
             end_time = t
-            out_file = 'clip_{}_{}_{}{}'.format(src_name, start_time, end_time, src_ext)
+            out_file = '{}clip_{}_{}_{}{}'.format(header, src_name, start_time, end_time, src_ext)
             out_clip_path = os.path.join(clip_dir, out_file)
 
             ffmpeg_util.create_clip(src_path, start_time, end_time, out_clip_path)

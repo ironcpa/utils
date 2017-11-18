@@ -21,7 +21,7 @@ class MainWindow(QMainWindow, form_class):
     collect_req = pyqtSignal(str, str)
     stop_req = pyqtSignal()
 
-    def __init__(self, src_dir):
+    def __init__(self, src_dir, src_file):
         super().__init__()
         self.setupUi(self)
 
@@ -57,6 +57,14 @@ class MainWindow(QMainWindow, form_class):
         self.db = DB()
 
         ui_util.load_settings(self, 'file_search')
+
+        if src_file:
+            base = os.path.basename(src_file)
+            product_no = file_util.get_product_no(os.path.splitext(base)[0])
+            drive = src_file[:2] + os.path.sep
+            self.txt_search_text.setText(product_no)
+            self.txt_selected_src_dir.setText(drive)
+            self.start_search(product_no, drive)
 
     def closeEvent(self, e: QtGui.QCloseEvent):
         ui_util.save_settings(self, 'file_search')
@@ -389,8 +397,14 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
 
-    src_path = file_util.get_cmd_path_arg(sys.argv[1]) if len(sys.argv) > 1 else ''
-    mywindow = MainWindow(src_path)
+    src_type = sys.argv[1]
+    src_dir, src_file = None, None
+    if src_type == 'file':
+        src_file = sys.argv[2]
+    elif src_type == 'dir':
+        src_dir = sys.argv[2]
+    # src_path = file_util.get_cmd_path_arg(sys.argv[1]) if len(sys.argv) > 1 else ''
+    mywindow = MainWindow(src_dir, src_file)
     mywindow.show()
     app.exec_()
 

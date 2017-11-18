@@ -164,7 +164,8 @@ class DB:
             where_cond = '(' if i == 0 else ' or ('
             for j, t in enumerate(tokens):
                 where_cond += '' if j == 0 else ' and'
-                where_cond += ' {} like ?'.format(f)
+                # where_cond += ' {} like ?'.format(f)
+                where_cond += " {} like ? escape '\\'".format(f)
                 params.append('%' + t + '%')
             sql += where_cond + ')\n'
         sql += ' order by p_no'

@@ -8,9 +8,10 @@ import common_util as co
 import file_util
 
 
-def get_clip_infos(clip_dir, filename):
+def get_clip_infos(clip_dir, filename, include_sample_clip = False):
+    sample_prefix = 'sample_' if include_sample_clip else ''
     return [(clip_dir + x, file_util.get_file_size(clip_dir + x)) for x in os.listdir(clip_dir)
-                                                    if x.startswith('clip_{}'.format(filename))]
+                                                    if x.startswith('{}clip_{}'.format(sample_prefix, filename))]
 
 
 def get_clip_paths(clip_dir, filename):

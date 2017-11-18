@@ -133,6 +133,7 @@ class MainWindow(QMainWindow, form_class):
 
     def on_result_open_tool_clciekd(self):
         command = 'pythonw c:/__devroot/utils/gui_capture_tool.py "{}"'.format(self.get_path_on_row(self.sender()))
+        print(command)
         subprocess.Popen(command)
 
     def on_result_del_file_clicked(self):
@@ -149,6 +150,8 @@ old_hook = sys.excepthook
 sys.excepthook = ui_util.catch_exceptions
 
 if __name__ == '__main__':
+    # ui_util.kill_same_script()
+
     app = QApplication(sys.argv)
 
     window = MainWindow()

@@ -69,7 +69,7 @@ class MainWindow(QMainWindow, form_class):
         clip_dir = 'c:\\__clips\\'
 
         self.clip_model.removeRows(0, self.clip_model.rowCount())
-        for i in ffmpeg_util.get_clip_infos(clip_dir, fname):
+        for i in ffmpeg_util.get_clip_infos(clip_dir, fname, self.chk_include_samples.isChecked()):
             self.add_clip_result(i[0], i[1])
         self.show_total_clip_size()
 

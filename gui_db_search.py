@@ -25,6 +25,7 @@ class MainWindow(QMainWindow):
 
         self.btn_search.clicked.connect(self.search_db)
         self.btn_filter.clicked.connect(self.filter_result)
+        self.btn_search_dup.clicked.connect(lambda: self.search_db(True))
 
         self.model = QtGui.QStandardItemModel(0, len(column_def))
         self.model.setHorizontalHeaderLabels([*column_def])
@@ -50,19 +51,17 @@ class MainWindow(QMainWindow):
         self.chk_is_and_condition = QCheckBox('and')
         self.btn_search = QPushButton('start')
         self.btn_filter = QPushButton('filter')
+        self.btn_search_dup = QPushButton('show dup result')
         controllayout.addWidget(self.txt_search)
         controllayout.addWidget(self.chk_is_and_condition)
         controllayout.addWidget(self.btn_search)
         controllayout.addWidget(self.btn_filter)
+        controllayout.addWidget(self.btn_search_dup)
 
         gridlayout.addLayout(controllayout, 0, 0)
 
-        # self.tbl_result = QTableView()
         self.tbl_result = SearchView()
         gridlayout.addWidget(self.tbl_result)
-
-        # for i, cd in enumerate(column_def):
-        #     self.tbl_result.setColumnWidth(i, 100)
 
     def closeEvent(self, e: QtGui.QCloseEvent):
         ui_util.save_settings(self, 'db_search')
@@ -114,10 +113,14 @@ class MainWindow(QMainWindow):
     def is_disk_online(self, disk):
         return self.get_drive(disk) is not None
 
-    def search_db(self):
+    def search_db(self, is_find_dub = False):
         self.model.removeRows(0, self.model.rowCount())
 
-        products = self.db.search(self.get_search_text(), self.is_and_checked())
+        products = []
+        if is_find_dub:
+            products = self.db.search_dup_list()
+        else:
+            products = self.db.search(self.get_search_text(), self.is_and_checked())
 
         for p in products:
             row = self.model.rowCount()

@@ -3,6 +3,7 @@ import sys
 import psutil
 import subprocess
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication, QPushButton
 from PyQt5.QtCore import QSettings, QPoint
 from send2trash import send2trash
@@ -48,11 +49,12 @@ def copy_to_clipboard(text):
 
 def focus_to_text(lineedit):
     lineedit.setFocus()
-    lineedit.selectAll()
+    lineedit.select_all()
 
 
 def add_button_on_tableview(tableview, row, col, label, font, width, slot):
     button = QPushButton()
+    button.setFocusPolicy(Qt.NoFocus)
     button.setText(label)
     button.setFixedWidth(width)
     if font is not None:

@@ -180,3 +180,16 @@ class DB:
             result = cur.fetchall()
 
             return self.to_product(result)
+
+    def search_dup_list(self):
+        with sqlite.connect(self.db_file) as c:
+            cur = c.cursor()
+            sql = "select p.p_no, p.desc, p.rate, p.disk, p.location, p.size, p.cdate \n" \
+                  "from product as p join \n" \
+                  "     (select p_no from product group by p_no having count(p_no) > 1) as d \n" \
+                  "     on p.p_no = d.p_no \n" \
+                  "order by p.p_no"
+            cur.execute(sql)
+            result = cur.fetchall()
+
+            return self.to_product(result)

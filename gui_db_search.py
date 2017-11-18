@@ -71,10 +71,20 @@ class MainWindow(QMainWindow):
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
+        mod = event.modifiers()
         if key == Qt.Key_Return:
-            self.search_db()
+            if mod == Qt.ControlModifier:
+                self.open_curr_row_file(self.get_del_button_at(self.tbl_result.currentIndex().row()))
+            elif mod == Qt.ControlModifier | Qt.ShiftModifier:
+                self.open_curr_row_dir(self.get_del_button_at(self.tbl_result.currentIndex().row()))
+            else:
+                self.search_db()
         elif key == Qt.Key_Escape:
             ui_util.focus_to_text(self.txt_search)
+        elif key == Qt.Key_T and mod == Qt.ControlModifier:
+            self.open_curr_row_capture_tool(self.get_del_button_at(self.tbl_result.currentIndex().row()))
+        elif key == Qt.Key_Delete:
+            self.del_curr_row_file(self.get_del_button_at(self.tbl_result.currentIndex().row()))
         else:
             event.ignore()
 
@@ -154,23 +164,40 @@ class MainWindow(QMainWindow):
         return path
 
     def on_result_open_file_clciekd(self):
-        ui_util.open_path(self.get_path_on_row(self.sender()))
+        self.open_curr_row_file(self.sender())
 
     def on_result_open_dir_clciekd(self):
-        ui_util.open_path_dir(self.get_path_on_row(self.sender()))
+        self.open_curr_row_dir(self.sender())
 
     def on_result_open_tool_clciekd(self):
-        command = 'pythonw c:/__devroot/utils/gui_capture_tool.py "{}"'.format(self.get_path_on_row(self.sender()))
-        subprocess.Popen(command)
+        self.open_curr_row_capture_tool(self.sender())
 
     def on_result_del_file_clicked(self):
-        s = self
-        if ui_util.delete_path(s, s.get_path_on_row(s.sender())):
-            if s.db.delete_product(s.get_data_on_table_widget(s.sender(), column_def['no'])) == 1:
-                s.model.removeRow(s.get_table_row(s.sender()))
+        self.del_curr_row_file(self.sender())
 
     def on_result_delete_row_clicked(self):
         pass
+
+    def get_del_button_at(self, row):
+        return self.tbl_result.indexWidget(self.model.index(row, column_def['del file']))
+
+    def open_curr_row_file(self, widget):
+        ui_util.open_path(self.get_path_on_row(widget))
+
+    def open_curr_row_dir(self, widget):
+        ui_util.open_path_dir(self.get_path_on_row(widget))
+
+    def open_curr_row_capture_tool(self, widget):
+        command = 'pythonw c:/__devroot/utils/gui_capture_tool.py "{}"'.format(self.get_path_on_row(widget))
+        subprocess.Popen(command)
+
+    def del_curr_row_file(self, widget):
+        if not widget:
+            return
+        s = self
+        if ui_util.delete_path(s, s.get_path_on_row(widget)):
+            if s.db.delete_product(s.get_data_on_table_widget(widget, column_def['no'])) == 1:
+                s.model.removeRow(s.get_table_row(widget))
 
 
 old_hook = sys.excepthook

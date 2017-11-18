@@ -34,6 +34,13 @@ class LabeledLineEdit(QWidget):
     def set_text(self, text):
         self.lineedit.setText(str(text))
 
+    def setFocus(self):
+        super(LabeledLineEdit, self).setFocus()
+        self.lineedit.setFocus()
+
+    def select_all(self):
+        self.lineedit.selectAll()
+
 
 class FileChooser(QWidget):
     def __init__(self):

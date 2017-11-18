@@ -21,6 +21,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.search_stack = []
+
         self.setup_ui()
 
         self.btn_search.clicked.connect(self.search_db)
@@ -84,6 +86,8 @@ class MainWindow(QMainWindow):
             self.open_curr_row_capture_tool(self.get_del_button_at(self.tbl_result.currentIndex().row()))
         elif key == Qt.Key_Delete:
             self.del_curr_row_file(self.get_del_button_at(self.tbl_result.currentIndex().row()))
+        elif key == Qt.Key_Left and mod == Qt.ControlModifier:
+            self.set_prev_search_text()
         else:
             event.ignore()
 
@@ -120,7 +124,9 @@ class MainWindow(QMainWindow):
         if is_find_dub:
             products = self.db.search_dup_list()
         else:
-            products = self.db.search(self.get_search_text(), self.is_and_checked())
+            search_tuple = (self.get_search_text(), self.is_and_checked())
+            self.search_stack.append(search_tuple)
+            products = self.db.search(*search_tuple)
 
         for p in products:
             row = self.model.rowCount()
@@ -201,6 +207,13 @@ class MainWindow(QMainWindow):
         if ui_util.delete_path(s, s.get_path_on_row(widget)):
             if s.db.delete_product(s.get_data_on_table_widget(widget, column_def['no'])) == 1:
                 s.model.removeRow(s.get_table_row(widget))
+
+    def set_prev_search_text(self):
+        search_tuple = self.search_stack.pop()
+        self.txt_search.set_text(search_tuple[0])
+        self.chk_is_and_condition.setChecked(search_tuple[1])
+
+        # self.search_db()
 
 
 old_hook = sys.excepthook

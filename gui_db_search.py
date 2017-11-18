@@ -11,15 +11,17 @@ from PyQt5.QtCore import Qt
 
 import ui_util
 from db_util import DB
+from widgets import *
 
-form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_db_search.ui")[0]
+
 column_def = {'no': 0, 'disk': 1, 'size': 2, 'date': 3, 'rate': 4, 'desc': 5, 'open': 6, 'dir': 7, 'tool':8 ,'del file': 9, 'del db': 10, 'location': 11}
 
 
-class MainWindow(QMainWindow, form_class):
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setupUi(self)
+
+        self.setup_ui()
 
         self.btn_search.clicked.connect(self.search_db)
         self.btn_filter.clicked.connect(self.filter_result)
@@ -35,6 +37,28 @@ class MainWindow(QMainWindow, form_class):
         self.db = DB()
 
         ui_util.load_settings(self, 'db_search')
+
+    def setup_ui(self):
+        self.setGeometry(0, 0, 1024, 768)
+
+        self.setCentralWidget(QWidget())
+        gridlayout = QGridLayout()
+        self.centralWidget().setLayout(gridlayout)
+
+        controllayout = QHBoxLayout()
+        self.txt_search = LabeledLineEdit('search text')
+        self.chk_is_and_condition = QCheckBox('and')
+        self.btn_search = QPushButton('start')
+        self.btn_filter = QPushButton('filter')
+        controllayout.addWidget(self.txt_search)
+        controllayout.addWidget(self.chk_is_and_condition)
+        controllayout.addWidget(self.btn_search)
+        controllayout.addWidget(self.btn_filter)
+
+        gridlayout.addLayout(controllayout, 0, 0)
+
+        self.tbl_result = QTableView()
+        gridlayout.addWidget(self.tbl_result)
 
     def closeEvent(self, e: QtGui.QCloseEvent):
         ui_util.save_settings(self, 'db_search')

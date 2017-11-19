@@ -96,6 +96,10 @@ class MainWindow(QMainWindow):
             self.del_curr_row_file(self.get_del_button_at(self.tbl_result.currentIndex().row()))
         elif key == Qt.Key_Left and mod == Qt.ControlModifier:
             self.set_prev_search_text()
+        elif key == Qt.Key_C and mod == Qt.ControlModifier:
+            self.turn_on_curr_checkbox()
+        elif key == Qt.Key_N and mod == Qt.ControlModifier:
+            self.copy_curr_row_file_name_from_checked_row(self.get_widget_at(self.tbl_result.currentIndex().row(), column_def['chk']))
         else:
             event.ignore()
 
@@ -209,6 +213,9 @@ class MainWindow(QMainWindow):
     def get_del_button_at(self, row):
         return self.tbl_result.indexWidget(self.model.index(row, column_def['del file']))
 
+    def get_widget_at(self, row, col):
+        return self.tbl_result.indexWidget(self.model.index(row, col))
+
     def open_curr_row_file(self, widget):
         ui_util.open_path(self.get_path_on_row(widget))
 
@@ -265,6 +272,10 @@ class MainWindow(QMainWindow):
             checkbox = self.tbl_result.indexWidget(self.model.index(r, column_def['chk']))
             if checkbox != widget and checkbox.isChecked():
                 checkbox.setChecked(False)
+
+    def turn_on_curr_checkbox(self):
+        r = self.tbl_result.currentIndex().row()
+        self.tbl_result.indexWidget(self.model.index(r, column_def['chk'])).setChecked(True)
 
     def set_prev_search_text(self):
         search_tuple = self.search_stack.pop()

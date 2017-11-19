@@ -62,6 +62,7 @@ def add_button_on_tableview(tableview, row, col, label, font, width, slot):
     button.clicked.connect(slot)
     tableview.setIndexWidget(tableview.model().index(row, col), button)
 
+
 def add_checkbox_on_tableview(tableview, row, col, label, width, slot):
     checkbox = QCheckBox()
     checkbox.setFocusPolicy(Qt.NoFocus)
@@ -69,6 +70,7 @@ def add_checkbox_on_tableview(tableview, row, col, label, width, slot):
     checkbox.setFixedWidth(width)
     checkbox.stateChanged.connect(slot)
     tableview.setIndexWidget(tableview.model().index(row, col), checkbox)
+
 
 def load_settings(self, app_name):
     self.settings = QSettings('hjchoi', 'util')

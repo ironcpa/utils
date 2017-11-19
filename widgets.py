@@ -92,6 +92,14 @@ class SearchView(QTableView):
         super().__init__()
         self.setItemDelegate(SearchViewDelegate(self))
 
+    def keyPressEvent(self, e: QtGui.QKeyEvent):
+        key = e.key()
+        mod = e.modifiers()
+        if key == Qt.Key_C and mod == Qt.ControlModifier:
+            e.ignore()
+        else:
+            super(SearchView, self).keyPressEvent(e)
+
     def currentChanged(self, current: QModelIndex, previous: QModelIndex):
         for c in range(self.model().columnCount()):
             self.update(self.model().index(previous.row(), c))

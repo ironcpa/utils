@@ -13,8 +13,10 @@ import ui_util
 from db_util import DB
 from widgets import *
 
-
-column_def = {'no': 0, 'disk': 1, 'size': 2, 'date': 3, 'rate': 4, 'desc': 5, 'open': 6, 'dir': 7, 'tool':8 ,'del file': 9, 'del db': 10, 'location': 11}
+cols = ['no', 'disk', 'size', 'date', 'rate', 'desc', 'open', 'dir', 'tool', 'del file', 'chk', 'copy', 'del db', 'location']
+column_def = {k: v for v, k in enumerate(cols)}
+header_titles = list(column_def.keys())
+header_titles[column_def['chk']] = ''
 
 
 class MainWindow(QMainWindow):
@@ -30,7 +32,8 @@ class MainWindow(QMainWindow):
         self.btn_search_dup.clicked.connect(lambda: self.search_db(True))
 
         self.model = QtGui.QStandardItemModel(0, len(column_def))
-        self.model.setHorizontalHeaderLabels([*column_def])
+        # self.model.setHorizontalHeaderLabels([*column_def])
+        self.model.setHorizontalHeaderLabels(header_titles)
         self.tbl_result.setModel(self.model)
 
         self.product_filter_model = QtCore.QSortFilterProxyModel()
@@ -153,16 +156,20 @@ class MainWindow(QMainWindow):
             self.model.setItem(row, column_def['size'], size_item)
             self.model.setItem(row, column_def['date'], QtGui.QStandardItem(p.cdate))
 
+            ui_util.add_checkbox_on_tableview(self.tbl_result, row, column_def['chk'], '', 20, self.on_checkbox_changed)
             if is_disk_online:
                 ui_util.add_button_on_tableview(self.tbl_result, row, column_def['open'], 'open', None, 60, self.on_result_open_file_clciekd)
                 ui_util.add_button_on_tableview(self.tbl_result, row, column_def['dir'], 'dir', None, 60, self.on_result_open_dir_clciekd)
                 ui_util.add_button_on_tableview(self.tbl_result, row, column_def['tool'], 'tool', None, 60, self.on_result_open_tool_clciekd)
                 ui_util.add_button_on_tableview(self.tbl_result, row, column_def['del file'], 'del file', None, 100, self.on_result_del_file_clicked)
+                ui_util.add_button_on_tableview(self.tbl_result, row, column_def['copy'], 'copy', None, 100, self.on_result_copy_name_clicked)
             ui_util.add_button_on_tableview(self.tbl_result, row, column_def['del db'], 'del db', None, 80, self.on_result_delete_row_clicked)
 
         self.tbl_result.resizeColumnsToContents()
         self.tbl_result.resizeRowsToContents()
         self.tbl_result.setColumnWidth(0, 150)
+        self.tbl_result.setColumnWidth(column_def['desc'], 400)
+        self.tbl_result.setColumnWidth(column_def['chk'], 20)
         # self.tbl_result.scrollToBottom()
 
     def filter_result(self):
@@ -189,6 +196,13 @@ class MainWindow(QMainWindow):
     def on_result_del_file_clicked(self):
         self.del_curr_row_file(self.sender())
 
+    def on_checkbox_changed(self, state):
+        if state:
+            self.turn_off_other_checkboxes(self.sender())
+
+    def on_result_copy_name_clicked(self):
+        self.copy_curr_row_file_name_from_checked_row(self.sender())
+
     def on_result_delete_row_clicked(self):
         pass
 
@@ -212,6 +226,45 @@ class MainWindow(QMainWindow):
         if ui_util.delete_path(s, s.get_path_on_row(widget)):
             if s.db.delete_product(s.get_data_on_table_widget(widget, column_def['no'])) == 1:
                 s.model.removeRow(s.get_table_row(widget))
+
+    def copy_curr_row_file_name_from_checked_row(self, widget):
+        if not widget:
+            return
+
+        copy_src_path = ''
+        copy_src_widget  = None
+        for r in range(self.model.rowCount()):
+            checkbox = self.tbl_result.indexWidget(self.model.index(r, column_def['chk']))
+            if checkbox.isChecked():
+                copy_src_path = self.model.item(r, column_def['location']).text()
+                copy_src_widget = checkbox
+                QMessageBox.information(self, 'debug', str(copy_src_path))
+                break
+        if not copy_src_path or copy_src_path == '':
+            return
+
+        target_path = self.get_path_on_row(widget)
+        target_base_name = os.path.basename(target_path)
+        new_target_path = target_path.replace(target_base_name, os.path.basename(copy_src_path))
+        print('c_path : ' + copy_src_path)
+        print('o_path : ' + target_path)
+        print('n_path : ' + new_target_path)
+        if copy_src_path != new_target_path and os.path.exists(new_target_path):
+            QMessageBox.warning(self, 'failed', 'file already exists')
+            return
+        if not os.path.exists(copy_src_path) or not os.path.exists(target_path):
+            QMessageBox.warning(self, 'failed', 'source or target path not exist. \nyou may run db collect and search again')
+            return
+
+        self.del_curr_row_file(copy_src_widget)
+        os.rename(target_path, new_target_path)
+        QMessageBox.information(self, 'copied', 'copied :\n{}\n<- {}'.format(new_target_path, target_path))
+
+    def turn_off_other_checkboxes(self, widget):
+        for r in range(self.model.rowCount()):
+            checkbox = self.tbl_result.indexWidget(self.model.index(r, column_def['chk']))
+            if checkbox != widget and checkbox.isChecked():
+                checkbox.setChecked(False)
 
     def set_prev_search_text(self):
         search_tuple = self.search_stack.pop()

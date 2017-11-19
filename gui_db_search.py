@@ -11,18 +11,23 @@ from PyQt5.QtCore import Qt
 
 import ui_util
 from db_util import DB
+from widgets import *
 
-form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_db_search.ui")[0]
+
 column_def = {'no': 0, 'disk': 1, 'size': 2, 'date': 3, 'rate': 4, 'desc': 5, 'open': 6, 'dir': 7, 'tool':8 ,'del file': 9, 'del db': 10, 'location': 11}
 
 
-class MainWindow(QMainWindow, form_class):
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setupUi(self)
+
+        self.search_stack = []
+
+        self.setup_ui()
 
         self.btn_search.clicked.connect(self.search_db)
         self.btn_filter.clicked.connect(self.filter_result)
+        self.btn_search_dup.clicked.connect(lambda: self.search_db(True))
 
         self.model = QtGui.QStandardItemModel(0, len(column_def))
         self.model.setHorizontalHeaderLabels([*column_def])
@@ -36,6 +41,32 @@ class MainWindow(QMainWindow, form_class):
 
         ui_util.load_settings(self, 'db_search')
 
+    def setup_ui(self):
+        self.setStyleSheet('font: 20pt')
+
+        self.setGeometry(0, 0, 1000, 600)
+
+        self.setCentralWidget(QWidget())
+        gridlayout = QGridLayout()
+        self.centralWidget().setLayout(gridlayout)
+
+        controllayout = QHBoxLayout()
+        self.txt_search = LabeledLineEdit('search text')
+        self.chk_is_and_condition = QCheckBox('and')
+        self.btn_search = QPushButton('start')
+        self.btn_filter = QPushButton('filter')
+        self.btn_search_dup = QPushButton('show dup result')
+        controllayout.addWidget(self.txt_search)
+        controllayout.addWidget(self.chk_is_and_condition)
+        controllayout.addWidget(self.btn_search)
+        controllayout.addWidget(self.btn_filter)
+        controllayout.addWidget(self.btn_search_dup)
+
+        gridlayout.addLayout(controllayout, 0, 0)
+
+        self.tbl_result = SearchView()
+        gridlayout.addWidget(self.tbl_result)
+
     def closeEvent(self, e: QtGui.QCloseEvent):
         ui_util.save_settings(self, 'db_search')
 
@@ -43,10 +74,25 @@ class MainWindow(QMainWindow, form_class):
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
+        mod = event.modifiers()
         if key == Qt.Key_Return:
-            self.search_db()
+            if mod == Qt.ControlModifier:
+                self.open_curr_row_file(self.get_del_button_at(self.tbl_result.currentIndex().row()))
+            elif mod == Qt.ShiftModifier:
+                pass
+            elif mod == Qt.ControlModifier | Qt.ShiftModifier:
+                self.open_curr_row_dir(self.get_del_button_at(self.tbl_result.currentIndex().row()))
+            else:
+                # self.search_db()
+                pass
         elif key == Qt.Key_Escape:
             ui_util.focus_to_text(self.txt_search)
+        elif key == Qt.Key_Z and mod == Qt.ControlModifier:
+            self.open_curr_row_capture_tool(self.get_del_button_at(self.tbl_result.currentIndex().row()))
+        elif key == Qt.Key_Delete:
+            self.del_curr_row_file(self.get_del_button_at(self.tbl_result.currentIndex().row()))
+        elif key == Qt.Key_Left and mod == Qt.ControlModifier:
+            self.set_prev_search_text()
         else:
             event.ignore()
 
@@ -76,10 +122,16 @@ class MainWindow(QMainWindow, form_class):
     def is_disk_online(self, disk):
         return self.get_drive(disk) is not None
 
-    def search_db(self):
+    def search_db(self, is_find_dub = False):
         self.model.removeRows(0, self.model.rowCount())
 
-        products = self.db.search(self.get_search_text(), self.is_and_checked())
+        products = []
+        if is_find_dub:
+            products = self.db.search_dup_list()
+        else:
+            search_tuple = (self.get_search_text(), self.is_and_checked())
+            self.search_stack.append(search_tuple)
+            products = self.db.search(*search_tuple)
 
         for p in products:
             row = self.model.rowCount()
@@ -126,23 +178,47 @@ class MainWindow(QMainWindow, form_class):
         return path
 
     def on_result_open_file_clciekd(self):
-        ui_util.open_path(self.get_path_on_row(self.sender()))
+        self.open_curr_row_file(self.sender())
 
     def on_result_open_dir_clciekd(self):
-        ui_util.open_path_dir(self.get_path_on_row(self.sender()))
+        self.open_curr_row_dir(self.sender())
 
     def on_result_open_tool_clciekd(self):
-        command = 'pythonw c:/__devroot/utils/gui_capture_tool.py "{}"'.format(self.get_path_on_row(self.sender()))
-        subprocess.Popen(command)
+        self.open_curr_row_capture_tool(self.sender())
 
     def on_result_del_file_clicked(self):
-        s = self
-        if ui_util.delete_path(s, s.get_path_on_row(s.sender())):
-            if s.db.delete_product(s.get_data_on_table_widget(s.sender(), column_def['no'])) == 1:
-                s.model.removeRow(s.get_table_row(s.sender()))
+        self.del_curr_row_file(self.sender())
 
     def on_result_delete_row_clicked(self):
         pass
+
+    def get_del_button_at(self, row):
+        return self.tbl_result.indexWidget(self.model.index(row, column_def['del file']))
+
+    def open_curr_row_file(self, widget):
+        ui_util.open_path(self.get_path_on_row(widget))
+
+    def open_curr_row_dir(self, widget):
+        ui_util.open_path_dir(self.get_path_on_row(widget))
+
+    def open_curr_row_capture_tool(self, widget):
+        command = 'pythonw c:/__devroot/utils/gui_capture_tool.py "{}"'.format(self.get_path_on_row(widget))
+        subprocess.Popen(command)
+
+    def del_curr_row_file(self, widget):
+        if not widget:
+            return
+        s = self
+        if ui_util.delete_path(s, s.get_path_on_row(widget)):
+            if s.db.delete_product(s.get_data_on_table_widget(widget, column_def['no'])) == 1:
+                s.model.removeRow(s.get_table_row(widget))
+
+    def set_prev_search_text(self):
+        search_tuple = self.search_stack.pop()
+        self.txt_search.set_text(search_tuple[0])
+        self.chk_is_and_condition.setChecked(search_tuple[1])
+
+        # self.search_db()
 
 
 old_hook = sys.excepthook

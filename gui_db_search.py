@@ -251,19 +251,20 @@ class MainWindow(QMainWindow):
             return
 
         target_path = self.get_path_on_row(widget)
-        target_base_name = os.path.basename(target_path)
-        new_target_path = target_path.replace(target_base_name, os.path.basename(copy_src_path))
+        target_name = os.path.splitext(os.path.basename(target_path))[0]
+        new_target_path = target_path.replace(target_name, os.path.splitext(os.path.basename(copy_src_path))[0])
         print('c_path : ' + copy_src_path)
         print('o_path : ' + target_path)
         print('n_path : ' + new_target_path)
         if copy_src_path != new_target_path and os.path.exists(new_target_path):
             QMessageBox.warning(self, 'failed', 'file already exists')
             return
-        if not os.path.exists(copy_src_path) or not os.path.exists(target_path):
+        if not os.path.exists(target_path):
             QMessageBox.warning(self, 'failed', 'source or target path not exist. \nyou may run db collect and search again')
             return
 
-        self.del_curr_row_file(copy_src_widget)
+        if os.path.exists(copy_src_path):
+            self.del_curr_row_file(copy_src_widget)
         os.rename(target_path, new_target_path)
         QMessageBox.information(self, 'copied', 'copied :\n{}\n<- {}'.format(new_target_path, target_path))
 

@@ -24,6 +24,12 @@ Windows Registry Editor Version 5.00
 [HKEY_CLASSES_ROOT\Directory\Background\shell\JAV DB Collect\command]
 @="\"C:\\__devroot\\utils\\context_menu_launcher.bat\" \"collect\" \"%V\""
 
+[HKEY_CLASSES_ROOT\Directory\Background\shell\JAV DB Collect All]
+@="&JAV DB Collect All"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\JAV DB Collect All\command]
+@="\"C:\\__devroot\\utils\\context_menu_launcher.bat\" \"collect\""
+
 [HKEY_CLASSES_ROOT\Directory\shell\JAV File Search]
 @="&JAV File Search"
 

@@ -34,7 +34,7 @@ class DB:
 
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
-            sql = "select count(*) from product\n"\
+            sql = "select count(*) from product\n" \
                   "where p_no = ? and disk = ? and location = ? and size = ? and cdate = ?"
             cur.execute(sql, (p.product_no, p.disk_name, p.location, p.size, p.cdate))
 

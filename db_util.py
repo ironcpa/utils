@@ -175,7 +175,7 @@ class DB:
     def search_all(self):
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
-            sql = "select p_no, desc, rate, disk, location, size, cdate from product limit 100"
+            sql = "select p_no, desc, rate, disk, location, size, cdate from product order by cdate desc limit 200"
             cur.execute(sql)
             result = cur.fetchall()
 

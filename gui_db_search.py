@@ -30,6 +30,7 @@ class MainWindow(QMainWindow):
         self.btn_search.clicked.connect(self.search_db)
         self.btn_filter.clicked.connect(self.filter_result)
         self.btn_search_dup.clicked.connect(lambda: self.search_db(True))
+        self.name_editor.edit_finished.connect(self.update_file_name_n_synk_db)
 
         self.model = QtGui.QStandardItemModel(0, len(column_def))
         # self.model.setHorizontalHeaderLabels([*column_def])
@@ -70,6 +71,9 @@ class MainWindow(QMainWindow):
         self.tbl_result = SearchView()
         gridlayout.addWidget(self.tbl_result)
 
+        self.name_editor = NameEditor(self)
+        self.name_editor.hide()
+
     def closeEvent(self, e: QtGui.QCloseEvent):
         ui_util.save_settings(self, 'db_search')
 
@@ -78,11 +82,17 @@ class MainWindow(QMainWindow):
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
         mod = event.modifiers()
-        if key == Qt.Key_Return:
+        if key == Qt.Key_Escape:
+            if self.name_editor.isVisible():
+                self.name_editor.hide()
+                self.tbl_result.setFocus()
+        elif key == Qt.Key_Return:
             if mod == Qt.ControlModifier:
                 self.open_curr_row_file(self.get_del_button_at(self.tbl_result.currentIndex().row()))
             elif mod == Qt.ShiftModifier:
-                pass
+                location_item = self.model.item(self.tbl_result.currentIndex().row(), column_def['location'])
+                name_only = os.path.splitext(os.path.basename(location_item.text()))[0] if location_item else ''
+                self.name_editor.open_editor(name_only)
             elif mod == Qt.ControlModifier | Qt.ShiftModifier:
                 self.open_curr_row_dir(self.get_del_button_at(self.tbl_result.currentIndex().row()))
             else:
@@ -98,6 +108,7 @@ class MainWindow(QMainWindow):
             self.set_prev_search_text()
         elif key == Qt.Key_C and mod == Qt.ControlModifier:
             self.turn_on_curr_checkbox()
+            ui_util.copy_to_clipboard(self.get_pno_on_curr_row())
         elif key == Qt.Key_N and mod == Qt.ControlModifier:
             self.copy_curr_row_file_name_from_checked_row(self.get_widget_at(self.tbl_result.currentIndex().row(), column_def['chk']))
         else:
@@ -187,6 +198,9 @@ class MainWindow(QMainWindow):
 
         path = curr_drive[0] + ':' + os.path.splitdrive(self.get_text_on_table_widget(widget, column_def['location']))[1]
         return path
+
+    def get_pno_on_curr_row(self):
+        return self.model.item(self.tbl_result.currentIndex().row(), column_def['no']).text()
 
     def on_result_open_file_clciekd(self):
         self.open_curr_row_file(self.sender())
@@ -284,6 +298,16 @@ class MainWindow(QMainWindow):
         self.chk_is_and_condition.setChecked(search_tuple[1])
 
         # self.search_db()
+
+    def update_file_name_n_synk_db(self, name):
+        # on current
+        target_path = self.model.item(self.tbl_result.currentIndex().row(), column_def['location']).text()
+        o_dir = os.path.dirname(target_path)
+        o_name, o_ext = os.path.splitext(os.path.basename(target_path))
+        new_target_path = os.path.join(o_dir, name + o_ext)
+
+        os.rename(target_path, new_target_path)
+        QMessageBox.information(self, 'renamed', 'renamed :\n{}\n<- {}'.format(new_target_path, target_path))
 
 
 old_hook = sys.excepthook

@@ -34,40 +34,40 @@ Windows Registry Editor Version 5.00
 @="&JAV File Search"
 
 [HKEY_CLASSES_ROOT\Directory\shell\JAV File Search\command]
-@="\"C:\\__devenv\\anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_file_search.py\" \"%1\""
+@="\"C:\\ProgramData\\Anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_file_search.py\" \"%1\""
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\JAV File Search]
 @="&JAV File Search"
 
 [HKEY_CLASSES_ROOT\Directory\BAckground\shell\JAV File Search\command]
-@="\"C:\\__devenv\\anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_file_search.py\" \"%V\""
+@="\"C:\\ProgramData\\Anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_file_search.py\" \"%V\""
 
 [HKEY_CLASSES_ROOT\Drive\shell\JAV File Search]
 @="&JAV File Search"
 
 [HKEY_CLASSES_ROOT\Drive\shell\JAV File Search\command]
-@="\"C:\\__devenv\\anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_file_search.py\" \"%1\""
+@="\"C:\\ProgramData\\Anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_file_search.py\" \"%1\""
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\JAV File Search]
 @="&JAV File Search"
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\JAV File Search\command]
-@="\"C:\\__devenv\\anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_file_search.py\""
+@="\"C:\\ProgramData\\Anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_file_search.py\""
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\JAV DB Search]
 @="&JAV DB Search"
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\JAV DB Search\command]
-@="\"C:\\__devenv\\anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_db_search.py\""
+@="\"C:\\ProgramData\\Anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_db_search.py\""
 
 [HKEY_CLASSES_ROOT\*\shell\JAV Clip Tool]
 @="&JAV Clip Tool"
 
 [HKEY_CLASSES_ROOT\*\shell\JAV Clip Tool\command]
-@="\"C:\\__devenv\\anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_clip_tool.py\" \"%1\""
+@="\"C:\\ProgramData\\Anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_clip_tool.py\" \"%1\""
 
 [HKEY_CLASSES_ROOT\*\shell\JAV Capture Tool]
 @="&JAV Capture Tool"
 
 [HKEY_CLASSES_ROOT\*\shell\JAV Capture Tool\command]
-@="\"C:\\__devenv\\anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_capture_tool.py\" \"%1\""
+@="\"C:\\ProgramData\\Anaconda3\\pythonw\" \"C:\\__devroot\\utils\\gui_capture_tool.py\" \"%1\""

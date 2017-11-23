@@ -107,3 +107,41 @@ class SearchView(QTableView):
             self.update(self.model().index(current.row(), c))
         super().currentChanged(current, previous)
 
+
+class NameEditor(QWidget):
+    edit_finished = pyqtSignal(str)
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.input_name = ''
+
+        self.setup_ui()
+        self.init_signal_slots()
+
+    def setup_ui(self):
+        self.setGeometry(0, 0, 800, 100)
+
+        self.setStyleSheet('background-color: cyan; font:40pt')
+
+        layout = QHBoxLayout()
+
+        self.txt_name = QLineEdit(self.input_name)
+        layout.addWidget(self.txt_name)
+
+        self.setLayout(layout)
+
+    def init_signal_slots(self):
+        self.txt_name.returnPressed.connect(lambda: self.edit_finished.emit(self.txt_name.text()))
+
+    def open_editor(self, name):
+        self.set_name(name)
+        self.set_position()
+        self.txt_name.setFocus()
+        self.show()
+
+    def set_position(self):
+        self.move((self.parent().width() - self.width()) // 2, (self.parent().height() - self.height()) // 2)
+
+    def set_name(self, name):
+        self.input_name = name
+        self.txt_name.setText(name)

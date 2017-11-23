@@ -34,6 +34,8 @@ if __name__ == '__main__':
         if len(sys.argv) == 2:
             # collect from all drive
             for drive in win32api.GetLogicalDriveStrings().split('\000')[:-1]:
+                if drive.startswith('C:'):
+                    continue
                 disk_name = win32api.GetVolumeInformation(drive)[0]
                 print(disk_name, drive)
                 collect_files_to_db(disk_name, drive)

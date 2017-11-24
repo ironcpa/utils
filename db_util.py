@@ -42,6 +42,18 @@ class DB:
     def insert_product_w_fileinfos(self, fileinfos):
         self.insert_products([conv_fileinfo_to_product(fi) for fi in fileinfos])
 
+    def update_product(self, product):
+        p = product
+        with sqlite.connect(self.db_file) as c:
+            cur = c.cursor()
+            sql = 'update product\n'\
+                  'set p_no = ?, disk = ?, location = ?, size = ?, cdate = ?\n'\
+                  'where id = ?'
+            rows = cur.execute(sql, (p.product_no, p.disk_name, p.location, p.size, p.cdate, p.id))
+            c.commit()
+
+            return rows.rowcount
+
     def delete_product(self, product):
         p = product
         with sqlite.connect(self.db_file) as c:

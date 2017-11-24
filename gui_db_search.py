@@ -12,6 +12,7 @@ from PyQt5.QtCore import Qt
 import ui_util
 from db_util import DB
 from widgets import *
+from common_util import Product
 
 cols = ['no', 'disk', 'size', 'date', 'rate', 'desc', 'open', 'dir', 'tool', 'del file', 'chk', 'copy', 'del db', 'location']
 column_def = {k: v for v, k in enumerate(cols)}
@@ -320,13 +321,24 @@ class MainWindow(QMainWindow):
         # self.search_db()
 
     def update_file_name_n_synk_db(self, name):
+        cur_row = self.tbl_result.currentIndex().row()
+
         # on current
-        target_path = self.model.item(self.tbl_result.currentIndex().row(), column_def['location']).text()
+        target_path = self.model.item(cur_row, column_def['location']).text()
         o_dir = os.path.dirname(target_path)
         o_name, o_ext = os.path.splitext(os.path.basename(target_path))
         new_target_path = os.path.join(o_dir, name + o_ext)
 
         os.rename(target_path, new_target_path)
+
+        # update curr item
+        cur_product = self.model.item(cur_row, column_def['no']).data()
+        self.model.item(cur_row, column_def['location']).setText(new_target_path)
+        # update db
+        cp = cur_product
+        new_product = Product(cp.id, cp.product_no, cp.desc, cp.rate, cp.disk_name, new_target_path, cp.size, cp.cdate)
+        self.db.update_product(new_product)
+
         QMessageBox.information(self, 'renamed', 'renamed :\n{}\n<- {}'.format(new_target_path, target_path))
 
 

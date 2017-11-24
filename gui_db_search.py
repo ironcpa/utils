@@ -20,7 +20,7 @@ header_titles[column_def['chk']] = ''
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, search_text = None):
         super().__init__()
 
         self.search_stack = []
@@ -44,6 +44,10 @@ class MainWindow(QMainWindow):
         self.db = DB()
 
         ui_util.load_settings(self, 'db_search')
+
+        if search_text:
+            self.txt_search.set_text(search_text)
+            self.search_db()
 
     def setup_ui(self):
         self.setStyleSheet('font: 20pt')
@@ -82,11 +86,7 @@ class MainWindow(QMainWindow):
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
         mod = event.modifiers()
-        if key == Qt.Key_Escape:
-            if self.name_editor.isVisible():
-                self.name_editor.hide()
-                self.tbl_result.setFocus()
-        elif key == Qt.Key_Return:
+        if key == Qt.Key_Return:
             if mod == Qt.ControlModifier:
                 self.open_curr_row_file(self.get_del_button_at(self.tbl_result.currentIndex().row()))
             elif mod == Qt.ShiftModifier:
@@ -99,7 +99,15 @@ class MainWindow(QMainWindow):
                 # self.search_db()
                 pass
         elif key == Qt.Key_Escape:
-            ui_util.focus_to_text(self.txt_search)
+            if self.name_editor.isVisible():
+                self.name_editor.hide()
+                self.tbl_result.setFocus()
+            else:
+                ui_util.focus_to_text(self.txt_search)
+        elif key == Qt.Key_D and mod == Qt.ControlModifier:
+            self.open_curr_row_db_search()
+        elif key == Qt.Key_F and mod == Qt.ControlModifier:
+            self.open_curr_row_file_search()
         elif key == Qt.Key_Z and mod == Qt.ControlModifier:
             self.open_curr_row_capture_tool(self.get_del_button_at(self.tbl_result.currentIndex().row()))
         elif key == Qt.Key_Delete:
@@ -199,6 +207,9 @@ class MainWindow(QMainWindow):
         path = curr_drive[0] + ':' + os.path.splitdrive(self.get_text_on_table_widget(widget, column_def['location']))[1]
         return path
 
+    def get_path_on_curr_row(self):
+        return self.model.item(self.tbl_result.currentIndex().row(), column_def['location']).text()
+
     def get_pno_on_curr_row(self):
         return self.model.item(self.tbl_result.currentIndex().row(), column_def['no']).text()
 
@@ -238,6 +249,15 @@ class MainWindow(QMainWindow):
 
     def open_curr_row_capture_tool(self, widget):
         command = 'pythonw c:/__devroot/utils/gui_capture_tool.py "{}"'.format(self.get_path_on_row(widget))
+        subprocess.Popen(command)
+
+    def open_curr_row_db_search(self):
+        command = 'pythonw c:/__devroot/utils/gui_db_search.py "{}"'.format(self.get_pno_on_curr_row())
+        subprocess.Popen(command)
+
+    def open_curr_row_file_search(self):
+        '''not completed'''
+        command = 'pythonw c:/__devroot/utils/gui_file_search.py "file" "{}"'.format(self.get_path_on_curr_row())
         subprocess.Popen(command)
 
     def del_curr_row_file(self, widget):
@@ -316,6 +336,7 @@ sys.excepthook = ui_util.catch_exceptions
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    window = MainWindow()
+    search_text = sys.argv[1] if len(sys.argv) > 1 else None
+    window = MainWindow(search_text)
     window.show()
     app.exec_()

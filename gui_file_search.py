@@ -192,12 +192,6 @@ class MainWindow(QMainWindow, form_class):
     def on_collect_finished(self):
         file_infos = self.search_worker.search_results
         self.db.update_product_w_fileinfos(file_infos)
-        # for fi in file_infos:
-        #     # prod_id, actor, desc, rating, location, tags = self.parse_filename(f)
-        #     parsed = db_util.conv_fileinfo_to_product(fi)
-        #     # for p in parsed:
-        #     # print('p_id={}, desc={}, rate={}, disk={}, loc={}'.format(*parsed))
-        #     self.db.update_product(parsed)
         self.enable_req_buttons(True)
         QMessageBox.information(self, 'info', 'collect finished : {}'.format(len(file_infos)))
 
@@ -276,23 +270,6 @@ class MainWindow(QMainWindow, form_class):
 
         src_dir = self.txt_selected_src_dir.text()
         self.collect_req.emit('.', src_dir)
-
-    # def conv_fileinfo_to_product(self, file_info):
-    #     path = file_info.path
-    #
-    #     drive_volume = win32api.GetVolumeInformation(os.path.splitdrive(path)[0] + '/')
-    #     filename = os.path.basename(path)
-    #
-    #     name_only = os.path.splitext(filename)[0]
-    #     tokens = name_only.split('_')
-    #
-    #     product_no = tokens[0]
-    #     rate = tokens[-1] if tokens[-1] != product_no and tokens[-1].startswith('xx') else ''
-    #     desc = ' '.join(tokens[1:]).replace(rate, '') if len(tokens) > 1 else ''
-    #     disk_name = drive_volume[0]
-    #     location = path
-    #
-    #     return Product(product_no, desc, rate, disk_name, location, file_info.size, file_info.cdate)
 
     def get_table_row(self, widget):
         return self.tbl_search_result.indexAt(widget.pos()).row()

@@ -1,18 +1,13 @@
 #-*-coding:utf-8-*-
 
-import os
 import re
-import win32api
-import win32ui
 import fnmatch
 import stat
 from symlink import *
 import subprocess
-import collections
 
+from defines import *
 import file_util
-
-FileInfo = collections.namedtuple('FileInfo', ['path', 'size', 'cdate'])
 
 
 def get_file_size(file):

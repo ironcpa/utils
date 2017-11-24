@@ -1,9 +1,7 @@
 # -*-coding:utf-8-*-
 
-import collections
 import win32api
-
-Product = collections.namedtuple('Product', ['id', 'product_no', 'desc', 'rate', 'disk_name', 'location', 'size', 'cdate'])
+from defines import *
 
 
 def better_filename(self, product):
@@ -55,3 +53,40 @@ def get_drive(disk_label):
 
 def is_disk_online(disk):
     return get_drive(disk) is not None
+
+
+def conv_fileinfo_to_product(file_info):
+    path = file_info.path
+
+    drive_volume = win32api.GetVolumeInformation(os.path.splitdrive(path)[0] + '/')
+    filename = os.path.basename(path)
+
+    name_only = os.path.splitext(filename)[0]
+    tokens = name_only.split('_')
+
+    product_no = tokens[0]
+    rate = tokens[-1] if tokens[-1] != product_no and tokens[-1].startswith('xx') else ''
+    desc = ' '.join(tokens[1:]).replace(rate, '') if len(tokens) > 1 else ''
+    disk_name = drive_volume[0]
+    location = path
+
+    return Product(None, product_no, desc, rate, disk_name, location, file_info.size, file_info.cdate)
+
+
+def conv_path_to_product(path, id = None):
+    size = file_util.get_file_size(path)
+    cdate = file_util.get_ctime(path)
+    return modify_product(conv_fileinfo_to_product(FileInfo(path, size, cdate)), id = id)
+
+
+def modify_product(org_product, id = None, product_no = None, desc = None, rate = None, disk_name = None, location = None, size = None, cdate = None):
+    return Product(
+        id if id else org_product.id,
+        product_no if product_no else org_product.product_no,
+        desc if desc else org_product.desc,
+        rate if rate else org_product.rate,
+        disk_name if disk_name else org_product.disk_name,
+        location if location else org_product.location,
+        size if size else org_product.size,
+        cdate if cdate else org_product.cdate
+    )

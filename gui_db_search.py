@@ -1,18 +1,17 @@
 # -*-coding:utf-8-*-
 
-import os
 import sys
 import win32api
 import subprocess
 
 from PyQt5 import uic, QtGui, QtCore
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
 
 import ui_util
+import defines
+import common_util as cu
 from db_util import DB
 from widgets import *
-from common_util import Product
+from defines import Product, FileInfo
 
 cols = ['no', 'disk', 'size', 'date', 'rate', 'desc', 'open', 'dir', 'tool', 'del file', 'chk', 'copy', 'del db', 'location']
 column_def = {k: v for v, k in enumerate(cols)}
@@ -51,7 +50,7 @@ class MainWindow(QMainWindow):
             self.search_db()
 
     def setup_ui(self):
-        self.setStyleSheet('font: 20pt')
+        self.setStyleSheet('font: 10pt')
 
         self.setGeometry(0, 0, 1000, 600)
 
@@ -97,7 +96,7 @@ class MainWindow(QMainWindow):
             elif mod == Qt.ControlModifier | Qt.ShiftModifier:
                 self.open_curr_row_dir(self.get_del_button_at(self.tbl_result.currentIndex().row()))
             else:
-                # self.search_db()
+                self.search_db()
                 pass
         elif key == Qt.Key_Escape:
             if self.name_editor.isVisible():
@@ -195,6 +194,8 @@ class MainWindow(QMainWindow):
         self.tbl_result.setColumnWidth(column_def['desc'], 400)
         self.tbl_result.setColumnWidth(column_def['chk'], 20)
         # self.tbl_result.scrollToBottom()
+
+        self.tbl_result.setFocus()
 
     def filter_result(self):
         self.product_filter_model.setFilterRegExp(self.get_search_text())
@@ -333,13 +334,22 @@ class MainWindow(QMainWindow):
 
         # update curr item
         cur_product = self.model.item(cur_row, column_def['no']).data()
-        self.model.item(cur_row, column_def['location']).setText(new_target_path)
         # update db
-        cp = cur_product
-        new_product = Product(cp.id, cp.product_no, cp.desc, cp.rate, cp.disk_name, new_target_path, cp.size, cp.cdate)
+        new_product = cu.conv_path_to_product(new_target_path, cur_product.id)
+        self.update_row(cur_row, new_product)
         self.db.update_product(new_product)
 
         QMessageBox.information(self, 'renamed', 'renamed :\n{}\n<- {}'.format(new_target_path, target_path))
+
+    def update_row(self, row, product):
+        self.model.item(row, column_def['no']).setText(product.product_no)
+        self.model.item(row, column_def['no']).setData(product)
+        self.model.item(row, column_def['disk']).setText(product.disk_name)
+        self.model.item(row, column_def['rate']).setText(product.rate)
+        self.model.item(row, column_def['desc']).setText(product.desc)
+        self.model.item(row, column_def['location']).setText(product.location)
+        self.model.item(row, column_def['size']).setText(product.size)
+        self.model.item(row, column_def['date']).setText(product.cdate)
 
 
 old_hook = sys.excepthook

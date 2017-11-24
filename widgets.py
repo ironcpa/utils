@@ -133,6 +133,13 @@ class NameEditor(QWidget):
     def init_signal_slots(self):
         self.txt_name.returnPressed.connect(lambda: self.edit_finished.emit(self.txt_name.text()))
 
+    def keyPressEvent(self, e: QtGui.QKeyEvent):
+        key = e.key()
+        if key == Qt.Key_Return:
+            e.accept()
+        else:
+            super().keyPressEvent(e)
+
     def open_editor(self, name):
         self.set_name(name)
         self.set_position()

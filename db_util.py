@@ -1,28 +1,8 @@
-import collections
 import os
 import sqlite3 as sqlite
-import win32api
 
 import common_util as cu
-from common_util import Product
-
-
-def conv_fileinfo_to_product(file_info):
-    path = file_info.path
-
-    drive_volume = win32api.GetVolumeInformation(os.path.splitdrive(path)[0] + '/')
-    filename = os.path.basename(path)
-
-    name_only = os.path.splitext(filename)[0]
-    tokens = name_only.split('_')
-
-    product_no = tokens[0]
-    rate = tokens[-1] if tokens[-1] != product_no and tokens[-1].startswith('xx') else ''
-    desc = ' '.join(tokens[1:]).replace(rate, '') if len(tokens) > 1 else ''
-    disk_name = drive_volume[0]
-    location = path
-
-    return Product(None, product_no, desc, rate, disk_name, location, file_info.size, file_info.cdate)
+from defines import Product
 
 
 class DB:
@@ -30,7 +10,7 @@ class DB:
         self.db_file = os.path.dirname(__file__) + '\\data\\product_using.db'
 
     def insert_products(self, products):
-        params = [(p.desc, p.rate, p.product_no, p.disk_name, p.location, p.size, p.cdate) for p in products]
+        params = [(p.product_no, p.desc, p.rate, p.disk_name, p.location, p.size, p.cdate) for p in products]
 
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
@@ -40,7 +20,7 @@ class DB:
             c.commit()
 
     def insert_product_w_fileinfos(self, fileinfos):
-        self.insert_products([conv_fileinfo_to_product(fi) for fi in fileinfos])
+        self.insert_products([cu.conv_fileinfo_to_product(fi) for fi in fileinfos])
 
     def update_product(self, product):
         p = product
@@ -59,8 +39,8 @@ class DB:
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
             sql = "delete from product\n" \
-                  "where p_no = ? and disk = ? and location = ? and size = ? and cdate = ?"
-            rows = cur.execute(sql, (p.product_no, p.disk_name, p.location, p.size, p.cdate))
+                  "where id = ?"
+            rows = cur.execute(sql, (p.id,))
             c.commit()
 
             return rows.rowcount

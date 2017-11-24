@@ -44,6 +44,5 @@ if __name__ == '__main__':
             disk_name = None
             if len(path) <= 3: # drive root
                 disk_name = win32api.GetVolumeInformation(os.path.splitdrive(path)[0] + os.path.sep)
-                path = path + os.path.sep
             collect_files_to_db(disk_name, path)
 

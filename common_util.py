@@ -3,7 +3,7 @@
 import collections
 import win32api
 
-Product = collections.namedtuple('Product', ['product_no', 'desc', 'rate', 'disk_name', 'location', 'size', 'cdate'])
+Product = collections.namedtuple('Product', ['id', 'product_no', 'desc', 'rate', 'disk_name', 'location', 'size', 'cdate'])
 
 
 def better_filename(self, product):

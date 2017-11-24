@@ -22,43 +22,25 @@ def conv_fileinfo_to_product(file_info):
     disk_name = drive_volume[0]
     location = path
 
-    return Product(product_no, desc, rate, disk_name, location, file_info.size, file_info.cdate)
+    return Product(None, product_no, desc, rate, disk_name, location, file_info.size, file_info.cdate)
 
 
 class DB:
     def __init__(self):
         self.db_file = os.path.dirname(__file__) + '\\data\\product_using.db'
 
-    def update_product(self, product):
-        p = product
+    def insert_products(self, products):
+        params = [(p.desc, p.rate, p.product_no, p.disk_name, p.location, p.size, p.cdate) for p in products]
 
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
-            sql = "select count(*) from product\n" \
-                  "where p_no = ? and disk = ? and location = ? and size = ? and cdate = ?"
-            cur.execute(sql, (p.product_no, p.disk_name, p.location, p.size, p.cdate))
+            sql = 'insert into product(p_no, desc, rate, disk, location, size, cdate)\n'\
+                  'values(?, ?, ?, ?, ?, ?, ?)'
+            cur.executemany(sql, params)
+            c.commit()
 
-            result = cur.fetchone()[0]
-
-            if result > 0:
-                sql = "update product\n" \
-                      "set desc=?, rate=?\n" \
-                      "where p_no = ? and disk = ? and location = ? and size = ? and cdate = ?"
-                cur.execute(sql, (p.desc, p.rate, p.product_no, p.disk_name, p.location, p.size, p.cdate))
-                c.commit()
-            else:
-                sql = 'insert into product(p_no, desc, rate, disk, location, size, cdate)\n'\
-                      'values(?, ?, ?, ?, ?, ?, ?)'
-                cur.execute(sql, (p.product_no, p.desc, p.rate, p.disk_name, p.location, p.size, p.cdate))
-                c.commit()
-
-    def update_product_w_fileinfos(self, fileinfos):
-        for fi in fileinfos:
-            # prod_id, actor, desc, rating, location, tags = self.parse_filename(f)
-            parsed = conv_fileinfo_to_product(fi)
-            # for p in parsed:
-            # print('p_id={}, desc={}, rate={}, disk={}, loc={}'.format(*parsed))
-            self.update_product(parsed)
+    def insert_product_w_fileinfos(self, fileinfos):
+        self.insert_products([conv_fileinfo_to_product(fi) for fi in fileinfos])
 
     def delete_product(self, product):
         p = product
@@ -157,7 +139,7 @@ class DB:
         return sql, params
 
     def make_all_match_sql(self, target_fields, tokens):
-        sql = "select p_no, desc, rate, disk, location, size, cdate from product\n" \
+        sql = "select id, p_no, desc, rate, disk, location, size, cdate from product\n" \
               "where "
         params = []
         for i, f in enumerate(target_fields):
@@ -175,7 +157,7 @@ class DB:
     def search_all(self):
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
-            sql = "select p_no, desc, rate, disk, location, size, cdate from product order by cdate desc limit 200"
+            sql = "select id, p_no, desc, rate, disk, location, size, cdate from product order by cdate desc limit 200"
             cur.execute(sql)
             result = cur.fetchall()
 
@@ -184,7 +166,7 @@ class DB:
     def search_dup_list(self):
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
-            sql = "select p.p_no, p.desc, p.rate, p.disk, p.location, p.size, p.cdate \n" \
+            sql = "select p.id, p.p_no, p.desc, p.rate, p.disk, p.location, p.size, p.cdate \n" \
                   "from product as p join \n" \
                   "     (select p_no from product group by p_no having count(p_no) > 1) as d \n" \
                   "     on p.p_no = d.p_no \n" \

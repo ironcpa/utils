@@ -14,11 +14,11 @@ def collect_files_to_db(disk_name, path):
     if disk_name and co.is_disk_online(disk_name):
         db.delete_by_disk(disk_name)
         fileinfos = find_file.find_file(path, '')
-        db.update_product_w_fileinfos(fileinfos)
+        db.insert_product_w_fileinfos(fileinfos)
     else:
         db.delete_by_dir(path)
         fileinfos = find_file.find_file(path, '')
-        db.update_product_w_fileinfos(fileinfos)
+        db.insert_product_w_fileinfos(fileinfos)
 
 
 if __name__ == '__main__':
@@ -42,9 +42,10 @@ if __name__ == '__main__':
         else:
             path = sys.argv[2]
             disk_name = None
-            if len(path) == 3:
-                disk_name = win32api.GetVolumeInformation(os.path.splitdrive(path)[0])
-                collect_files_to_db(disk_name, path)
+            if len(path) <= 3: # drive root
+                disk_name = win32api.GetVolumeInformation(os.path.splitdrive(path)[0] + os.path.sep)
+                path = path + os.path.sep
+            collect_files_to_db(disk_name, path)
 
         # print(sys.argv[2])
         # path = sys.argv[2]

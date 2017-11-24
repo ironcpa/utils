@@ -191,7 +191,7 @@ class MainWindow(QMainWindow, form_class):
 
     def on_collect_finished(self):
         file_infos = self.search_worker.search_results
-        self.db.update_product_w_fileinfos(file_infos)
+        self.db.insert_product_w_fileinfos(file_infos)
         self.enable_req_buttons(True)
         QMessageBox.information(self, 'info', 'collect finished : {}'.format(len(file_infos)))
 

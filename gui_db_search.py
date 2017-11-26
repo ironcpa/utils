@@ -50,7 +50,7 @@ class MainWindow(QMainWindow):
             self.search_db()
 
     def setup_ui(self):
-        self.setStyleSheet('font: 10pt')
+        self.setStyleSheet('font: 20pt')
 
         self.setGeometry(0, 0, 1000, 600)
 
@@ -97,7 +97,8 @@ class MainWindow(QMainWindow):
                 self.open_curr_row_dir(self.get_del_button_at(self.tbl_result.currentIndex().row()))
             else:
                 self.search_db()
-                pass
+        elif key == Qt.Key_Tab and mod == Qt.ControlModifier:
+            self.close()
         elif key == Qt.Key_Escape:
             if self.name_editor.isVisible():
                 self.name_editor.hide()
@@ -340,6 +341,8 @@ class MainWindow(QMainWindow):
         self.db.update_product(new_product)
 
         QMessageBox.information(self, 'renamed', 'renamed :\n{}\n<- {}'.format(new_target_path, target_path))
+        self.name_editor.hide()
+        self.tbl_result.setFocus()
 
     def update_row(self, row, product):
         self.model.item(row, column_def['no']).setText(product.product_no)

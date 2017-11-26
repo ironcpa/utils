@@ -6,6 +6,7 @@ import subprocess
 
 import common_util as co
 import file_util
+import ui_util
 
 
 def get_clip_infos(clip_dir, filename, include_sample_clip = False):
@@ -30,10 +31,13 @@ def merge_all_clips(src_path, clip_paths, is_async = False):
     if len(clip_paths) < 1:
         return
 
-    merged_file = os.path.dirname(src_path) + '\\con_' + os.path.basename(src_path)
+    pno = file_util.get_product_no(os.path.basename(src_path))
+    # merged_file = os.path.dirname(src_path) + '\\con_' + os.path.basename(src_path)
+    merged_file = os.path.dirname(src_path) + os.path.sep + pno + '_con' + os.path.basename(src_path).replace(pno, '')
 
     if len(clip_paths) == 1:
-        shutil.move(clip_paths[0], merged_file)
+        # shutil.move(clip_paths[0], merged_file)
+        shutil.copy(clip_paths[0], merged_file)
         return merged_file
 
     tmp_list_file_name = 'tmp_list.txt'

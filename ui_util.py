@@ -23,8 +23,12 @@ def open_path(path):
     subprocess.Popen(cmd)
 
 
-def delete_path(widget, path):
-    ok = QMessageBox.question(widget, 'alert', 'Sure to delete?', QMessageBox.Yes, QMessageBox.No)
+def delete_path(widget, path, yes=False):
+    ok = QMessageBox.No
+    if yes:
+        ok = QMessageBox.Yes
+    else:
+        ok = QMessageBox.question(widget, 'alert', 'Sure to delete?', QMessageBox.Yes, QMessageBox.No)
     if ok == QMessageBox.Yes:
         return send2trash(path) is None
     return False

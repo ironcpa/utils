@@ -146,8 +146,12 @@ class MainWindow(QMainWindow, form_class):
 
     def make_direct_merge(self):
         src_filename = os.path.splitext(os.path.basename(self.src_path()))[0]
-        merged_name = ffmpeg_util.merge_all_clips(self.src_path(), ffmpeg_util.get_clip_paths('c:\\__clips\\', src_filename))
-        QMessageBox.information(self, 'job', 'merge complete : {}'.format(merged_name))
+        clip_paths = ffmpeg_util.get_clip_paths('c:\\__clips\\', src_filename)
+        merged_path = ffmpeg_util.merge_all_clips(self.src_path(), clip_paths)
+        for p in clip_paths:
+            ui_util.delete_path(self, p, True)
+        ui_util.delete_path(self, self.src_path(), True)
+        QMessageBox.information(self, 'info', 'merge complete : {}'.format(merged_path))
 
     def open_clip_tool(self):
         command = 'pythonw c:/__devroot/utils/gui_clip_tool.py "{}"'.format(self.src_path())

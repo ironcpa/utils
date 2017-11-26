@@ -147,6 +147,7 @@ class NameEditor(QWidget):
         self.show()
 
     def set_position(self):
+        self.setFixedWidth(self.parent().width() - 20)
         self.move((self.parent().width() - self.width()) // 2, (self.parent().height() - self.height()) // 2)
 
     def set_name(self, name):

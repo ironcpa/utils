@@ -115,7 +115,11 @@ class MainWindow(QMainWindow, form_class):
 
     def merge_all_clips(self):
         model_clip_paths = [self.clip_model.item(r, column_def['path']).text() for r in range(self.clip_model.rowCount())]
-        ffmpeg_util.merge_all_clips(self.src_path(), model_clip_paths)
+        merged_path = ffmpeg_util.merge_all_clips(self.src_path(), model_clip_paths)
+        for p in model_clip_paths:
+            ui_util.delete_path(self, p, True)
+        ui_util.delete_path(self, self.src_path(), True)
+        QMessageBox.information(self, 'info', 'merge complete : {}'.format(merged_path))
 
     def on_dir_src_clicked(self):
         ui_util.open_path_dir(self.lbl_src_file.text())

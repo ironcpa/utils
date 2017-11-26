@@ -14,7 +14,7 @@ class DB:
 
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
-            sql = 'insert into product(p_no, desc, rate, disk, location, size, cdate)\n'\
+            sql = 'insert into product(p_no, desc, rate, disk, location, size, cdate)\n' \
                   'values(?, ?, ?, ?, ?, ?, ?)'
             cur.executemany(sql, params)
             c.commit()
@@ -26,8 +26,8 @@ class DB:
         p = product
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
-            sql = 'update product\n'\
-                  'set p_no = ?, disk = ?, location = ?, size = ?, cdate = ?\n'\
+            sql = 'update product\n' \
+                  'set p_no = ?, disk = ?, location = ?, size = ?, cdate = ?\n' \
                   'where id = ?'
             rows = cur.execute(sql, (p.product_no, p.disk_name, p.location, p.size, p.cdate, p.id))
             c.commit()
@@ -71,7 +71,7 @@ class DB:
             products.append(Product(*r))
         return products
 
-    def search(self, text, is_all_match = False):
+    def search(self, text, is_all_match=False):
         # # test
         # return [Product('aaa-123', 'ddd', 'xxx', 'disk', 'c:/aaa.txt', '10.00', '2017-07-11'),
         #         Product('bbb-456', 'bbb', 'xxx', 'disk', 'c:/aaa.txt', '5.00', '2017-08-01aa)]
@@ -86,15 +86,15 @@ class DB:
             else:
                 return self.search_any_tokens(tokens)
 
-        # # test multi field search
-        # with sqlite.connect(self.db_file) as c:
-        #     cur = c.cursor()
-        #     sql = "select p_no, desc, rate, disk, location from product\n"\
-        #           "where p_no || desc like ?"
-        #     cur.execute(sql, ('%' + text + '%',))
-        #     result = cur.fetchall()
-        #
-        #     return self.to_product(result)
+                # # test multi field search
+                # with sqlite.connect(self.db_file) as c:
+                #     cur = c.cursor()
+                #     sql = "select p_no, desc, rate, disk, location from product\n"\
+                #           "where p_no || desc like ?"
+                #     cur.execute(sql, ('%' + text + '%',))
+                #     result = cur.fetchall()
+                #
+                #     return self.to_product(result)
 
     def search_any_tokens(self, tokens):
         with sqlite.connect(self.db_file) as c:
@@ -120,9 +120,9 @@ class DB:
         params = []
         for i, f in enumerate(target_fields):
             for j, t in enumerate(tokens):
-                if not(i == 0 and j == 0):
+                if not (i == 0 and j == 0):
                     sql += "union\n"
-                sql += "select p_no, desc, rate, disk, location, size, cdate from product\n" \
+                sql += "select id, p_no, desc, rate, disk, location, size, cdate from product\n" \
                        "where {} like ?\n".format(f)
             for t in tokens:
                 params.append('%' + t + '%')
@@ -149,7 +149,11 @@ class DB:
     def search_all(self):
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
-            sql = "select id, p_no, desc, rate, disk, location, size, cdate from product order by cdate desc limit 200"
+            sql = "select id, p_no, desc, rate, disk, location, size, cdate\n" \
+                  "from product\n" \
+                  "where rate = ''\n" \
+                  "order by cdate desc\n" \
+                  "limit 200"
             cur.execute(sql)
             result = cur.fetchall()
 

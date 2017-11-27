@@ -106,10 +106,7 @@ class MainWindow(UtilWindow):
         if key == Qt.Key_Return:
             self.on_search_dir_clicked()
         elif key == Qt.Key_Escape:
-            if self.setting_ui.isVisible():
-                self.setting_ui.hide()
-            else:
-                ui_util.focus_to_text(self.txt_search_text)
+            ui_util.focus_to_text(self.txt_search_text)
         elif key == Qt.Key_S and mod == Qt.ControlModifier:
             self.setting_ui.show()
         else:

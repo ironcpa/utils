@@ -50,18 +50,18 @@ class MainWindow(UtilWindow):
     def setup_ui(self):
         self.setGeometry(0, 0, 1280, 768)
 
-        col1_w = 200
+        col1_w = 120
 
         self.flc_src_file = FileChooser(False, 'file name')
         self.btn_reload = QPushButton('reload')
         self.btn_dir_src = QPushButton('src dir')
         self.btn_open_src = QPushButton('src open')
         self.btn_del_src = QPushButton('src delete')
-        self.txt_start_time = LabeledLineEdit('start', '', col1_w)
+        self.txt_start_time = LabeledLineEdit('start', '', col1_w, col1_w)
         self.txt_start_time.set_input_mask('00 : 00 : 00')
         self.btn_to_end_time = QPushButton('E')
         self.chk_include_samples = QCheckBox('include samples')
-        self.txt_end_time = LabeledLineEdit('end', '', col1_w)
+        self.txt_end_time = LabeledLineEdit('end', '', col1_w, col1_w)
         self.txt_end_time.set_input_mask('00 : 00 : 00')
         self.btn_to_start_time = QPushButton('S')
         self.txt_clip_name = LabeledLineEdit('clip name', '', col1_w)
@@ -86,8 +86,11 @@ class MainWindow(UtilWindow):
         base_layout.addLayout(file_button_group)
 
         start_end_group = QGridLayout()
-        start_end_group.addWidget(self.txt_start_time, 0, 0, 1, 2)
-        start_end_group.addWidget(self.txt_end_time, 1, 0, 1, 2)
+        start_end_group.setColumnStretch(5, 4)
+        start_end_group.addWidget(self.txt_start_time, 0, 0)
+        start_end_group.addWidget(self.btn_to_end_time, 0, 2)
+        start_end_group.addWidget(self.txt_end_time, 1, 0)
+        start_end_group.addWidget(self.btn_to_start_time, 1, 2)
         start_end_group.addWidget(self.chk_include_samples, 0, 3)
         base_layout.addLayout(start_end_group)
 
@@ -151,9 +154,6 @@ class MainWindow(UtilWindow):
             self.on_encode_clicked()
         elif mod == Qt.ControlModifier and key == Qt.Key_C:
             ui_util.copy_to_clipboard(self.src_product_no())
-        elif key == Qt.Key_Escape:
-            if self.setting_ui.isVisible():
-                self.setting_ui.hide()
         elif key == Qt.Key_S and mod == Qt.ControlModifier:
             self.setting_ui.show()
         else:
@@ -200,7 +200,7 @@ class MainWindow(UtilWindow):
         # if os.path.exists(out_clip_path):
         #     return False, 'already exists'
 
-        src_file = self.lbl_src_file.text()
+        src_file = self.flc_src_file.path()
         command = ''
         if self.chk_reencode.isChecked():
             command = 'ffmpeg -i "{}" -ss {} -to {} {} -y'.format(src_file, start_time, end_time, out_clip_path)

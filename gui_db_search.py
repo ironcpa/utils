@@ -29,6 +29,7 @@ class MainWindow(UtilWindow):
         self.btn_filter.clicked.connect(self.filter_result)
         self.btn_search_dup.clicked.connect(lambda: self.search_db(True))
         self.name_editor.edit_finished.connect(self.update_file_name_n_synk_db)
+        self.name_editor.closed.connect(lambda: self.tbl_result.setFocus())
 
         self.model = QtGui.QStandardItemModel(0, len(column_def))
         # self.model.setHorizontalHeaderLabels([*column_def])
@@ -76,6 +77,7 @@ class MainWindow(UtilWindow):
 
     def init_setting_ui(self):
         self.setting_ui = BaseSearchSettingUI(self)
+        self.setting_ui.closed.connect(lambda: self.tbl_result.setFocus())
         self.setting_ui.hide()
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
@@ -95,14 +97,14 @@ class MainWindow(UtilWindow):
         elif key == Qt.Key_Tab and mod == Qt.ControlModifier:
             self.close()
         elif key == Qt.Key_Escape:
-            if self.name_editor.isVisible():
-                self.name_editor.hide()
-                self.tbl_result.setFocus()
-            elif self.setting_ui.isVisible():
-                self.setting_ui.hide()
-                self.tbl_result.setFocus()
-            else:
-                ui_util.focus_to_text(self.txt_search)
+            # if self.name_editor.isVisible():
+            #     self.name_editor.hide()
+            #     self.tbl_result.setFocus()
+            # elif self.setting_ui.isVisible():
+            #     self.setting_ui.hide()
+            #     self.tbl_result.setFocus()
+            # else:
+            ui_util.focus_to_text(self.txt_search)
         elif key == Qt.Key_D and mod == Qt.ControlModifier:
             self.open_curr_row_db_search()
         elif key == Qt.Key_F and mod == Qt.ControlModifier:

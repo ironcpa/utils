@@ -50,13 +50,16 @@ class UtilWindow(QMainWindow):
 class LabeledLineEdit(QWidget):
     return_pressed = pyqtSignal(str)
 
-    def __init__(self, label_text='', edit_text='', label_w=0):
+    def __init__(self, label_text='', edit_text='', label_w=0, txt_w=0):
         super().__init__()
+
         self.init_ui()
 
         self.label.setText(label_text)
         if label_w > 0:
             self.label.setFixedWidth(label_w)
+        if txt_w > 0:
+            self.lineedit.setFixedWidth(txt_w)
         self.lineedit.setText(str(edit_text))
 
         self.lineedit.returnPressed.connect(lambda: self.return_pressed.emit(self.lineedit.text()))
@@ -172,6 +175,7 @@ class SearchView(QTableView):
 
 class NameEditor(QWidget):
     edit_finished = pyqtSignal(str)
+    closed = pyqtSignal()
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -199,8 +203,11 @@ class NameEditor(QWidget):
         key = e.key()
         if key == Qt.Key_Return:
             e.accept()
-        else:
-            super().keyPressEvent(e)
+        elif key == Qt.Key_Escape:
+            self.hide()
+            self.closed.emit()
+        # else:
+        #     super().keyPressEvent(e)
 
     def open_editor(self, name):
         self.set_name(name)
@@ -229,9 +236,12 @@ class Settings():
 
 class BaseSearchSettingUI(QWidget, Settings):
     apply_req = pyqtSignal()
+    closed = pyqtSignal()
 
     def __init__(self, parent):
         super().__init__(parent)
+
+        self.setFocusPolicy(Qt.StrongFocus)
 
         self.setup_ui()
 
@@ -262,6 +272,14 @@ class BaseSearchSettingUI(QWidget, Settings):
         self.txt_font_size = QLineEdit()
         self.gridlayout.addWidget(QLabel(name), 0, 0)
         self.gridlayout.addWidget(self.txt_font_size, 0, 1)
+
+    def keyPressEvent(self, e: QtGui.QKeyEvent):
+        key = e.key()
+        if key == Qt.Key_Return:
+            self.apply_req.emit()
+        elif key == Qt.Key_Escape:
+            self.hide()
+            self.closed.emit()
 
     def paintEvent(self, e: QtGui.QPaintEvent):
         painter = QtGui.QPainter()

@@ -117,9 +117,6 @@ class MainWindow(UtilWindow):
         mod = QApplication.keyboardModifiers()
         if mod == Qt.ControlModifier and key == Qt.Key_C:
             ui_util.copy_to_clipboard(self.src_product_no())
-        elif key == Qt.Key_Escape:
-            if self.setting_ui.isVisible():
-                self.setting_ui.hide()
         elif key == Qt.Key_S and mod == Qt.ControlModifier:
             self.setting_ui.show()
         else:

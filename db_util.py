@@ -65,6 +65,16 @@ class DB:
 
             return rows.rowcount
 
+    def delete_by_path(self, path):
+        with sqlite.connect(self.db_file) as c:
+            cur = c.cursor()
+            sql = "delete from product\n" \
+                  "where location = ?"
+            rows = cur.execute(sql, (path,))
+            c.commit()
+
+            return rows.rowcount
+
     def to_product(self, db_rows):
         products = []
         for r in db_rows:

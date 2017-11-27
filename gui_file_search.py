@@ -1,6 +1,8 @@
 # -*-coding:utf-8-*-
 
+import common_util as cu
 import ui_util
+import db_util
 from find_file import *
 from db_util import DB
 from widgets import *
@@ -15,7 +17,8 @@ class MainWindow(UtilWindow):
 
     def __init__(self, src_dir, src_file):
         super().__init__('file_search')
-        # self.setupUi(self)
+
+        self.db = db_util.DB()
 
         self.thread = QThread()
         self.thread.start()
@@ -238,6 +241,7 @@ class MainWindow(UtilWindow):
         path = self.model.item(row, column_def['path']).text()
         if ui_util.delete_path(self, path):
             self.model.removeRow(row)
+            self.db.delete_by_path(path)
 
     def on_open_capture_tool_clicked(self):
         command = 'pythonw c:/__devroot/utils/gui_capture_tool.py "{}"'.format(self.get_selected_path(self.sender()))
@@ -277,6 +281,9 @@ class MainWindow(UtilWindow):
 
                 tgt_item.setText(new_tgt_path)
                 self.release_all_checkbox()
+
+                self.db.delete_by_path(src_path)
+                """todo: update product fields on db"""
 
     def release_all_checkbox(self):
         for r in range(self.model.rowCount()):

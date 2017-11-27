@@ -283,7 +283,7 @@ class MainWindow(UtilWindow):
                 self.release_all_checkbox()
 
                 self.db.delete_by_path(src_path)
-                """todo: update product fields on db"""
+                '''todo: update product fields on db'''
 
     def release_all_checkbox(self):
         for r in range(self.model.rowCount()):

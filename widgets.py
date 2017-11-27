@@ -1,5 +1,6 @@
 import os
 import sys
+from abc import ABC, abstractmethod
 
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
@@ -13,6 +14,18 @@ class UtilWindow(QMainWindow):
         super().__init__()
 
         self.app_name = app_name
+        self.setting_ui = None
+
+        self.setup_ui()
+        self.init_setting_ui()
+
+    @abstractmethod
+    def setup_ui(self):
+        pass
+
+    @abstractmethod
+    def init_setting_ui(self):
+        pass
 
     def closeEvent(self, e: QtGui.QCloseEvent):
         self.save_settings()
@@ -21,9 +34,12 @@ class UtilWindow(QMainWindow):
 
     def load_settings(self):
         self.move(ui_util.load_settings(self, self.app_name, 'pos', QPoint(0, 0)))
+        self.setting_ui.set_font_size(ui_util.load_settings(self, self.app_name, 'font_size', 20))
+        self.setStyleSheet('font: ' + self.setting_ui.font_size() + 'pt')
 
     def save_settings(self):
         ui_util.save_settings(self, self.app_name, 'pos', self.pos())
+        ui_util.save_settings(self, self.app_name, 'font_size', self.setting_ui.font_size())
 
 
 class LabeledLineEdit(QWidget):
@@ -176,7 +192,17 @@ class NameEditor(QWidget):
         self.txt_name.setText(name)
 
 
-class DBSearchSettings(QWidget):
+class BaseSettings():
+    @abstractmethod
+    def set_font_size(self, value):
+        pass
+
+    @abstractmethod
+    def font_size(self):
+        pass
+
+
+class DBSearchSettingUI(QWidget, BaseSettings):
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -226,7 +252,7 @@ class TestWindow(QWidget):
     def setup_ui(self):
         self.setLayout(QGridLayout())
 
-        db_setting = DBSearchSettings(self)
+        db_setting = DBSearchSettingUI(self)
         self.layout().addWidget(db_setting, 0, 0)
 
 

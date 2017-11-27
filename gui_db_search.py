@@ -25,8 +25,6 @@ class MainWindow(UtilWindow):
 
         self.search_stack = []
 
-        self.setup_ui()
-
         self.btn_search.clicked.connect(self.search_db)
         self.btn_filter.clicked.connect(self.filter_result)
         self.btn_search_dup.clicked.connect(lambda: self.search_db(True))
@@ -76,24 +74,9 @@ class MainWindow(UtilWindow):
         self.name_editor = NameEditor(self)
         self.name_editor.hide()
 
-        self.setting_ui = DBSearchSettings(self)
+    def init_setting_ui(self):
+        self.setting_ui = DBSearchSettingUI(self)
         self.setting_ui.hide()
-
-    def load_settings(self):
-        super().load_settings()
-        # self.move(ui_util.load_settings(self, 'db_search', 'pos', QPoint(0, 0)))
-        self.setting_ui.set_font_size(ui_util.load_settings(self, 'db_search', 'font_size', 20))
-        self.setStyleSheet('font: ' + self.setting_ui.font_size() + 'pt')
-
-    def save_settings(self):
-        super().save_settings()
-        # ui_util.save_settings(self, 'db_search', 'pos', self.pos())
-        ui_util.save_settings(self, 'db_search', 'font_size', self.setting_ui.font_size())
-
-    # def closeEvent(self, e: QtGui.QCloseEvent):
-    #     self.save_settings()
-    #
-    #     e.accept()
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()

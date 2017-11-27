@@ -10,8 +10,8 @@ import ui_util
 
 
 class UtilWindow(QMainWindow):
-    def __init__(self, app_name):
-        super().__init__()
+    def __init__(self, app_name, parent = None):
+        super().__init__(parent)
 
         self.app_name = app_name
         self.setting_ui = None
@@ -84,6 +84,9 @@ class LabeledLineEdit(QWidget):
 
     def select_all(self):
         self.lineedit.selectAll()
+
+    def set_input_mask(self, mask):
+        self.lineedit.setInputMask(mask)
 
 
 class FileChooser(QWidget):

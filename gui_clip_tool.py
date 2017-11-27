@@ -5,30 +5,28 @@ import sys
 import os
 import re
 
-from PyQt5 import uic, QtGui
+from PyQt5 import QtGui
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from send2trash import send2trash
 
+from widgets import *
 import ui_util
 import file_util
 import ffmpeg_util
 
-form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_clip_tool.ui")[0]
 column_def = {'dir': 0, 'open': 1, 'del': 2, 'reclip': 3, 'copy setting':4, 'size':5, 'path': 6}
 
 
-class MainWindow(QMainWindow, form_class):
+class MainWindow(UtilWindow):
     def __init__(self, parent, src_path):
-        super().__init__(parent)
-        self.parent = parent
-        self.setupUi(self)
+        super().__init__('clip_tool', parent)
 
-        self.lbl_src_file.setText(src_path)
+        self.flc_src_file.set_path(src_path)
 
         src_name_only, src_ext = os.path.splitext(os.path.basename(src_path))
         clip_name = 'clip_' + src_name_only
-        self.txt_clip_name.setText('c:\\__clips\\' + clip_name + '_{}_{}' + src_ext)
+        self.txt_clip_name.set_text('c:\\__clips\\' + clip_name + '_{}_{}' + src_ext)
 
         self.btn_encode.clicked.connect(self.on_encode_clicked)
         self.btn_merge_all_clips.clicked.connect(self.merge_all_clips)
@@ -40,30 +38,81 @@ class MainWindow(QMainWindow, form_class):
         self.btn_reload.clicked.connect(self.load_rel_clips)
         self.btn_del_all.clicked.connect(self.delete_all_clips)
 
+        self.setting_ui.apply_req.connect(self.apply_curr_settings)
+
         self.clip_model = QtGui.QStandardItemModel(0, len(column_def))
         self.tbl_clip_result.setModel(self.clip_model)
 
         self.load_rel_clips()
 
-        # # test
-        # self.txt_start_time.setText('000000')
-        # self.txt_end_time.setText('000010')
-
         self.load_settings()
 
-    def load_settings(self):
-        self.move(ui_util.load_settings(self, 'clip_tool', 'pos', QPoint(0, 0)))
+    def setup_ui(self):
+        self.setGeometry(0, 0, 1280, 768)
 
-    def save_settings(self):
-        ui_util.save_settings(self, 'clip_tool', 'pos', self.pos())
+        col1_w = 200
 
-    def closeEvent(self, e: QtGui.QCloseEvent):
-        self.save_settings()
+        self.flc_src_file = FileChooser(False, 'file name')
+        self.btn_reload = QPushButton('reload')
+        self.btn_dir_src = QPushButton('src dir')
+        self.btn_open_src = QPushButton('src open')
+        self.btn_del_src = QPushButton('src delete')
+        self.txt_start_time = LabeledLineEdit('start', '', col1_w)
+        self.txt_start_time.set_input_mask('00 : 00 : 00')
+        self.btn_to_end_time = QPushButton('E')
+        self.chk_include_samples = QCheckBox('include samples')
+        self.txt_end_time = LabeledLineEdit('end', '', col1_w)
+        self.txt_end_time.set_input_mask('00 : 00 : 00')
+        self.btn_to_start_time = QPushButton('S')
+        self.txt_clip_name = LabeledLineEdit('clip name', '', col1_w)
+        self.btn_encode = QPushButton('encode')
+        self.chk_reencode = QCheckBox('re-encode?')
+        self.btn_merge_all_clips = QPushButton('merge all')
+        self.lbl_clip_total_size = QLabel()
+        self.btn_del_all = QPushButton('del all clips')
+        self.tbl_clip_result = QTableView()
 
-        e.accept()
+        self.setCentralWidget(QWidget())
+        base_layout = QVBoxLayout()
+        self.centralWidget().setLayout(base_layout)
+
+        base_layout.addWidget(self.flc_src_file)
+
+        file_button_group = QHBoxLayout()
+        file_button_group.addWidget(self.btn_reload)
+        file_button_group.addWidget(self.btn_dir_src)
+        file_button_group.addWidget(self.btn_open_src)
+        file_button_group.addWidget(self.btn_del_src)
+        base_layout.addLayout(file_button_group)
+
+        start_end_group = QGridLayout()
+        start_end_group.addWidget(self.txt_start_time, 0, 0, 1, 2)
+        start_end_group.addWidget(self.txt_end_time, 1, 0, 1, 2)
+        start_end_group.addWidget(self.chk_include_samples, 0, 3)
+        base_layout.addLayout(start_end_group)
+
+        base_layout.addWidget(self.txt_clip_name)
+
+        encode_group = QHBoxLayout()
+        encode_group.addWidget(self.btn_encode)
+        encode_group.addWidget(self.chk_reencode)
+        encode_group.addWidget(self.btn_merge_all_clips)
+        base_layout.addLayout(encode_group)
+
+        table_button_group = QHBoxLayout()
+        table_button_group.addWidget(QLabel('total size: '))
+        table_button_group.addWidget(self.lbl_clip_total_size)
+        table_button_group.addWidget(self.btn_del_all)
+        base_layout.addLayout(table_button_group)
+
+        base_layout.addWidget(self.tbl_clip_result)
+
+    def init_setting_ui(self):
+        self.setting_ui = BaseSearchSettingUI(self)
+        self.setting_ui.hide()
 
     def src_path(self):
-        return self.lbl_src_file.text()
+        return self.flc_src_file.path()
 
     def src_product_no(self):
         _, fname = os.path.split(os.path.splitext(self.src_path())[0])
@@ -97,11 +146,16 @@ class MainWindow(QMainWindow, form_class):
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
-        modifiers = QApplication.keyboardModifiers()
+        mod = QApplication.keyboardModifiers()
         if key == Qt.Key_Return:
             self.on_encode_clicked()
-        elif modifiers == Qt.ControlModifier and key == Qt.Key_C:
+        elif mod == Qt.ControlModifier and key == Qt.Key_C:
             ui_util.copy_to_clipboard(self.src_product_no())
+        elif key == Qt.Key_Escape:
+            if self.setting_ui.isVisible():
+                self.setting_ui.hide()
+        elif key == Qt.Key_S and mod == Qt.ControlModifier:
+            self.setting_ui.show()
         else:
             event.ignore()
 

@@ -38,7 +38,6 @@ class MainWindow(UtilWindow):
 
         self.product_filter_model = QtCore.QSortFilterProxyModel()
         self.product_filter_model.setSourceModel(self.model)
-        self.product_filter_model.setFilterKeyColumn(column_def['no'])
 
         self.db = DB()
 
@@ -70,6 +69,7 @@ class MainWindow(UtilWindow):
         gridlayout.addLayout(controllayout, 0, 0)
 
         self.tbl_result = SearchView()
+        self.tbl_result.setSortingEnabled(True)
         gridlayout.addWidget(self.tbl_result)
 
         self.name_editor = NameEditor(self)
@@ -97,13 +97,6 @@ class MainWindow(UtilWindow):
         elif key == Qt.Key_Tab and mod == Qt.ControlModifier:
             self.close()
         elif key == Qt.Key_Escape:
-            # if self.name_editor.isVisible():
-            #     self.name_editor.hide()
-            #     self.tbl_result.setFocus()
-            # elif self.setting_ui.isVisible():
-            #     self.setting_ui.hide()
-            #     self.tbl_result.setFocus()
-            # else:
             ui_util.focus_to_text(self.txt_search)
         elif key == Qt.Key_D and mod == Qt.ControlModifier:
             self.open_curr_row_db_search()
@@ -198,10 +191,14 @@ class MainWindow(UtilWindow):
         self.tbl_result.setColumnWidth(column_def['chk'], 20)
         # self.tbl_result.scrollToBottom()
 
+        self.tbl_result.setModel(self.model)
         self.tbl_result.setFocus()
 
     def filter_result(self):
+        """only by p_no"""
+        self.product_filter_model.setFilterKeyColumn(column_def['no'])
         self.product_filter_model.setFilterRegExp(self.get_search_text())
+        self.tbl_result.setModel(self.product_filter_model)
 
     def get_path_on_row(self, widget):
         disk_label = self.get_text_on_table_widget(widget, column_def['disk'])

@@ -1,19 +1,10 @@
 # -*-coding:utf-8-*-
 
-import sys
-
-from PyQt5 import uic, QtGui
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from send2trash import send2trash
-
 import ui_util
 from find_file import *
 from db_util import DB
 from widgets import *
 
-# form_class = uic.loadUiType("./resource/gui_file_search.ui")[0]
-form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_file_search.ui")[0]
 column_def = {'checkbox': 0, 'dir': 1, 'open': 2, 'del': 3, 'capture': 4, 'clip': 5, 'copy name': 6, 'size': 7, 'path': 8}
 
 
@@ -279,7 +270,7 @@ class MainWindow(UtilWindow):
                 break
 
         if src_path != '' and src_row >= 0:
-            if self.delete_path(src_path):
+            if ui_util.delete_path(src_path):
                 self.model.removeRow(src_row)
 
                 tgt_dir = os.path.dirname(tgt_path)
@@ -312,11 +303,6 @@ class MainWindow(UtilWindow):
     def get_selected_path(self, widget):
         row = self.get_table_row(widget)
         return self.model.item(row, column_def['path']).text()
-
-    def delete_path(self, path):
-        reply = QMessageBox.question(self, 'alert', 'Sure to delete?', QMessageBox.Yes, QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            return send2trash(path) is None
 
 
 class SearchWorker(QObject):

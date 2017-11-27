@@ -301,8 +301,8 @@ class MainWindow(UtilWindow):
         time_form = self.get_time_form(path)
 
         if time_form is not '':
-            self.txt_start_time.setText(time_form[0:6])
-            self.txt_end_time.setText(time_form[-6:])
+            self.txt_start_time.set_text(time_form[0:6])
+            self.txt_end_time.set_text(time_form[-6:])
 
     def get_time_form(self, path):
         clip_name = os.path.splitext(path)[0]

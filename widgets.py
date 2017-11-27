@@ -35,6 +35,11 @@ class UtilWindow(QMainWindow):
     def load_settings(self):
         self.move(ui_util.load_settings(self, self.app_name, 'pos', QPoint(0, 0)))
         self.setting_ui.set_font_size(ui_util.load_settings(self, self.app_name, 'font_size', 20))
+
+        self.apply_curr_settings()
+
+    def apply_curr_settings(self):
+        """currently only font size"""
         self.setStyleSheet('font: ' + self.setting_ui.font_size() + 'pt')
 
     def save_settings(self):
@@ -45,11 +50,13 @@ class UtilWindow(QMainWindow):
 class LabeledLineEdit(QWidget):
     return_pressed = pyqtSignal(str)
 
-    def __init__(self, label_text = '', edit_text = ''):
+    def __init__(self, label_text='', edit_text='', label_w=0):
         super().__init__()
         self.init_ui()
 
         self.label.setText(label_text)
+        if label_w > 0:
+            self.label.setFixedWidth(label_w)
         self.lineedit.setText(str(edit_text))
 
         self.lineedit.returnPressed.connect(lambda: self.return_pressed.emit(self.lineedit.text()))
@@ -80,29 +87,44 @@ class LabeledLineEdit(QWidget):
 
 
 class FileChooser(QWidget):
-    def __init__(self):
+    clicked = pyqtSignal()
+
+    def __init__(self, is_dir=False, label='', label_w=0):
         super().__init__()
 
-        self.init_ui()
+        self.is_dir = is_dir
+
+        self.init_ui(label, label_w)
 
         self.btn_show_dialog.clicked.connect(self.on_show_dialog_clicked)
 
-    def init_ui(self):
+    def init_ui(self, label, label_w):
+        lbl_title = None
+        if label is not '':
+            lbl_title = QLabel(label)
+        if label_w > 0:
+            lbl_title.setFixedWidth(label_w)
         self.txt_path = QLineEdit()
         self.btn_show_dialog = QPushButton('...')
 
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
+        if lbl_title:
+            layout.addWidget(lbl_title)
         layout.addWidget(self.txt_path)
         layout.addWidget(self.btn_show_dialog)
 
         self.setLayout(layout)
 
     def on_show_dialog_clicked(self):
-        path, _ = QFileDialog.getOpenFileName(self, "select file")
-        print(path)
-        if path and os.path.exists(path):
-            self.txt_path.setText(path)
+        if self.is_dir:
+            path = QFileDialog.getExistingDirectory(self, "select directory")
+            if path and os.path.isdir(path):
+                self.txt_path.setText(path)
+        else:
+            path, _ = QFileDialog.getOpenFileName(self, "select file")
+            if path and os.path.exists(path):
+                self.txt_path.setText(path)
 
     def set_path(self, path):
         self.txt_path.setText(path)
@@ -192,7 +214,7 @@ class NameEditor(QWidget):
         self.txt_name.setText(name)
 
 
-class BaseSettings():
+class Settings():
     @abstractmethod
     def set_font_size(self, value):
         pass
@@ -202,11 +224,18 @@ class BaseSettings():
         pass
 
 
-class DBSearchSettingUI(QWidget, BaseSettings):
+class BaseSearchSettingUI(QWidget, Settings):
+    apply_req = pyqtSignal()
+
     def __init__(self, parent):
         super().__init__(parent)
 
         self.setup_ui()
+
+    def show(self):
+        super().show()
+
+        self.txt_font_size.setFocus()
 
     def setup_ui(self):
         self.setGeometry(0, 0, 400, 300)
@@ -223,6 +252,8 @@ class DBSearchSettingUI(QWidget, BaseSettings):
         self.buttonlayout.addWidget(self.btn_apply)
 
         self.add_setting_ui('font size')
+
+        self.btn_apply.clicked.connect(self.apply_req)
 
     def add_setting_ui(self, name):
         self.txt_font_size = QLineEdit()
@@ -252,7 +283,7 @@ class TestWindow(QWidget):
     def setup_ui(self):
         self.setLayout(QGridLayout())
 
-        db_setting = DBSearchSettingUI(self)
+        db_setting = BaseSearchSettingUI(self)
         self.layout().addWidget(db_setting, 0, 0)
 
 

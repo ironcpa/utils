@@ -75,7 +75,7 @@ class MainWindow(UtilWindow):
         self.name_editor.hide()
 
     def init_setting_ui(self):
-        self.setting_ui = DBSearchSettingUI(self)
+        self.setting_ui = BaseSearchSettingUI(self)
         self.setting_ui.hide()
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):

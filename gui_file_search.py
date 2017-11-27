@@ -10,20 +10,21 @@ from send2trash import send2trash
 import ui_util
 from find_file import *
 from db_util import DB
+from widgets import *
 
 # form_class = uic.loadUiType("./resource/gui_file_search.ui")[0]
 form_class = uic.loadUiType("C:/__devroot/utils/resource/gui_file_search.ui")[0]
 column_def = {'checkbox': 0, 'dir': 1, 'open': 2, 'del': 3, 'capture': 4, 'clip': 5, 'copy name': 6, 'size': 7, 'path': 8}
 
 
-class MainWindow(QMainWindow, form_class):
+class MainWindow(UtilWindow):
     search_req = pyqtSignal(str, str)
     collect_req = pyqtSignal(str, str)
     stop_req = pyqtSignal()
 
     def __init__(self, src_dir, src_file):
-        super().__init__()
-        self.setupUi(self)
+        super().__init__('file_search')
+        # self.setupUi(self)
 
         self.thread = QThread()
         self.thread.start()
@@ -39,12 +40,11 @@ class MainWindow(QMainWindow, form_class):
 
         self.btn_search_dir.clicked.connect(self.on_search_dir_clicked)
         self.btn_search_all_drives.clicked.connect(self.on_search_all_drives_clicked)
-        self.btn_select_src_dir.clicked.connect(lambda state: self.on_select_dir_clicked(False))
-        self.btn_select_tgt_dir.clicked.connect(lambda state: self.on_select_dir_clicked(True))
-        # self.btn_stop.clicked.connect(self.on_stop_clicked)       # it'll be called from worker's thread : so can't be stopped
         self.btn_stop.clicked.connect(lambda: self.search_worker.on_stop_req())  # called from main thread
         self.btn_clear_result.clicked.connect(self.on_clear_result)
-        self.btn_coll_data.clicked.connect(self.on_coll_data_clicked)
+        self.btn_collect_db.clicked.connect(self.on_coll_data_clicked)
+
+        self.setting_ui.apply_req.connect(self.apply_curr_settings)
 
         self.model = QtGui.QStandardItemModel(0, len(column_def))
         self.tbl_search_result.setModel(self.model)
@@ -52,7 +52,7 @@ class MainWindow(QMainWindow, form_class):
         self.load_ini_file()
 
         if src_dir:
-            self.txt_selected_src_dir.setText(src_dir)
+            self.flc_src_dir.set_path(src_dir)
 
         self.db = DB()
 
@@ -63,26 +63,64 @@ class MainWindow(QMainWindow, form_class):
             product_no = file_util.get_product_no(os.path.splitext(base)[0])
             drive = src_file[:2] + os.path.sep
             self.txt_search_text.setText(product_no)
-            self.txt_selected_src_dir.setText(drive)
+            self.flc_src_dir.set_path(drive)
             self.start_search(product_no, drive)
 
-    def load_settings(self):
-        self.move(ui_util.load_settings(self, 'file_search', 'pos', QPoint(0, 0)))
+    def setup_ui(self):
+        self.setGeometry(0, 0, 1024, 760)
 
-    def save_settings(self):
-        ui_util.save_settings(self, 'file_search', 'pos', self.pos())
+        root_layout = QVBoxLayout()
+        self.setCentralWidget(QWidget())
+        self.centralWidget().setLayout(root_layout)
 
-    def closeEvent(self, e: QtGui.QCloseEvent):
-        self.save_settings()
+        self.txt_search_text = LabeledLineEdit('search text', '', 200)
+        self.flc_src_dir = FileChooser(True, 'source dir', 200)
+        self.flc_tgt_dir = FileChooser(True, 'target dir', 200)
 
-        e.accept()
+        self.btn_search_dir = QPushButton('search dir')
+        self.btn_search_all_drives = QPushButton('search all drives')
+        self.btn_collect_db = QPushButton('collect db')
+
+        self.tbl_search_result = QTableView()
+
+        self.btn_stop = QPushButton('stop')
+        self.btn_clear_result = QPushButton('clear result')
+
+        buttongrid = QGridLayout()
+        buttongrid.addWidget(self.txt_search_text, 0, 0)
+        buttongrid.addWidget(self.flc_src_dir, 1, 0)
+
+        file_button_group = QHBoxLayout()
+        file_button_group.addWidget(self.btn_search_dir)
+        file_button_group.addWidget(self.btn_search_all_drives)
+        file_button_group.addWidget(self.btn_collect_db)
+        buttongrid.addLayout(file_button_group, 2, 0)
+
+        tbl_button_group = QHBoxLayout()
+        tbl_button_group.addWidget(self.btn_stop)
+        tbl_button_group.addWidget(self.btn_clear_result)
+
+        root_layout.addLayout(buttongrid)
+        root_layout.addWidget(self.tbl_search_result)
+        root_layout.addLayout(tbl_button_group)
+
+    def init_setting_ui(self):
+        self.setting_ui = BaseSearchSettingUI(self)
+        self.setting_ui.hide()
 
     def keyPressEvent(self, event):
         key = event.key()
+        mod = event.modifiers()
+
         if key == Qt.Key_Return:
             self.on_search_dir_clicked()
         elif key == Qt.Key_Escape:
-            ui_util.focus_to_text(self.txt_search_text)
+            if self.setting_ui.isVisible():
+                self.setting_ui.hide()
+            else:
+                ui_util.focus_to_text(self.txt_search_text)
+        elif key == Qt.Key_S and mod == Qt.ControlModifier:
+            self.setting_ui.show()
         else:
             event.ignore()
 
@@ -148,8 +186,8 @@ class MainWindow(QMainWindow, form_class):
         # with open('search.ini', 'w') as f:
         with open('C:/__devroot/utils/search.ini', 'w') as f:
             search_text = self.txt_search_text.text()
-            src_dir = self.txt_selected_src_dir.text()
-            tgt_dir = self.txt_selected_tgt_dir.text()
+            src_dir = self.flc_src_dir.path()
+            tgt_dir = self.flc_tgt_dir.path()
 
             f.write('last_search_text={}\n'.format(search_text))
             f.write('last_src_dir={}\n'.format(src_dir))
@@ -165,11 +203,11 @@ class MainWindow(QMainWindow, form_class):
             for line in iter(f):
                 key_val = line.split('=')
                 if key_val[0] == 'last_search_text':
-                    self.txt_search_text.setText(key_val[1].rstrip())
+                    self.txt_search_text.set_text(key_val[1].rstrip())
                 elif key_val[0] == 'last_src_dir':
-                    self.txt_selected_src_dir.setText(key_val[1].rstrip())
+                    self.flc_src_dir.set_path(key_val[1].rstrip())
                 elif key_val[0] == 'last_tgt_dir':
-                    self.txt_selected_tgt_dir.setText(key_val[1].rstrip())
+                    self.flc_tgt_dir.set_path(key_val[1].rstrip())
 
     def start_search(self, text, src_dir=''):
         self.enable_req_buttons(False)
@@ -180,7 +218,7 @@ class MainWindow(QMainWindow, form_class):
         return '(.*)'.join([x for x in src_text.split()])
 
     def on_search_dir_clicked(self):
-        src_dir = self.txt_selected_src_dir.text()
+        src_dir = self.flc_src_dir.path()
         self.start_search(self.get_search_re_text(), src_dir)
 
     def on_search_all_drives_clicked(self):
@@ -200,15 +238,6 @@ class MainWindow(QMainWindow, form_class):
         self.db.insert_product_w_fileinfos(file_infos)
         self.enable_req_buttons(True)
         QMessageBox.information(self, 'info', 'collect finished : {}'.format(len(file_infos)))
-
-    def on_select_dir_clicked(self, is_target):
-        path = QFileDialog.getExistingDirectory(self, "select directory")
-        print('select file : ', path)
-        if path and os.path.isdir(path):
-            if is_target:
-                self.txt_selected_tgt_dir.setText(path)
-            else:
-                self.txt_selected_src_dir.setText(path)
 
     def on_open_dir_clicked(self):
         subprocess.Popen('explorer /select,"{}"'.format(self.get_selected_path(self.sender())))
@@ -274,7 +303,7 @@ class MainWindow(QMainWindow, form_class):
     def on_coll_data_clicked(self):
         self.enable_req_buttons(False)
 
-        src_dir = self.txt_selected_src_dir.text()
+        src_dir = self.flc_src_dir.path()
         self.collect_req.emit('.', src_dir)
 
     def get_table_row(self, widget):

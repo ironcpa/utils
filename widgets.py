@@ -34,6 +34,7 @@ class UtilWindow(QMainWindow):
 
     def load_settings(self):
         self.move(ui_util.load_settings(self, self.app_name, 'pos', QPoint(0, 0)))
+        self.resize(ui_util.load_settings(self, self.app_name, 'size', QSize(1280, 768)))
         self.setting_ui.set_font_size(ui_util.load_settings(self, self.app_name, 'font_size', 20))
 
         self.apply_curr_settings()
@@ -44,6 +45,7 @@ class UtilWindow(QMainWindow):
 
     def save_settings(self):
         ui_util.save_settings(self, self.app_name, 'pos', self.pos())
+        ui_util.save_settings(self, self.app_name, 'size', self.size())
         ui_util.save_settings(self, self.app_name, 'font_size', self.setting_ui.font_size())
 
 
@@ -206,8 +208,6 @@ class NameEditor(QWidget):
         elif key == Qt.Key_Escape:
             self.hide()
             self.closed.emit()
-        # else:
-        #     super().keyPressEvent(e)
 
     def open_editor(self, name):
         self.set_name(name)

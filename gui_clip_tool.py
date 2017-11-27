@@ -182,13 +182,13 @@ class MainWindow(UtilWindow):
         QMessageBox.information(self, 'info', 'merge complete : {}'.format(merged_path))
 
     def on_dir_src_clicked(self):
-        ui_util.open_path_dir(self.lbl_src_file.text())
+        ui_util.open_path_dir(self.src_path())
 
     def on_open_src_clicked(self):
-        ui_util.open_path(self.lbl_src_file.text())
+        ui_util.open_path(self.src_path())
 
     def on_del_src_clicked(self):
-        ui_util.delete_path(self, self.lbl_src_file.text())
+        ui_util.delete_path(self, self.src_path())
 
     def copy_end_to_start_time(self):
         self.txt_start_time.setText(self.txt_end_time.text())

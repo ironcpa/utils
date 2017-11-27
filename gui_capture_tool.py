@@ -4,48 +4,45 @@ import sys
 import os
 import subprocess
 
-from PyQt5 import uic, QtGui
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
+from widgets import *
 import common_util as co
 import capture_util
 import ui_util
 import file_util
 import ffmpeg_util
 
-form_class = uic.loadUiType('C:/__devroot/utils/resource/gui_capture_tool.ui')[0]
 cap_col_def = {'seq':0, 'time': 1, 'duration': 2, 'dir':3, 'open':4, 'del': 5, 'file':6}
 
 
-class MainWindow(QMainWindow, form_class):
+class MainWindow(UtilWindow):
     def __init__(self, src_path):
-        super().__init__()
-        self.setupUi(self)
+        super().__init__('capture_tool')
 
-        self.lbl_src_path.setText(src_path)
+        self.flc_src_path.set_path(src_path)
 
         self.btn_open_src.clicked.connect(self.open_src_path)
         self.btn_open_cap_dir.clicked.connect(self.open_cap_dir)
         self.btn_open_clip_dir.clicked.connect(self.open_clip_dir)
 
-        self.btn_select_cap_dir.clicked.connect(lambda state: self.open_dir_dialog(self.txt_selected_cap_dir))
-        self.btn_select_clip_dir.clicked.connect(lambda state: self.open_dir_dialog(self.txt_selected_cap_dir))
-
         self.btn_make_sample_clips.clicked.connect(self.make_sample_clips_from_model)
         self.btn_make_clips.clicked.connect(self.make_clips_from_model)
-        self.btn_merge.clicked.connect(self.make_direct_merge)
+        self.btn_merge_clips.clicked.connect(self.make_direct_merge)
         self.btn_open_clip_tool.clicked.connect(self.open_clip_tool)
 
         self.btn_del_all.clicked.connect(self.del_all_capture_files)
         self.btn_recapture.clicked.connect(self.recapture_all)
 
+        self.setting_ui.apply_req.connect(self.apply_curr_settings)
+
         self.cap_model = QtGui.QStandardItemModel(0, len(cap_col_def))
         self.tbl_caps.setModel(self.cap_model)
 
-        #init setting
-        self.txt_selected_cap_dir.setText('c:/__potplayer_capture_for_clip')
-        self.txt_selected_clip_dir.setText('c:/__clips')
+        self.flc_capture_dir.set_path('c:/__potplayer_capture_for_clip')
+        self.flc_clip_dir.set_path('c:/__clips')
 
         self.load_rel_caps()
 
@@ -61,37 +58,85 @@ class MainWindow(QMainWindow, form_class):
 
         self.load_settings()
 
-    def load_settings(self):
-        self.move(ui_util.load_settings(self, 'capture_tool', 'pos', QPoint(0, 0)))
+    def setup_ui(self):
+        self.setGeometry(0, 0, 1024, 760)
 
-    def save_settings(self):
-        ui_util.save_settings(self, 'capture_tool', 'pos', self.pos())
+        # self.lbl_src_path = QLabel()
+        self.flc_src_path = FileChooser(False, 'source file')
+        self.btn_open_src = QPushButton('open')
+        self.flc_capture_dir = FileChooser(True, 'capture dir')
+        self.btn_open_cap_dir = QPushButton('open')
+        self.flc_clip_dir = FileChooser(True, 'clip dir')
+        self.btn_open_clip_dir = QPushButton('open')
+        self.chk_auto_sync = QCheckBox('auto sync')
+        self.txt_sync_time = QLineEdit()
+        self.btn_make_clips = QPushButton('make clips')
+        self.btn_merge_clips = QPushButton('merge clips')
+        self.btn_open_clip_tool = QPushButton('open clip tool')
+        self.lbl_total_time = QLabel('total time : 0')
+        self.btn_make_sample_clips = QPushButton('make sample clips')
+        self.btn_del_all = QPushButton('delete all')
+        self.txt_offset_time = QLineEdit()
+        self.txt_offset_time.setInputMask('x00 : 00 : 00')
+        self.btn_recapture = QPushButton('recapture')
+        self.tbl_caps = QTableView()
 
-    def closeEvent(self, e: QtGui.QCloseEvent):
-        self.save_settings()
+        self.setCentralWidget(QWidget())
 
-        e.accept()
+        base_layout = QVBoxLayout()
+        self.centralWidget().setLayout(base_layout)
+
+        buttongrid = QGridLayout()
+        buttongrid.addWidget(self.flc_src_path, 0, 0, 1, 4)
+        buttongrid.addWidget(self.btn_open_src, 0, 4)
+        buttongrid.addWidget(self.flc_capture_dir, 1, 0, 1, 4)
+        buttongrid.addWidget(self.btn_open_cap_dir, 1, 4)
+        buttongrid.addWidget(self.flc_clip_dir, 2, 0, 1, 4)
+        buttongrid.addWidget(self.btn_open_clip_dir, 2, 4)
+        buttongrid.addWidget(self.chk_auto_sync, 3, 0)
+        buttongrid.addWidget(self.txt_sync_time, 3, 1)
+        buttongrid.addWidget(self.btn_make_clips, 3, 2)
+        buttongrid.addWidget(self.btn_merge_clips, 3, 3)
+        buttongrid.addWidget(self.btn_open_clip_tool, 3, 4)
+        buttongrid.addWidget(self.lbl_total_time, 4, 0)
+        buttongrid.addWidget(self.btn_make_sample_clips, 4, 2)
+        buttongrid.addWidget(self.btn_del_all, 4, 4)
+        buttongrid.addWidget(QLabel('offset times'), 5, 0)
+        buttongrid.addWidget(self.txt_offset_time, 5, 1)
+        buttongrid.addWidget(self.btn_recapture, 5, 2)
+
+        base_layout.addLayout(buttongrid)
+        base_layout.addWidget(self.tbl_caps)
+
+    def init_setting_ui(self):
+        self.setting_ui = BaseSearchSettingUI(self)
+        self.setting_ui.hide()
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.ControlModifier and key == Qt.Key_C:
+        mod = QApplication.keyboardModifiers()
+        if mod == Qt.ControlModifier and key == Qt.Key_C:
             ui_util.copy_to_clipboard(self.src_product_no())
+        elif key == Qt.Key_Escape:
+            if self.setting_ui.isVisible():
+                self.setting_ui.hide()
+        elif key == Qt.Key_S and mod == Qt.ControlModifier:
+            self.setting_ui.show()
         else:
             event.ignore()
 
     def src_path(self):
-        return self.lbl_src_path.text()
+        return self.flc_src_path.path()
 
     def src_product_no(self):
         _, fname = os.path.split(os.path.splitext(self.src_path())[0])
         return file_util.get_product_no(fname)
 
     def cap_dir(self):
-        return self.txt_selected_cap_dir.text()
+        return self.flc_capture_dir.path()
 
     def clip_dir(self):
-        return self.txt_selected_clip_dir.text()
+        return self.flc_clip_dir.path()
 
     def sync_on(self):
         return self.chk_auto_sync.isChecked()
@@ -226,15 +271,7 @@ class MainWindow(QMainWindow, form_class):
         if self.cap_model.rowCount() == 0:
             return
 
-        # o_start = co.to_second(self.cap_model.item(0, cap_col_def['time']).text())
-        # n_start = co.to_second(self.txt_new_start_time.text().replace(' ', ''))
-        # offset_sec = n_start - o_start
-        #
-        # if o_start + offset_sec < 0:
-        #     QMessageBox.warning(self, 'warning', 'start time is under zero')
-        #     return
-
-        offset_str = self.txt_new_start_time.text().replace(' ', '')
+        offset_str = self.txt_offset_time.text().replace(' ', '')
         offset_sec = co.to_second(offset_str[1:])
 
         if offset_str[0] != '+' and offset_str[0] != '-':

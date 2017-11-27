@@ -43,15 +43,13 @@ class MainWindow(QMainWindow):
 
         self.db = DB()
 
-        ui_util.load_settings(self, 'db_search')
+        self.load_settings()
 
         if search_text:
             self.txt_search.set_text(search_text)
             self.search_db()
 
     def setup_ui(self):
-        self.setStyleSheet('font: 20pt')
-
         self.setGeometry(0, 0, 1000, 600)
 
         self.setCentralWidget(QWidget())
@@ -78,8 +76,20 @@ class MainWindow(QMainWindow):
         self.name_editor = NameEditor(self)
         self.name_editor.hide()
 
+        self.setting_ui = DBSearchSettings(self)
+        self.setting_ui.hide()
+
+    def load_settings(self):
+        self.move(ui_util.load_settings(self, 'db_search', 'pos', QPoint(0, 0)))
+        self.setting_ui.set_font_size(ui_util.load_settings(self, 'db_search', 'font_size', 20))
+        self.setStyleSheet('font: ' + self.setting_ui.font_size() + 'pt')
+
+    def save_settings(self):
+        ui_util.save_settings(self, 'db_search', 'pos', self.pos())
+        ui_util.save_settings(self, 'db_search', 'font_size', self.setting_ui.font_size())
+
     def closeEvent(self, e: QtGui.QCloseEvent):
-        ui_util.save_settings(self, 'db_search')
+        self.save_settings()
 
         e.accept()
 
@@ -103,6 +113,9 @@ class MainWindow(QMainWindow):
             if self.name_editor.isVisible():
                 self.name_editor.hide()
                 self.tbl_result.setFocus()
+            elif self.setting_ui.isVisible():
+                self.setting_ui.hide()
+                self.tbl_result.setFocus()
             else:
                 ui_util.focus_to_text(self.txt_search)
         elif key == Qt.Key_D and mod == Qt.ControlModifier:
@@ -120,6 +133,8 @@ class MainWindow(QMainWindow):
             ui_util.copy_to_clipboard(self.get_pno_on_curr_row())
         elif key == Qt.Key_N and mod == Qt.ControlModifier:
             self.copy_curr_row_file_name_from_checked_row(self.get_widget_at(self.tbl_result.currentIndex().row(), column_def['chk']))
+        elif key == Qt.Key_S and mod == Qt.ControlModifier:
+            self.setting_ui.show()
         else:
             event.ignore()
 

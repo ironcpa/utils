@@ -1,4 +1,5 @@
 import os
+import sys
 
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
@@ -153,3 +154,73 @@ class NameEditor(QWidget):
     def set_name(self, name):
         self.input_name = name
         self.txt_name.setText(name)
+
+
+class DBSearchSettings(QWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.setup_ui()
+
+    def setup_ui(self):
+        self.setGeometry(0, 0, 400, 300)
+
+        self.gridlayout = QGridLayout()
+        self.setLayout(self.gridlayout)
+
+        self.buttonlayout = QHBoxLayout()
+        self.buttonlayout.setContentsMargins(0, 0, 0, 0)
+        self.gridlayout.addLayout(self.buttonlayout, 1, 0)
+        self.gridlayout.setColumnStretch(1, 2)
+
+        self.btn_apply = QPushButton('apply')
+        self.buttonlayout.addWidget(self.btn_apply)
+
+        self.add_setting_ui('font size')
+
+    def add_setting_ui(self, name):
+        self.txt_font_size = QLineEdit()
+        self.gridlayout.addWidget(QLabel(name), 0, 0)
+        self.gridlayout.addWidget(self.txt_font_size, 0, 1)
+
+    def paintEvent(self, e: QtGui.QPaintEvent):
+        painter = QtGui.QPainter()
+        painter.begin(self)
+        painter.fillRect(self.rect(), Qt.lightGray)
+        painter.end()
+        super().paintEvent(e)
+
+    def set_font_size(self, value):
+        self.txt_font_size.setText(str(value))
+
+    def font_size(self):
+        return self.txt_font_size.text()
+
+
+class TestWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.setup_ui()
+
+    def setup_ui(self):
+        self.setLayout(QGridLayout())
+
+        db_setting = DBSearchSettings(self)
+        self.layout().addWidget(db_setting, 0, 0)
+
+
+def catch_exceptions(self, t, val, tb):
+    QMessageBox.critical(None, 'exception', '{}'.format(t))
+    old_hook(t, val, tb)
+
+
+if __name__ == '__main__':
+    old_hook = sys.excepthook
+    sys.excepthook = catch_exceptions
+
+    app = QApplication(sys.argv)
+
+    test_window = TestWindow()
+    test_window.show()
+    app.exec_()

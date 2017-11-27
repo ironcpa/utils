@@ -59,10 +59,16 @@ class MainWindow(QMainWindow, form_class):
         if self.sync_on():
             self.sync_timer.start(self.sync_miliseconds())
 
-        ui_util.load_settings(self, 'capture_tool')
+        self.load_settings()
+
+    def load_settings(self):
+        self.move(ui_util.load_settings(self, 'capture_tool', 'pos', QPoint(0, 0)))
+
+    def save_settings(self):
+        ui_util.save_settings(self, 'capture_tool', 'pos', self.pos())
 
     def closeEvent(self, e: QtGui.QCloseEvent):
-        ui_util.save_settings(self, 'capture_tool')
+        self.save_settings()
 
         e.accept()
 

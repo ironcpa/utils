@@ -49,10 +49,16 @@ class MainWindow(QMainWindow, form_class):
         # self.txt_start_time.setText('000000')
         # self.txt_end_time.setText('000010')
 
-        ui_util.load_settings(self, 'clip_tool')
+        self.load_settings()
+
+    def load_settings(self):
+        self.move(ui_util.load_settings(self, 'clip_tool', 'pos', QPoint(0, 0)))
+
+    def save_settings(self):
+        ui_util.save_settings(self, 'clip_tool', 'pos', self.pos())
 
     def closeEvent(self, e: QtGui.QCloseEvent):
-        ui_util.save_settings(self, 'clip_tool')
+        self.save_settings()
 
         e.accept()
 

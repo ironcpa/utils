@@ -56,7 +56,7 @@ class MainWindow(QMainWindow, form_class):
 
         self.db = DB()
 
-        ui_util.load_settings(self, 'file_search')
+        self.load_settings()
 
         if src_file:
             base = os.path.basename(src_file)
@@ -66,8 +66,14 @@ class MainWindow(QMainWindow, form_class):
             self.txt_selected_src_dir.setText(drive)
             self.start_search(product_no, drive)
 
+    def load_settings(self):
+        self.move(ui_util.load_settings(self, 'file_search', 'pos', QPoint(0, 0)))
+
+    def save_settings(self):
+        ui_util.save_settings(self, 'file_search', 'pos', self.pos())
+
     def closeEvent(self, e: QtGui.QCloseEvent):
-        ui_util.save_settings(self, 'file_search')
+        self.save_settings()
 
         e.accept()
 

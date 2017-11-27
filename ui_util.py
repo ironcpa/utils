@@ -76,13 +76,15 @@ def add_checkbox_on_tableview(tableview, row, col, label, width, slot):
     tableview.setIndexWidget(tableview.model().index(row, col), checkbox)
 
 
-def load_settings(self, app_name):
+def load_settings(self, app_name, key, default):
     self.settings = QSettings('hjchoi', 'util')
-    self.move(self.settings.value(app_name + '_pos', QPoint(0, 0)))
+    return self.settings.value(app_name + '_' + key, default)
+
+    # self.setting_ui.set_font_size(self.settings.value(app_name + '_font_size', 20))
 
 
-def save_settings(self, app_name):
-    self.settings.setValue(app_name + '_pos', self.pos())
+def save_settings(self, app_name, key, value):
+    self.settings.setValue(app_name + '_' + key, value)
 
 
 def catch_exceptions(self, t, val, tb):

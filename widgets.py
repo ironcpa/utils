@@ -5,6 +5,26 @@ from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
+import ui_util
+
+
+class UtilWindow(QMainWindow):
+    def __init__(self, app_name):
+        super().__init__()
+
+        self.app_name = app_name
+
+    def closeEvent(self, e: QtGui.QCloseEvent):
+        self.save_settings()
+
+        e.accept()
+
+    def load_settings(self):
+        self.move(ui_util.load_settings(self, self.app_name, 'pos', QPoint(0, 0)))
+
+    def save_settings(self):
+        ui_util.save_settings(self, self.app_name, 'pos', self.pos())
+
 
 class LabeledLineEdit(QWidget):
     return_pressed = pyqtSignal(str)

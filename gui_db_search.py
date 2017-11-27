@@ -19,9 +19,9 @@ header_titles = list(column_def.keys())
 header_titles[column_def['chk']] = ''
 
 
-class MainWindow(QMainWindow):
+class MainWindow(UtilWindow):
     def __init__(self, search_text = None):
-        super().__init__()
+        super().__init__('db_search')
 
         self.search_stack = []
 
@@ -80,18 +80,20 @@ class MainWindow(QMainWindow):
         self.setting_ui.hide()
 
     def load_settings(self):
-        self.move(ui_util.load_settings(self, 'db_search', 'pos', QPoint(0, 0)))
+        super().load_settings()
+        # self.move(ui_util.load_settings(self, 'db_search', 'pos', QPoint(0, 0)))
         self.setting_ui.set_font_size(ui_util.load_settings(self, 'db_search', 'font_size', 20))
         self.setStyleSheet('font: ' + self.setting_ui.font_size() + 'pt')
 
     def save_settings(self):
-        ui_util.save_settings(self, 'db_search', 'pos', self.pos())
+        super().save_settings()
+        # ui_util.save_settings(self, 'db_search', 'pos', self.pos())
         ui_util.save_settings(self, 'db_search', 'font_size', self.setting_ui.font_size())
 
-    def closeEvent(self, e: QtGui.QCloseEvent):
-        self.save_settings()
-
-        e.accept()
+    # def closeEvent(self, e: QtGui.QCloseEvent):
+    #     self.save_settings()
+    #
+    #     e.accept()
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()

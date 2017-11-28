@@ -128,23 +128,25 @@ class TitledLabel(QWidget):
 class FileChooser(QWidget):
     clicked = pyqtSignal()
 
-    def __init__(self, is_dir=False, label='', label_w=0):
+    def __init__(self, is_dir=False, label='', label_w=0, button_w=0):
         super().__init__()
 
         self.is_dir = is_dir
 
-        self.init_ui(label, label_w)
+        self.init_ui(label, label_w, button_w)
 
         self.btn_show_dialog.clicked.connect(self.on_show_dialog_clicked)
 
-    def init_ui(self, label, label_w):
+    def init_ui(self, label, label_w, button_w):
         lbl_title = None
         if label is not '':
             lbl_title = QLabel(label)
-        if label_w > 0:
-            lbl_title.setFixedWidth(label_w)
         self.txt_path = QLineEdit()
         self.btn_show_dialog = QPushButton('...')
+        if label_w > 0:
+            lbl_title.setFixedWidth(label_w)
+        if button_w > 0:
+            self.btn_show_dialog.setFixedWidth(button_w)
 
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)

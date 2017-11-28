@@ -70,7 +70,7 @@ class LabeledLineEdit(QWidget):
         settingLayout = QHBoxLayout()
         settingLayout.setContentsMargins(0, 0, 0, 0)
 
-        self.label = QLabel('cell width')
+        self.label = QLabel()
         self.lineedit = QLineEdit()
         settingLayout.addWidget(self.label)
         settingLayout.addWidget(self.lineedit)
@@ -92,6 +92,37 @@ class LabeledLineEdit(QWidget):
 
     def set_input_mask(self, mask):
         self.lineedit.setInputMask(mask)
+
+
+class TitledLabel(QWidget):
+    def __init__(self, title='', text='', title_w=0, text_w=0):
+        super().__init__()
+
+        self.init_ui()
+
+        self.lbl_title.setText(title)
+        if title_w > 0:
+            self.lbl_title.setFixedWidth(title_w)
+        if text_w > 0:
+            self.lbl_text.setFixedWidth(text_w)
+        self.lbl_text.setText(str(text))
+
+    def init_ui(self):
+        settingLayout = QHBoxLayout()
+        settingLayout.setContentsMargins(0, 0, 0, 0)
+
+        self.lbl_title = QLabel()
+        self.lbl_text = QLabel()
+        settingLayout.addWidget(self.lbl_title)
+        settingLayout.addWidget(self.lbl_text)
+
+        self.setLayout(settingLayout)
+
+    def text(self):
+        return self.lbl_text.text()
+
+    def set_text(self, text):
+        self.lbl_text.setText(str(text))
 
 
 class FileChooser(QWidget):

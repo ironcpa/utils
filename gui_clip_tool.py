@@ -29,6 +29,7 @@ class MainWindow(UtilWindow):
         self.txt_clip_name.set_text('c:\\__clips\\' + clip_name + '_{}_{}' + src_ext)
 
         self.btn_encode.clicked.connect(self.on_encode_clicked)
+        self.btn_encode_0_9_start_seconds.clicked.connect(self.on_encode_0_9_seconds_clicked)
         self.btn_merge_all_clips.clicked.connect(self.merge_all_clips)
         self.btn_dir_src.clicked.connect(self.on_dir_src_clicked)
         self.btn_open_src.clicked.connect(self.on_open_src_clicked)
@@ -50,7 +51,7 @@ class MainWindow(UtilWindow):
     def setup_ui(self):
         self.setGeometry(0, 0, 1280, 768)
 
-        col1_w = 120
+        col1_w = 150
 
         self.flc_src_file = FileChooser(False, 'file name')
         self.btn_reload = QPushButton('reload')
@@ -66,9 +67,10 @@ class MainWindow(UtilWindow):
         self.btn_to_start_time = QPushButton('S')
         self.txt_clip_name = LabeledLineEdit('clip name', '', col1_w)
         self.btn_encode = QPushButton('encode')
-        self.chk_reencode = QCheckBox('re-encode?')
+        self.btn_encode_0_9_start_seconds = QPushButton('encode(0-9sec)')
         self.btn_merge_all_clips = QPushButton('merge all')
-        self.lbl_clip_total_size = QLabel()
+        self.chk_reencode = QCheckBox('re-encode?')
+        self.lbl_clip_total_size = TitledLabel('total size:')
         self.btn_del_all = QPushButton('del all clips')
         self.tbl_clip_result = QTableView()
 
@@ -79,10 +81,11 @@ class MainWindow(UtilWindow):
         base_layout.addWidget(self.flc_src_file)
 
         file_button_group = QHBoxLayout()
-        file_button_group.addWidget(self.btn_reload)
         file_button_group.addWidget(self.btn_dir_src)
         file_button_group.addWidget(self.btn_open_src)
         file_button_group.addWidget(self.btn_del_src)
+        file_button_group.addWidget(self.btn_reload)
+        file_button_group.addWidget(self.chk_include_samples)
         base_layout.addLayout(file_button_group)
 
         start_end_group = QGridLayout()
@@ -91,21 +94,21 @@ class MainWindow(UtilWindow):
         start_end_group.addWidget(self.btn_to_end_time, 0, 2)
         start_end_group.addWidget(self.txt_end_time, 1, 0)
         start_end_group.addWidget(self.btn_to_start_time, 1, 2)
-        start_end_group.addWidget(self.chk_include_samples, 0, 3)
         base_layout.addLayout(start_end_group)
 
         base_layout.addWidget(self.txt_clip_name)
 
         encode_group = QHBoxLayout()
         encode_group.addWidget(self.btn_encode)
-        encode_group.addWidget(self.chk_reencode)
+        encode_group.addWidget(self.btn_encode_0_9_start_seconds)
         encode_group.addWidget(self.btn_merge_all_clips)
+        encode_group.addWidget(self.chk_reencode)
         base_layout.addLayout(encode_group)
 
-        table_button_group = QHBoxLayout()
-        table_button_group.addWidget(QLabel('total size: '))
-        table_button_group.addWidget(self.lbl_clip_total_size)
-        table_button_group.addWidget(self.btn_del_all)
+        table_button_group = QGridLayout()
+        table_button_group.setColumnStretch(2, 3)
+        table_button_group.addWidget(self.lbl_clip_total_size, 0, 0, 1, 2)
+        table_button_group.addWidget(self.btn_del_all, 0, 5)
         base_layout.addLayout(table_button_group)
 
         base_layout.addWidget(self.tbl_clip_result)
@@ -145,7 +148,7 @@ class MainWindow(UtilWindow):
             s = self.clip_model.item(r, column_def['size']).text()
             if len(s) > 0:
                 total += int(s.split('.')[0].replace(',', ''))
-        self.lbl_clip_total_size.setText(format(total, ','))
+        self.lbl_clip_total_size.set_text(format(total, ','))
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
@@ -173,6 +176,16 @@ class MainWindow(UtilWindow):
             print(err)
             QMessageBox.critical(self, 'error', 'encoding failed\n{}'.format(err))
 
+    def on_encode_0_9_seconds_clicked(self):
+        start_time = self.txt_start_time.text().replace(' ', '')
+        end_time = self.txt_end_time.text().replace(' ', '')
+        for s in range(10):
+            start_time = start_time[0:-1] + str(s)
+            clip_file_form = self.txt_clip_name.text()
+            out_clip_path = clip_file_form.format(start_time.replace(':', ''), end_time.replace(':', ''))
+
+            self.run_ffmpeg_make_clip(start_time, end_time, out_clip_path)
+
     def merge_all_clips(self):
         model_clip_paths = [self.clip_model.item(r, column_def['path']).text() for r in range(self.clip_model.rowCount())]
         merged_path = ffmpeg_util.merge_all_clips(self.src_path(), model_clip_paths)
@@ -196,7 +209,7 @@ class MainWindow(UtilWindow):
     def copy_start_to_end_time(self):
         self.txt_end_time.setText(self.txt_start_time.text())
 
-    def run_ffmpeg_make_clip(self, start_time, end_time, out_clip_path):
+    def run_ffmpeg_make_clip(self, start_time, end_time, out_clip_path, is_async_call=False):
         # if os.path.exists(out_clip_path):
         #     return False, 'already exists'
 
@@ -208,14 +221,18 @@ class MainWindow(UtilWindow):
             command = 'ffmpeg -i "{}" -ss {} -to {} -c copy {} -y'.format(src_file, start_time, end_time,
                                                                           out_clip_path)
         print(command)
-        try:
-            subprocess.check_output(command, stderr=subprocess.STDOUT)
-            self.remove_old_same_result(out_clip_path)
-            self.add_clip_result(out_clip_path, file_util.get_file_size(out_clip_path))
-            self.show_total_clip_size()
+        if is_async_call:
+            subprocess.Popen(command)
             return True, None
-        except subprocess.CalledProcessError as e:
-            return False, e
+        else:
+            try:
+                subprocess.check_output(command, stderr=subprocess.STDOUT)
+                self.remove_old_same_result(out_clip_path)
+                self.add_clip_result(out_clip_path, file_util.get_file_size(out_clip_path))
+                self.show_total_clip_size()
+                return True, None
+            except subprocess.CalledProcessError as e:
+                return False, e
 
     def add_clip_result(self, path, size):
         row = self.clip_model.rowCount()
@@ -301,8 +318,8 @@ class MainWindow(UtilWindow):
         time_form = self.get_time_form(path)
 
         if time_form is not '':
-            self.txt_start_time.setText(time_form[0:6])
-            self.txt_end_time.setText(time_form[-6:])
+            self.txt_start_time.set_text(time_form[0:6])
+            self.txt_end_time.set_text(time_form[-6:])
 
     def get_time_form(self, path):
         clip_name = os.path.splitext(path)[0]

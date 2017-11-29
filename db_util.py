@@ -27,9 +27,9 @@ class DB:
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
             sql = 'update product\n' \
-                  'set p_no = ?, disk = ?, location = ?, size = ?, cdate = ?\n' \
+                  'set p_no = ?, desc = ?, disk = ?, location = ?, size = ?, cdate = ?\n' \
                   'where id = ?'
-            rows = cur.execute(sql, (p.product_no, p.disk_name, p.location, p.size, p.cdate, p.id))
+            rows = cur.execute(sql, (p.product_no, p.desc, p.disk_name, p.location, p.size, p.cdate, p.id))
             c.commit()
 
             return rows.rowcount

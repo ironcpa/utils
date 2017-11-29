@@ -8,6 +8,7 @@ from PyQt5 import uic, QtGui, QtCore
 
 import ui_util
 import defines
+import file_util
 import common_util as cu
 from db_util import DB
 from widgets import *
@@ -244,9 +245,13 @@ class MainWindow(UtilWindow):
         return self.tbl_result.indexWidget(self.model.index(row, col))
 
     def open_curr_row_file(self, widget):
+        if not widget:
+            return
         ui_util.open_path(self.get_path_on_row(widget))
 
     def open_curr_row_dir(self, widget):
+        if not widget:
+            return
         ui_util.open_path_dir(self.get_path_on_row(widget))
 
     def open_curr_row_capture_tool(self, widget):
@@ -302,6 +307,12 @@ class MainWindow(UtilWindow):
         if os.path.exists(copy_src_path):
             self.del_curr_row_file(copy_src_widget)
         os.rename(target_path, new_target_path)
+
+        '''db update'''
+        cur_row = self.tbl_result.currentIndex().row()
+        self.db.delete_by_path(copy_src_path)
+        self.update_path_on_db_n_model(cur_row, new_target_path)
+
         QMessageBox.information(self, 'copied', 'copied :\n{}\n<- {}'.format(new_target_path, target_path))
 
     def turn_off_other_checkboxes(self, widget):
@@ -332,16 +343,25 @@ class MainWindow(UtilWindow):
 
         os.rename(target_path, new_target_path)
 
-        # update curr item
-        cur_product = self.model.item(cur_row, column_def['no']).data()
-        # update db
-        new_product = cu.conv_path_to_product(new_target_path, cur_product.id)
-        self.update_row(cur_row, new_product)
-        self.db.update_product(new_product)
+        # # update curr item
+        # cur_product = self.model.item(cur_row, column_def['no']).data()
+        # # update db
+        # new_product = cu.conv_path_to_product(new_target_path, cur_product.id)
+        # self.update_row(cur_row, new_product)
+        # self.db.update_product(new_product)
+        self.update_path_on_db_n_model(cur_row, new_target_path)
 
         QMessageBox.information(self, 'renamed', 'renamed :\n{}\n<- {}'.format(new_target_path, target_path))
         self.name_editor.hide()
         self.tbl_result.setFocus()
+
+    def update_path_on_db_n_model(self, cur_row, new_path):
+        # update curr item
+        cur_product = self.model.item(cur_row, column_def['no']).data()
+        # update db
+        new_product = cu.conv_path_to_product(new_path, cur_product.id)
+        self.update_row(cur_row, new_product)
+        self.db.update_product(new_product)
 
     def update_row(self, row, product):
         self.model.item(row, column_def['no']).setText(product.product_no)

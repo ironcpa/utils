@@ -28,8 +28,8 @@ class MainWindow(UtilWindow):
         self.btn_open_cap_dir.clicked.connect(self.open_cap_dir)
         self.btn_open_clip_dir.clicked.connect(self.open_clip_dir)
 
-        self.btn_make_sample_clips.clicked.connect(self.make_sample_clips_from_model)
         self.btn_make_clips.clicked.connect(self.make_clips_from_model)
+        self.btn_make_sample_clips.clicked.connect(lambda: self.make_clips_from_model('sample_'))
         self.btn_merge_clips.clicked.connect(self.make_direct_merge)
         self.btn_open_clip_tool.clicked.connect(self.open_clip_tool)
 
@@ -197,10 +197,10 @@ class MainWindow(UtilWindow):
 
         capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), captures)
 
-    def make_clips_from_model(self):
+    def make_clips_from_model(self, out_prefix=''):
         captures = [self.cap_model.item(r, cap_col_def['file']).data() for r in range(self.cap_model.rowCount())]
         # capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), captures)
-        result = capture_util.future_call(self.src_path(), self.clip_dir(), captures)
+        result = capture_util.future_call(self.src_path(), self.clip_dir(), captures, out_prefix)
 
         succ, fail = 0, 0
         for r in result:
@@ -210,9 +210,9 @@ class MainWindow(UtilWindow):
                 fail += 1
         QMessageBox.information(self, 'result', '{} completed, {} failed'.format(succ, fail))
 
-    def make_sample_clips_from_model(self):
-        captures = [self.cap_model.item(r, cap_col_def['file']).data() for r in range(self.cap_model.rowCount())]
-        capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), captures, 'sample_')
+    # def make_sample_clips_from_model(self):
+    #     captures = [self.cap_model.item(r, cap_col_def['file']).data() for r in range(self.cap_model.rowCount())]
+    #     capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), captures, 'sample_')
 
     def make_direct_merge(self):
         src_filename = os.path.splitext(os.path.basename(self.src_path()))[0]

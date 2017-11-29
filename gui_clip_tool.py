@@ -179,12 +179,14 @@ class MainWindow(UtilWindow):
     def on_encode_0_9_seconds_clicked(self):
         start_time = self.txt_start_time.text().replace(' ', '')
         end_time = self.txt_end_time.text().replace(' ', '')
+        if len(start_time) < 8:
+            return False, 'no start time set'
         for s in range(10):
-            start_time = start_time[0:-1] + str(s)
+            new_start_time = start_time[0:-1] + str(s)
             clip_file_form = self.txt_clip_name.text()
-            out_clip_path = clip_file_form.format(start_time.replace(':', ''), end_time.replace(':', ''))
+            out_clip_path = clip_file_form.format(new_start_time.replace(':', ''), end_time.replace(':', ''))
 
-            self.run_ffmpeg_make_clip(start_time, end_time, out_clip_path)
+            self.run_ffmpeg_make_clip(start_time[0:-1], end_time, out_clip_path)
 
     def merge_all_clips(self):
         model_clip_paths = [self.clip_model.item(r, column_def['path']).text() for r in range(self.clip_model.rowCount())]

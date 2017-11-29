@@ -4,6 +4,12 @@ import win32api
 from defines import *
 
 
+def split_path(path):
+    src_dir, src_file = os.path.split(path)
+    src_name, src_ext = os.path.splitext(src_file)
+    return src_dir, src_name, src_ext
+
+
 def better_filename(self, product):
     p = product
     return '{}_{}_{}'.format(p.p_no, p.desc.replace(' ', '_'), p.rate)

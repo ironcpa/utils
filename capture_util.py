@@ -1,8 +1,11 @@
 # -*-coding:utf-8-*-
 
+import sys
 import os
 import subprocess
+import asyncio
 
+import ui_util
 import common_util as cu
 import ffmpeg_util
 
@@ -24,6 +27,49 @@ def create_clips_from_captures(src_path, cap_dir, clip_dir, captures, header = '
             out_clip_path = os.path.join(clip_dir, out_file)
 
             ffmpeg_util.create_clip(src_path, start_time, end_time, out_clip_path)
+
+
+def future_call(src_path, clip_dir, captures, header=''):
+    """for async call stub"""
+    loop = asyncio.new_event_loop()
+    result = loop.run_until_complete(async_create_clips_from_captures(src_path, clip_dir, captures, header))
+    loop.close()
+
+    return result
+
+
+async def async_create_clips_from_captures(src_path, clip_dir, captures, prefix=''):
+    """async test"""
+    times = [cu.get_time(f) for f in captures]
+    futures = [asyncio.ensure_future(create_clip_from_capture(clip_dir, src_path, times[i - 1], t, prefix))
+               for i, t in enumerate(times) if i % 2 == 1]
+    result = await asyncio.gather(*futures)
+    print(result)
+    return result
+
+
+async def create_clip_from_capture(out_dir, src_path, start_time, end_time, prefix):
+    """async test"""
+    src_dir, src_name, src_ext = cu.split_path(src_path)
+
+    start_pad = START_TIME_PAD if int(start_time) > 0 else 0
+    start_time = '{:06d}'.format(int(start_time) - start_pad)
+    out_file = '{}clip_{}_{}_{}{}'.format(prefix, src_name, start_time, end_time, src_ext)
+    out_clip_path = os.path.join(out_dir, out_file)
+
+    # ffmpeg_util.create_clip(src_path, start_time, end_time, out_clip_path)
+    command = 'ffmpeg -i "{}" -ss {} -to {} -c copy "{}" -y'.format(src_path, cu.to_time_form(start_time),
+                                                                    cu.to_time_form(end_time), out_clip_path)
+    print(command)
+    try:
+        subprocess.check_output(command, stderr=subprocess.STDOUT)
+        return start_time, True, None
+    except subprocess.CalledProcessError as e:
+        return start_time, False, e
+
+
+old_hook = sys.excepthook
+sys.excepthook = ui_util.catch_exceptions
 
 
 if __name__ == '__main__':

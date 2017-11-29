@@ -28,8 +28,8 @@ class MainWindow(UtilWindow):
         self.btn_open_cap_dir.clicked.connect(self.open_cap_dir)
         self.btn_open_clip_dir.clicked.connect(self.open_clip_dir)
 
-        self.btn_make_clips.clicked.connect(self.make_clips_from_model)
-        self.btn_make_sample_clips.clicked.connect(lambda: self.make_clips_from_model('sample_'))
+        self.btn_make_clips.clicked.connect(lambda state: self.make_clips_from_model())
+        self.btn_make_sample_clips.clicked.connect(lambda state: self.make_clips_from_model('sample_'))
         self.btn_merge_clips.clicked.connect(self.make_direct_merge)
         self.btn_open_clip_tool.clicked.connect(self.open_clip_tool)
 

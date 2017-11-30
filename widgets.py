@@ -212,6 +212,8 @@ class SearchViewDelegate(QStyledItemDelegate):
     def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QModelIndex):
         if index.row() == self.parent().currentIndex().row():
             painter.fillRect(option.rect, self.color_curr_highlight)
+        elif self.parent().indexWidget(index.model().index(index.row(), 10)).isChecked():
+            painter.fillRect(option.rect, Qt.red)
 
         super(SearchViewDelegate, self).paint(painter, option, index)
 

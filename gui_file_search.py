@@ -10,7 +10,7 @@ from widgets import *
 column_def = {'checkbox': 0, 'dir': 1, 'open': 2, 'del': 3, 'capture': 4, 'clip': 5, 'copy name': 6, 'size': 7, 'path': 8}
 
 
-class MainWindow(UtilWindow):
+class MainWindow(TabledUtilWindow):
     search_req = pyqtSignal(str, str)
     collect_req = pyqtSignal(str, str)
     stop_req = pyqtSignal()
@@ -76,6 +76,7 @@ class MainWindow(UtilWindow):
         self.btn_collect_db = QPushButton('collect db')
 
         self.tbl_search_result = QTableView()
+        self.set_default_table(self.tbl_search_result)
 
         self.btn_stop = QPushButton('stop')
         self.btn_clear_result = QPushButton('clear result')
@@ -97,10 +98,6 @@ class MainWindow(UtilWindow):
         root_layout.addLayout(buttongrid)
         root_layout.addWidget(self.tbl_search_result)
         root_layout.addLayout(tbl_button_group)
-
-    def init_setting_ui(self):
-        self.setting_ui = BaseSettingUI(self)
-        self.setting_ui.hide()
 
     def keyPressEvent(self, event):
         key = event.key()

@@ -18,7 +18,7 @@ import ffmpeg_util
 column_def = {'dir': 0, 'open': 1, 'del': 2, 'reclip': 3, 'copy setting':4, 'size':5, 'path': 6}
 
 
-class MainWindow(UtilWindow):
+class MainWindow(TabledUtilWindow):
     def __init__(self, parent, src_path):
         super().__init__('clip_tool', parent)
 
@@ -73,6 +73,7 @@ class MainWindow(UtilWindow):
         self.lbl_clip_total_size = TitledLabel('total size:')
         self.btn_del_all = QPushButton('del all clips')
         self.tbl_clip_result = QTableView()
+        self.set_default_table(self.tbl_clip_result)
 
         self.setCentralWidget(QWidget())
         base_layout = QVBoxLayout()
@@ -112,10 +113,6 @@ class MainWindow(UtilWindow):
         base_layout.addLayout(table_button_group)
 
         base_layout.addWidget(self.tbl_clip_result)
-
-    def init_setting_ui(self):
-        self.setting_ui = BaseSettingUI(self)
-        self.setting_ui.hide()
 
     def src_path(self):
         return self.flc_src_file.path()

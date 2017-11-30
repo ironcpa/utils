@@ -74,7 +74,7 @@ class MainWindow(TabledUtilWindow):
         all_control_group.addLayout(main_control_group)
 
         sub_control_group = QHBoxLayout()
-        self.txt_order = LabeledLineEdit('order')
+        self.txt_order = LabeledLineEdit('order by')
         sub_control_group.addWidget(self.txt_order)
         all_control_group.addLayout(sub_control_group)
 
@@ -338,6 +338,7 @@ class MainWindow(TabledUtilWindow):
             checkbox = self.tbl_result.indexWidget(self.model.index(r, column_def['chk']))
             if checkbox != widget and checkbox.isChecked():
                 checkbox.setChecked(False)
+        self.model.layoutChanged.emit()
 
     def turn_on_curr_checkbox(self):
         r = self.tbl_result.currentIndex().row()

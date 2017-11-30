@@ -155,7 +155,8 @@ def copy_sample_to_test_area(dst_dir):
 
 
 def get_file_size(full_path):
-    return format(os.path.getsize(full_path) // 1000, ',')
+    return str(os.path.getsize(full_path) // 1000)
+    # return format(os.path.getsize(full_path) // 1000, ',')
 
 
 def get_ctime(full_path):

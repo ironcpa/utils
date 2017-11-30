@@ -162,8 +162,9 @@ class DB:
             sql = "select id, p_no, desc, rate, disk, location, size, cdate\n" \
                   "from product\n" \
                   "where rate = ''\n" \
-                  "order by cdate desc\n" \
+                  "order by cast(size as decimal) desc\n" \
                   "limit 200"
+            # "order by cdate desc\n" \
             cur.execute(sql)
             result = cur.fetchall()
 

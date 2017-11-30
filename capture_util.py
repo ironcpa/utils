@@ -62,7 +62,7 @@ async def create_clip_from_capture(out_dir, src_path, start_time, end_time, pref
                                                                     cu.to_time_form(end_time), out_clip_path)
     print(command)
     try:
-        subprocess.check_output(command, stderr=subprocess.STDOUT)
+        await subprocess.check_output(command, stderr=subprocess.STDOUT)
         return start_time, True, None
     except subprocess.CalledProcessError as e:
         return start_time, False, e

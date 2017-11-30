@@ -55,27 +55,35 @@ class MainWindow(TabledUtilWindow):
         self.setGeometry(0, 0, 1000, 600)
 
         self.setCentralWidget(QWidget())
-        gridlayout = QGridLayout()
-        self.centralWidget().setLayout(gridlayout)
+        base_layout = QVBoxLayout()
+        self.centralWidget().setLayout(base_layout)
 
-        controllayout = QHBoxLayout()
+        all_control_group = QVBoxLayout()
+
+        main_control_group = QHBoxLayout()
         self.txt_search = LabeledLineEdit('search text')
         self.chk_is_and_condition = QCheckBox('and')
         self.btn_search = QPushButton('start')
         self.btn_filter = QPushButton('filter')
         self.btn_search_dup = QPushButton('show dup result')
-        controllayout.addWidget(self.txt_search)
-        controllayout.addWidget(self.chk_is_and_condition)
-        controllayout.addWidget(self.btn_search)
-        controllayout.addWidget(self.btn_filter)
-        controllayout.addWidget(self.btn_search_dup)
+        main_control_group.addWidget(self.txt_search)
+        main_control_group.addWidget(self.chk_is_and_condition)
+        main_control_group.addWidget(self.btn_search)
+        main_control_group.addWidget(self.btn_filter)
+        main_control_group.addWidget(self.btn_search_dup)
+        all_control_group.addLayout(main_control_group)
 
-        gridlayout.addLayout(controllayout, 0, 0)
+        sub_control_group = QHBoxLayout()
+        self.txt_order = LabeledLineEdit('order')
+        sub_control_group.addWidget(self.txt_order)
+        all_control_group.addLayout(sub_control_group)
+
+        base_layout.addLayout(all_control_group)
 
         self.tbl_result = SearchView()
         self.set_default_table(self.tbl_result)
         self.tbl_result.setSortingEnabled(True)
-        gridlayout.addWidget(self.tbl_result)
+        base_layout.addWidget(self.tbl_result)
 
         self.name_editor = NameEditor(self)
         self.name_editor.hide()
@@ -152,14 +160,14 @@ class MainWindow(TabledUtilWindow):
     def is_disk_online(self, disk):
         return self.get_drive(disk) is not None
 
-    def search_db(self, is_find_dub = False):
+    def search_db(self, is_find_dub=False):
         self.model.removeRows(0, self.model.rowCount())
 
         products = []
         if is_find_dub:
             products = self.db.search_dup_list()
         else:
-            search_tuple = (self.get_search_text(), self.is_and_checked())
+            search_tuple = (self.get_search_text(), self.txt_order.text(), self.is_and_checked())
             self.search_stack.append(search_tuple)
             products = self.db.search(*search_tuple)
 

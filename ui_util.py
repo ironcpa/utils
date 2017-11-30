@@ -3,6 +3,7 @@ import sys
 import psutil
 import subprocess
 
+import PyQt5
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMessageBox, QFileDialog, QApplication, QPushButton, QCheckBox
 from PyQt5.QtCore import QSettings, QPoint
@@ -60,9 +61,10 @@ def add_button_on_tableview(tableview, row, col, label, font, width, slot):
     button = QPushButton()
     button.setFocusPolicy(Qt.NoFocus)
     button.setText(label)
-    button.setFixedWidth(width)
     if font is not None:
         button.setFont(font)
+    # button.setFixedWidth(width)
+    # button.setFixedWidth(button.fontMetrics().boundingRect(label).width() + 24)
     button.clicked.connect(slot)
     tableview.setIndexWidget(tableview.model().index(row, col), button)
 
@@ -77,14 +79,16 @@ def add_checkbox_on_tableview(tableview, row, col, label, width, slot):
 
 
 def load_settings(self, app_name, key, default):
-    self.settings = QSettings('hjchoi', 'util')
-    return self.settings.value(app_name + '_' + key, default)
+    self.settings = QSettings('hjchoi', app_name)
+    # return self.settings.value(app_name + '_' + key, default)
+    return self.settings.value(key, default)
 
     # self.setting_ui.set_font_size(self.settings.value(app_name + '_font_size', 20))
 
 
 def save_settings(self, app_name, key, value):
-    self.settings.setValue(app_name + '_' + key, value)
+    # self.settings.setValue(app_name + '_' + key, value)
+    self.settings.setValue(key, value)
 
 
 def catch_exceptions(self, t, val, tb):

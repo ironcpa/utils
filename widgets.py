@@ -35,7 +35,7 @@ class UtilWindow(QMainWindow):
     def load_settings(self):
         self.move(ui_util.load_settings(self, self.app_name, 'pos', QPoint(0, 0)))
         self.resize(ui_util.load_settings(self, self.app_name, 'size', QSize(1280, 768)))
-        self.setting_ui.set_font_size(ui_util.load_settings(self, self.app_name, 'font_size', 20))
+        self.setting_ui.set_font_size(ui_util.load_settings(self, self.app_name, 'font size', 20))
 
         self.apply_curr_settings()
 
@@ -46,7 +46,36 @@ class UtilWindow(QMainWindow):
     def save_settings(self):
         ui_util.save_settings(self, self.app_name, 'pos', self.pos())
         ui_util.save_settings(self, self.app_name, 'size', self.size())
-        ui_util.save_settings(self, self.app_name, 'font_size', self.setting_ui.font_size())
+        ui_util.save_settings(self, self.app_name, 'font size', self.setting_ui.font_size())
+
+
+class TabledUtilWindow(UtilWindow):
+    def __init__(self, app_name, parent=None):
+        self._default_table = None
+        super().__init__(app_name, parent)
+
+    @abstractmethod
+    def setup_ui(self):
+        pass
+
+    def set_default_table(self, tableview):
+        self._default_table = tableview
+
+    def init_setting_ui(self):
+        self.setting_ui = TableBaseSettingUI(self)
+        self.setting_ui.hide()
+
+    def apply_curr_settings(self):
+        super().apply_curr_settings()
+        self._default_table.setStyleSheet('font: ' + self.setting_ui.table_font_size() + 'pt')
+
+    def load_settings(self):
+        self.setting_ui.set_table_font_size(ui_util.load_settings(self, self.app_name, 'table font size', 20))
+        super().load_settings()
+
+    def save_settings(self):
+        super().save_settings()
+        ui_util.save_settings(self, self.app_name, 'table font size', self.setting_ui.table_font_size())
 
 
 class LabeledLineEdit(QWidget):
@@ -183,6 +212,8 @@ class SearchViewDelegate(QStyledItemDelegate):
     def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QModelIndex):
         if index.row() == self.parent().currentIndex().row():
             painter.fillRect(option.rect, self.color_curr_highlight)
+        elif self.parent().indexWidget(index.model().index(index.row(), 10)).isChecked():
+            painter.fillRect(option.rect, Qt.red)
 
         super(SearchViewDelegate, self).paint(painter, option, index)
 
@@ -267,7 +298,7 @@ class Settings():
         pass
 
 
-class BaseSearchSettingUI(QWidget, Settings):
+class BaseSettingUI(QWidget, Settings):
     apply_req = pyqtSignal()
     closed = pyqtSignal()
 
@@ -281,30 +312,36 @@ class BaseSearchSettingUI(QWidget, Settings):
     def show(self):
         super().show()
 
-        self.txt_font_size.setFocus()
+        self.default_setting_lineedit.setFocus()
 
     def setup_ui(self):
         self.setGeometry(0, 0, 400, 300)
 
-        self.gridlayout = QGridLayout()
-        self.setLayout(self.gridlayout)
+        base_layout = QVBoxLayout()
+        self.setLayout(base_layout)
+
+        self.setting_group = QGridLayout()
+        base_layout.addLayout(self.setting_group)
 
         self.buttonlayout = QHBoxLayout()
         self.buttonlayout.setContentsMargins(0, 0, 0, 0)
-        self.gridlayout.addLayout(self.buttonlayout, 1, 0)
-        self.gridlayout.setColumnStretch(1, 2)
+        base_layout.addLayout(self.buttonlayout)
 
         self.btn_apply = QPushButton('apply')
         self.buttonlayout.addWidget(self.btn_apply)
 
+        self.setting_lineedits = {}
         self.add_setting_ui('font size')
+        self.default_setting_lineedit = self.setting_lineedits['font size']
 
         self.btn_apply.clicked.connect(self.apply_req)
 
-    def add_setting_ui(self, name):
-        self.txt_font_size = QLineEdit()
-        self.gridlayout.addWidget(QLabel(name), 0, 0)
-        self.gridlayout.addWidget(self.txt_font_size, 0, 1)
+    def add_setting_ui(self, name, default=0):
+        lineedit = QLineEdit(str(default))
+        row = len(self.setting_lineedits)
+        self.setting_lineedits[name] = lineedit
+        self.setting_group.addWidget(QLabel(name), row, 0)
+        self.setting_group.addWidget(lineedit, row, 1)
 
     def keyPressEvent(self, e: QtGui.QKeyEvent):
         key = e.key()
@@ -322,10 +359,26 @@ class BaseSearchSettingUI(QWidget, Settings):
         super().paintEvent(e)
 
     def set_font_size(self, value):
-        self.txt_font_size.setText(str(value))
+        self.setting_lineedits['font size'].setText(str(value))
 
     def font_size(self):
-        return self.txt_font_size.text()
+        return self.setting_lineedits['font size'].text()
+
+
+class TableBaseSettingUI(BaseSettingUI):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def setup_ui(self):
+        super().setup_ui()
+
+        self.add_setting_ui('table font size', 10)
+
+    def set_table_font_size(self, value):
+        self.setting_lineedits['table font size'].setText(str(value))
+
+    def table_font_size(self):
+        return self.setting_lineedits['table font size'].text()
 
 
 class TestWindow(QWidget):
@@ -337,7 +390,7 @@ class TestWindow(QWidget):
     def setup_ui(self):
         self.setLayout(QGridLayout())
 
-        db_setting = BaseSearchSettingUI(self)
+        db_setting = BaseSettingUI(self)
         self.layout().addWidget(db_setting, 0, 0)
 
 

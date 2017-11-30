@@ -18,7 +18,7 @@ import ffmpeg_util
 cap_col_def = {'seq':0, 'time': 1, 'duration': 2, 'dir':3, 'open':4, 'del': 5, 'file':6}
 
 
-class MainWindow(UtilWindow):
+class MainWindow(TabledUtilWindow):
     def __init__(self, src_path):
         super().__init__('capture_tool')
 
@@ -82,6 +82,7 @@ class MainWindow(UtilWindow):
         self.txt_offset_time.set_text('+00 : 00 : 00')
         self.btn_recapture = QPushButton('recapture')
         self.tbl_caps = QTableView()
+        self.set_default_table(self.tbl_caps)
 
         self.setCentralWidget(QWidget())
 
@@ -120,10 +121,6 @@ class MainWindow(UtilWindow):
 
         base_layout.addLayout(clip_group)
         base_layout.addWidget(self.tbl_caps)
-
-    def init_setting_ui(self):
-        self.setting_ui = BaseSearchSettingUI(self)
-        self.setting_ui.hide()
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
@@ -239,7 +236,7 @@ class MainWindow(UtilWindow):
         time = co.to_time_form(co.get_time(cap_path))
         time_item = QtGui.QStandardItem(time)
         font = time_item.font()
-        font.setPointSize(20)
+        # font.setPointSize(20)
         time_item.setFont(font)
         self.cap_model.setItem(row, cap_col_def['time'], time_item)
 
@@ -260,7 +257,7 @@ class MainWindow(UtilWindow):
         self.cap_model.setItem(row, cap_col_def['file'], file_item)
 
         btn_font = font
-        btn_font.setPointSize(14)
+        # btn_font.setPointSize(14)
         ui_util.add_button_on_tableview(self.tbl_caps, row, cap_col_def['dir'], 'dir', btn_font, 60, self.on_item_dir_file_clicked)
         ui_util.add_button_on_tableview(self.tbl_caps, row, cap_col_def['open'], 'open', btn_font, 70, self.on_item_open_file_clicked)
         ui_util.add_button_on_tableview(self.tbl_caps, row, cap_col_def['del'], 'del', btn_font, 60, self.on_item_del_file_clicked)

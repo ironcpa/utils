@@ -114,7 +114,7 @@ class MainWindow(UtilWindow):
         base_layout.addWidget(self.tbl_clip_result)
 
     def init_setting_ui(self):
-        self.setting_ui = BaseSearchSettingUI(self)
+        self.setting_ui = BaseSettingUI(self)
         self.setting_ui.hide()
 
     def src_path(self):

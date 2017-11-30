@@ -20,7 +20,7 @@ header_titles = list(column_def.keys())
 header_titles[column_def['chk']] = ''
 
 
-class MainWindow(UtilWindow):
+class MainWindow(TabledUtilWindow):
     def __init__(self, search_text = None):
         super().__init__('db_search')
 
@@ -31,6 +31,7 @@ class MainWindow(UtilWindow):
         self.btn_search_dup.clicked.connect(lambda: self.search_db(True))
         self.name_editor.edit_finished.connect(self.update_file_name_n_synk_db)
         self.name_editor.closed.connect(lambda: self.tbl_result.setFocus())
+        self.setting_ui.apply_req.connect(self.apply_curr_settings)
 
         self.model = QtGui.QStandardItemModel(0, len(column_def))
         # self.model.setHorizontalHeaderLabels([*column_def])
@@ -49,6 +50,8 @@ class MainWindow(UtilWindow):
             self.search_db()
 
     def setup_ui(self):
+        super().setup_ui()
+
         self.setGeometry(0, 0, 1000, 600)
 
         self.setCentralWidget(QWidget())
@@ -70,6 +73,7 @@ class MainWindow(UtilWindow):
         gridlayout.addLayout(controllayout, 0, 0)
 
         self.tbl_result = SearchView()
+        self.set_default_table(self.tbl_result)
         self.tbl_result.setSortingEnabled(True)
         gridlayout.addWidget(self.tbl_result)
 
@@ -77,9 +81,12 @@ class MainWindow(UtilWindow):
         self.name_editor.hide()
 
     def init_setting_ui(self):
-        self.setting_ui = BaseSearchSettingUI(self)
+        super().init_setting_ui()
         self.setting_ui.closed.connect(lambda: self.tbl_result.setFocus())
-        self.setting_ui.hide()
+
+    def apply_curr_settings(self):
+        super().apply_curr_settings()
+        self.arrange_table()
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
@@ -185,15 +192,18 @@ class MainWindow(UtilWindow):
                 ui_util.add_button_on_tableview(self.tbl_result, row, column_def['copy'], 'copy', None, 100, self.on_result_copy_name_clicked)
             ui_util.add_button_on_tableview(self.tbl_result, row, column_def['del db'], 'del db', None, 80, self.on_result_delete_row_clicked)
 
+        self.arrange_table()
+
+        self.tbl_result.setModel(self.model)
+        self.tbl_result.setFocus()
+
+    def arrange_table(self):
         self.tbl_result.resizeColumnsToContents()
         self.tbl_result.resizeRowsToContents()
         self.tbl_result.setColumnWidth(0, 150)
         self.tbl_result.setColumnWidth(column_def['desc'], 400)
         self.tbl_result.setColumnWidth(column_def['chk'], 20)
         # self.tbl_result.scrollToBottom()
-
-        self.tbl_result.setModel(self.model)
-        self.tbl_result.setFocus()
 
     def filter_result(self):
         """only by p_no"""

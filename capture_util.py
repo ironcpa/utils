@@ -32,23 +32,23 @@ def create_clips_from_captures(src_path, cap_dir, clip_dir, captures, header = '
 def future_call(src_path, clip_dir, captures, header=''):
     """for async call stub"""
     loop = asyncio.new_event_loop()
-    result = loop.run_until_complete(async_create_clips_from_captures(src_path, clip_dir, captures, header))
+    result = loop.run_until_complete(async_create_clips_from_captures(loop, src_path, clip_dir, captures, header))
     loop.close()
 
     return result
 
 
-async def async_create_clips_from_captures(src_path, clip_dir, captures, prefix=''):
+async def async_create_clips_from_captures(async_loop, src_path, clip_dir, captures, prefix=''):
     """async test"""
     times = [cu.get_time(f) for f in captures]
-    futures = [asyncio.ensure_future(create_clip_from_capture(clip_dir, src_path, times[i - 1], t, prefix))
+    futures = [asyncio.ensure_future(create_clip_from_capture(async_loop, clip_dir, src_path, times[i - 1], t, prefix))
                for i, t in enumerate(times) if i % 2 == 1]
     result = await asyncio.gather(*futures)
     print(result)
     return result
 
 
-async def create_clip_from_capture(out_dir, src_path, start_time, end_time, prefix):
+async def create_clip_from_capture(async_loop, out_dir, src_path, start_time, end_time, prefix):
     """async test"""
     src_dir, src_name, src_ext = cu.split_path(src_path)
 
@@ -62,7 +62,8 @@ async def create_clip_from_capture(out_dir, src_path, start_time, end_time, pref
                                                                     cu.to_time_form(end_time), out_clip_path)
     print(command)
     try:
-        subprocess.check_output(command, stderr=subprocess.STDOUT)
+        # subprocess.check_output(command, stderr=subprocess.STDOUT)
+        await async_loop.run_in_executor(None, subprocess.check_output, command)
         return start_time, True, None
     except subprocess.CalledProcessError as e:
         return start_time, False, e

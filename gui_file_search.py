@@ -99,7 +99,7 @@ class MainWindow(UtilWindow):
         root_layout.addLayout(tbl_button_group)
 
     def init_setting_ui(self):
-        self.setting_ui = BaseSearchSettingUI(self)
+        self.setting_ui = BaseSettingUI(self)
         self.setting_ui.hide()
 
     def keyPressEvent(self, event):

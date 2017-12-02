@@ -125,9 +125,10 @@ class MainWindow(TabledUtilWindow):
         dir, fname = os.path.split(os.path.splitext(self.src_path())[0])
         dir = '.' if dir == '' else dir
         clip_dir = 'c:\\__clips\\'
+        pno = file_util.get_product_no(fname)
 
         self.clip_model.removeRows(0, self.clip_model.rowCount())
-        for i in ffmpeg_util.get_clip_infos(clip_dir, fname, self.chk_include_samples.isChecked()):
+        for i in ffmpeg_util.get_clip_infos(clip_dir, pno, self.chk_include_samples.isChecked()):
             self.add_clip_result(i[0], i[1])
         self.show_total_clip_size()
 

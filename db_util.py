@@ -27,9 +27,9 @@ class DB:
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
             sql = 'update product\n' \
-                  'set p_no = ?, desc = ?, disk = ?, location = ?, size = ?, cdate = ?\n' \
+                  'set p_no = ?, desc = ?, rate = ?, disk = ?, location = ?, size = ?, cdate = ?\n' \
                   'where id = ?'
-            rows = cur.execute(sql, (p.product_no, p.desc, p.disk_name, p.location, p.size, p.cdate, p.id))
+            rows = cur.execute(sql, (p.product_no, p.desc, p.rate, p.disk_name, p.location, p.size, p.cdate, p.id))
             c.commit()
 
             return rows.rowcount
@@ -161,10 +161,15 @@ class DB:
             cur = c.cursor()
             order_text = order_text if order_text is not '' else 'cdate desc'
             sql = "select id, p_no, desc, rate, disk, location, size, cdate\n" \
-                  "from product\n" \
+                  "from (select * from product where rate = '' order by cdate desc limit 200)\n" \
                   "where rate = ''\n" \
                   "order by {}\n" \
                   "limit 200".format(order_text)
+            # sql = "select id, p_no, desc, rate, disk, location, size, cdate\n" \
+            #       "from product\n" \
+            #       "where rate = ''\n" \
+            #       "order by {}\n" \
+            #       "limit 200".format(order_text)
             cur.execute(sql)
             result = cur.fetchall()
 

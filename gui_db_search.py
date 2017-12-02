@@ -101,7 +101,7 @@ class MainWindow(TabledUtilWindow):
         mod = event.modifiers()
         if key == Qt.Key_Return:
             if mod == Qt.ControlModifier:
-                self.open_curr_row_file(self.get_del_button_at(self.tbl_result.currentIndex().row()))
+                self.search_db()
             elif mod == Qt.ShiftModifier:
                 location_item = self.model.item(self.tbl_result.currentIndex().row(), column_def['location'])
                 name_only = os.path.splitext(os.path.basename(location_item.text()))[0] if location_item else ''
@@ -109,7 +109,7 @@ class MainWindow(TabledUtilWindow):
             elif mod == Qt.ControlModifier | Qt.ShiftModifier:
                 self.open_curr_row_dir(self.get_del_button_at(self.tbl_result.currentIndex().row()))
             else:
-                self.search_db()
+                self.open_curr_row_file(self.get_del_button_at(self.tbl_result.currentIndex().row()))
         elif key == Qt.Key_Tab and mod == Qt.ControlModifier:
             self.close()
         elif key == Qt.Key_Escape:

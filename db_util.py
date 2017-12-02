@@ -1,5 +1,6 @@
 import os
 import sqlite3 as sqlite
+import time
 
 import common_util as cu
 from defines import Product, DBException
@@ -8,6 +9,37 @@ from defines import Product, DBException
 class DB:
     def __init__(self):
         self.db_file = os.path.dirname(__file__) + '\\data\\product_using.db'
+        self.create_tables()
+
+    def create_tables(self):
+        sql_create_product_table = """CREATE TABLE
+                                        IF NOT EXISTS product(
+                                        id integer primary key autoincrement,
+                                        p_no text not null,
+                                        disk text,
+                                        location text,
+                                        rate text,
+                                        desc text, size text, cdate text);"""
+
+        sql_create_search_history_table = """CREATE TABLE 
+                                                IF NOT EXISTS search_history (
+                                                token text,
+                                                count integer,
+                                                last_date text
+                                                );"""
+
+        sql_create_view_history_tabel = """CREATE TABLE 
+                                                IF NOT EXISTS view_history (
+                                                p_no text,
+                                                count integer,
+                                                last_date text
+                                                );"""
+
+        with sqlite.connect(self.db_file) as c:
+            cur = c.cursor()
+            cur.execute(sql_create_product_table)
+            cur.execute(sql_create_search_history_table)
+            cur.execute(sql_create_view_history_tabel)
 
     def insert_products(self, products):
         params = [(p.product_no, p.desc, p.rate, p.disk_name, p.location, p.size, p.cdate) for p in products]
@@ -81,6 +113,23 @@ class DB:
             products.append(Product(*r))
         return products
 
+    def add_search_history(self, search_text):
+        tokens = search_text.split()
+        now = time.strftime('%Y%m%d-%H%M%S')
+
+        with sqlite.connect(self.db_file) as c:
+            for t in tokens:
+                cur = c.cursor()
+                sql = "update search_history " \
+                      "set count = count + 1, " \
+                      "    last_date = ? " \
+                      "where token = ?"
+                rows = cur.execute(sql, (now, t))
+                if rows.rowcount == 0:
+                    sql = "insert into search_history(token, count, last_date) " \
+                          "values (?, 1, ?)"
+                    rows = cur.execute(sql, (t, now))
+
     def search(self, text, limit_filter_text, limit_count, order_text, is_all_match=False):
         # # test
         # return [Product('aaa-123', 'ddd', 'xxx', 'disk', 'c:/aaa.txt', '10.00', '2017-07-11'),
@@ -91,10 +140,15 @@ class DB:
 
         tokens = text.split()
         if len(tokens) > 0:
+            products = []
             if is_all_match:
-                return self.search_all_tokens(tokens)
+                products = self.search_all_tokens(tokens)
             else:
-                return self.search_any_tokens(tokens)
+                products = self.search_any_tokens(tokens)
+
+            if len(products) > 0:
+                self.add_search_history(text)
+            return products
 
     def search_any_tokens(self, tokens):
         with sqlite.connect(self.db_file) as c:
@@ -103,7 +157,7 @@ class DB:
             cur.execute(sql, tuple(params))
             result = cur.fetchall()
 
-            return self.to_product(result), None
+            return self.to_product(result)
 
     def search_all_tokens(self, tokens):
         with sqlite.connect(self.db_file) as c:
@@ -113,7 +167,7 @@ class DB:
             cur.execute(sql, tuple(params))
             result = cur.fetchall()
 
-            return self.to_product(result), None
+            return self.to_product(result)
 
     def make_union_sql(self, target_fields, tokens):
         sql = ''

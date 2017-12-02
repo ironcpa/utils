@@ -128,7 +128,22 @@ class DB:
                 if rows.rowcount == 0:
                     sql = "insert into search_history(token, count, last_date) " \
                           "values (?, 1, ?)"
-                    rows = cur.execute(sql, (t, now))
+                    cur.execute(sql, (t, now))
+
+    def add_view_history(self, pno):
+        now = time.strftime('%Y%m%d-%H%M%S')
+
+        with sqlite.connect(self.db_file) as c:
+            cur = c.cursor()
+            sql = "update view_history " \
+                  "set count = count + 1, " \
+                  "    last_date = ? " \
+                  "where p_no = ?"
+            rows = cur.execute(sql, (now, pno))
+            if rows.rowcount == 0:
+                sql = "insert into view_history(p_no, count, last_date) " \
+                      "values (?, 1, ?)"
+                cur.execute(sql, (pno, now))
 
     def search(self, text, limit_filter_text, limit_count, order_text, is_all_match=False):
         # # test

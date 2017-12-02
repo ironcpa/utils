@@ -243,6 +243,9 @@ class MainWindow(TabledUtilWindow):
     def get_path_on_curr_row(self):
         return self.model.item(self.tbl_result.currentIndex().row(), column_def['location']).text()
 
+    def get_pno_on_row(self, widget):
+        return self.get_text_on_table_widget(widget, column_def['no'])
+
     def get_pno_on_curr_row(self):
         return self.model.item(self.tbl_result.currentIndex().row(), column_def['no']).text()
 
@@ -278,6 +281,7 @@ class MainWindow(TabledUtilWindow):
         if not widget:
             return
         ui_util.open_path(self.get_path_on_row(widget))
+        self.db.add_view_history(self.get_pno_on_row(widget))
 
     def open_curr_row_dir(self, widget):
         if not widget:

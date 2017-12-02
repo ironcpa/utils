@@ -12,7 +12,7 @@ import file_util
 import common_util as cu
 from db_util import DB
 from widgets import *
-from defines import Product, FileInfo
+from defines import Product, FileInfo, DBException
 
 cols = ['no', 'disk', 'size', 'date', 'rate', 'desc', 'open', 'dir', 'tool', 'del file', 'chk', 'copy', 'del db', 'location']
 column_def = {k: v for v, k in enumerate(cols)}
@@ -178,7 +178,10 @@ class MainWindow(TabledUtilWindow):
                             self.txt_order.text(),
                             self.is_and_checked())
             self.search_stack.append(search_tuple)
-            products = self.db.search(*search_tuple)
+            try:
+                products = self.db.search(*search_tuple)
+            except DBException as e:
+                QMessageBox.warning(self, 'db', e.msg)
 
         for p in products:
             row = self.model.rowCount()

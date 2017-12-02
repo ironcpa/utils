@@ -2,7 +2,7 @@ import os
 import sqlite3 as sqlite
 
 import common_util as cu
-from defines import Product
+from defines import Product, DBException
 
 
 class DB:
@@ -155,8 +155,11 @@ class DB:
                   "from (select * from product {} limit {})\n" \
                   "where rate = ''\n" \
                   "order by {}\n".format(limit_filter_test, limit_count, order_text)
-            cur.execute(sql)
-            result = cur.fetchall()
+            try:
+                cur.execute(sql)
+                result = cur.fetchall()
+            except Exception as e:
+                raise DBException(str(e))
 
             return self.to_product(result)
 

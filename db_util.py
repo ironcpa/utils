@@ -81,13 +81,13 @@ class DB:
             products.append(Product(*r))
         return products
 
-    def search(self, text, order_text, is_all_match=False):
+    def search(self, text, limit_filter_text, limit_count, order_text, is_all_match=False):
         # # test
         # return [Product('aaa-123', 'ddd', 'xxx', 'disk', 'c:/aaa.txt', '10.00', '2017-07-11'),
         #         Product('bbb-456', 'bbb', 'xxx', 'disk', 'c:/aaa.txt', '5.00', '2017-08-01aa)]
 
         if text == '':
-            return self.search_all(order_text)
+            return self.search_all(limit_filter_text, limit_count, order_text)
 
         tokens = text.split()
         if len(tokens) > 0:
@@ -96,16 +96,6 @@ class DB:
             else:
                 return self.search_any_tokens(tokens)
 
-                # # test multi field search
-                # with sqlite.connect(self.db_file) as c:
-                #     cur = c.cursor()
-                #     sql = "select p_no, desc, rate, disk, location from product\n"\
-                #           "where p_no || desc like ?"
-                #     cur.execute(sql, ('%' + text + '%',))
-                #     result = cur.fetchall()
-                #
-                #     return self.to_product(result)
-
     def search_any_tokens(self, tokens):
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
@@ -113,7 +103,7 @@ class DB:
             cur.execute(sql, tuple(params))
             result = cur.fetchall()
 
-            return self.to_product(result)
+            return self.to_product(result), None
 
     def search_all_tokens(self, tokens):
         with sqlite.connect(self.db_file) as c:
@@ -123,7 +113,7 @@ class DB:
             cur.execute(sql, tuple(params))
             result = cur.fetchall()
 
-            return self.to_product(result)
+            return self.to_product(result), None
 
     def make_union_sql(self, target_fields, tokens):
         sql = ''
@@ -156,15 +146,15 @@ class DB:
 
         return sql, params
 
-    def search_all(self, order_text=''):
+    def search_all(self, limit_filter_test='', limit_count='', order_text=''):
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
+            limit_filter_test = 'where ' + limit_filter_test if limit_filter_test is not '' else ''
             order_text = order_text if order_text is not '' else 'cdate desc'
             sql = "select id, p_no, desc, rate, disk, location, size, cdate\n" \
-                  "from product\n" \
+                  "from (select * from product {} limit {})\n" \
                   "where rate = ''\n" \
-                  "order by {}\n" \
-                  "limit 200".format(order_text)
+                  "order by {}\n".format(limit_filter_test, limit_count, order_text)
             cur.execute(sql)
             result = cur.fetchall()
 

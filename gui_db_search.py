@@ -73,10 +73,15 @@ class MainWindow(TabledUtilWindow):
         main_control_group.addWidget(self.btn_search_dup)
         all_control_group.addLayout(main_control_group)
 
-        sub_control_group = QHBoxLayout()
+        filter_group = QGridLayout()
+        filter_group.setColumnStretch(0, 4)
+        self.txt_limit_filter = LabeledLineEdit('limit by')
+        filter_group.addWidget(self.txt_limit_filter, 0, 0)
+        self.txt_limit_count = LabeledLineEdit('count', 200, 120, 120)
+        filter_group.addWidget(self.txt_limit_count, 0, 1)
         self.txt_order = LabeledLineEdit('order by')
-        sub_control_group.addWidget(self.txt_order)
-        all_control_group.addLayout(sub_control_group)
+        filter_group.addWidget(self.txt_order, 1, 0, 1, 2)
+        all_control_group.addLayout(filter_group)
 
         base_layout.addLayout(all_control_group)
 
@@ -167,7 +172,11 @@ class MainWindow(TabledUtilWindow):
         if is_find_dub:
             products = self.db.search_dup_list()
         else:
-            search_tuple = (self.get_search_text(), self.txt_order.text(), self.is_and_checked())
+            search_tuple = (self.get_search_text(),
+                            self.txt_limit_filter.text(),
+                            self.txt_limit_count.text(),
+                            self.txt_order.text(),
+                            self.is_and_checked())
             self.search_stack.append(search_tuple)
             products = self.db.search(*search_tuple)
 

@@ -12,7 +12,7 @@ import file_util
 import common_util as cu
 from db_util import DB
 from widgets import *
-from defines import Product, FileInfo
+from defines import Product, FileInfo, DBException
 
 cols = ['no', 'disk', 'size', 'date', 'rate', 'desc', 'open', 'dir', 'tool', 'del file', 'chk', 'copy', 'del db', 'location']
 column_def = {k: v for v, k in enumerate(cols)}
@@ -73,10 +73,15 @@ class MainWindow(TabledUtilWindow):
         main_control_group.addWidget(self.btn_search_dup)
         all_control_group.addLayout(main_control_group)
 
-        sub_control_group = QHBoxLayout()
+        filter_group = QGridLayout()
+        filter_group.setColumnStretch(0, 4)
+        self.txt_limit_filter = LabeledLineEdit('limit by')
+        filter_group.addWidget(self.txt_limit_filter, 0, 0)
+        self.txt_limit_count = LabeledLineEdit('count', 200, 120, 120)
+        filter_group.addWidget(self.txt_limit_count, 0, 1)
         self.txt_order = LabeledLineEdit('order by')
-        sub_control_group.addWidget(self.txt_order)
-        all_control_group.addLayout(sub_control_group)
+        filter_group.addWidget(self.txt_order, 1, 0, 1, 2)
+        all_control_group.addLayout(filter_group)
 
         base_layout.addLayout(all_control_group)
 
@@ -167,9 +172,16 @@ class MainWindow(TabledUtilWindow):
         if is_find_dub:
             products = self.db.search_dup_list()
         else:
-            search_tuple = (self.get_search_text(), self.txt_order.text(), self.is_and_checked())
+            search_tuple = (self.get_search_text(),
+                            self.txt_limit_filter.text(),
+                            self.txt_limit_count.text(),
+                            self.txt_order.text(),
+                            self.is_and_checked())
             self.search_stack.append(search_tuple)
-            products = self.db.search(*search_tuple)
+            try:
+                products = self.db.search(*search_tuple)
+            except DBException as e:
+                QMessageBox.warning(self, 'db', e.msg)
 
         for p in products:
             row = self.model.rowCount()
@@ -231,6 +243,9 @@ class MainWindow(TabledUtilWindow):
     def get_path_on_curr_row(self):
         return self.model.item(self.tbl_result.currentIndex().row(), column_def['location']).text()
 
+    def get_pno_on_row(self, widget):
+        return self.get_text_on_table_widget(widget, column_def['no'])
+
     def get_pno_on_curr_row(self):
         return self.model.item(self.tbl_result.currentIndex().row(), column_def['no']).text()
 
@@ -266,6 +281,7 @@ class MainWindow(TabledUtilWindow):
         if not widget:
             return
         ui_util.open_path(self.get_path_on_row(widget))
+        self.db.add_view_history(self.get_pno_on_row(widget))
 
     def open_curr_row_dir(self, widget):
         if not widget:

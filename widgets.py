@@ -98,13 +98,12 @@ class LabeledLineEdit(QWidget):
     def init_ui(self):
         settingLayout = QHBoxLayout()
         settingLayout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(settingLayout)
 
         self.label = QLabel()
         self.lineedit = QLineEdit()
         settingLayout.addWidget(self.label)
         settingLayout.addWidget(self.lineedit)
-
-        self.setLayout(settingLayout)
 
     def text(self):
         return self.lineedit.text()

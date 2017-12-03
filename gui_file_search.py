@@ -8,11 +8,6 @@ from db_util import DB
 from widgets import *
 from defines import ColumnDef
 
-# cols = ['checkbox', 'dir', 'open', 'del', 'capture', 'clip', 'copy name', 'size', 'path']
-# column_def = {k: v for v, k in enumerate(cols)}
-# header_titles = list(column_def.keys())
-# header_titles[column_def['checkbox']] = ''
-
 column_def = ColumnDef(['checkbox', 'dir', 'open', 'del', 'capture', 'clip', 'copy name', 'size', 'path'],
                        {'checkbox': ''})
 
@@ -47,7 +42,7 @@ class MainWindow(TabledUtilWindow):
 
         self.setting_ui.apply_req.connect(self.apply_curr_settings)
 
-        self.model = QtGui.QStandardItemModel(0, column_def.size())
+        self.model = QtGui.QStandardItemModel(0, len(column_def))
         self.model.setHorizontalHeaderLabels(column_def.header_titles)
         self.tbl_search_result.setModel(self.model)
 
@@ -84,6 +79,7 @@ class MainWindow(TabledUtilWindow):
         self.btn_collect_db = QPushButton('collect db')
 
         self.tbl_search_result = QTableView()
+        self.tbl_search_result.setSortingEnabled(True)
         self.set_default_table(self.tbl_search_result)
 
         self.btn_stop = QPushButton('stop')
@@ -125,7 +121,8 @@ class MainWindow(TabledUtilWindow):
             event.ignore()
 
     def update_result(self, file_infos):
-        self.model.clear()
+        self.model.removeRows(0, self.model.rowCount())
+
         for fi in file_infos:
             path = fi.path
             size = fi.size

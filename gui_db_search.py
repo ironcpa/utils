@@ -12,12 +12,10 @@ import file_util
 import common_util as cu
 from db_util import DB
 from widgets import *
-from defines import Product, FileInfo, DBException
+from defines import ColumnDef, Product, FileInfo, DBException
 
-cols = ['no', 'disk', 'size', 'date', 'rate', 'desc', 'open', 'dir', 'tool', 'del file', 'chk', 'copy', 'del db', 'location']
-column_def = {k: v for v, k in enumerate(cols)}
-header_titles = list(column_def.keys())
-header_titles[column_def['chk']] = ''
+column_def = ColumnDef(['no', 'disk', 'size', 'date', 'rate', 'desc', 'open', 'dir', 'tool', 'del file', 'chk', 'copy', 'del db', 'location'],
+                       {'chk': ''})
 
 
 class MainWindow(TabledUtilWindow):
@@ -33,8 +31,8 @@ class MainWindow(TabledUtilWindow):
         self.name_editor.closed.connect(lambda: self.tbl_result.setFocus())
         self.setting_ui.apply_req.connect(self.apply_curr_settings)
 
-        self.model = QtGui.QStandardItemModel(0, len(column_def))
-        self.model.setHorizontalHeaderLabels(header_titles)
+        self.model = QtGui.QStandardItemModel(0, column_def.size())
+        self.model.setHorizontalHeaderLabels(column_def.header_titles)
         self.tbl_result.setModel(self.model)
 
         self.product_filter_model = QtCore.QSortFilterProxyModel()

@@ -9,18 +9,18 @@ Product = collections.namedtuple('Product', ['id', 'product_no', 'desc', 'rate',
 
 
 class ColumnDef:
-    def __init__(self, cols, title_def_map):
+    def __init__(self, cols, title_def_map={}):
         self.cols = cols
         self.column_def = {k: v for v, k in enumerate(cols)}
         self.header_titles = list(self.column_def.keys())
         for k in title_def_map.keys():
             self.header_titles[self.column_def[k]] = title_def_map[k]
 
-    def size(self):
-        return len(self.cols)
-
     def __getitem__(self, key):
         return self.column_def[key]
+
+    def __len__(self):
+        return len(self.column_def)
 
 
 class DBException(Exception):

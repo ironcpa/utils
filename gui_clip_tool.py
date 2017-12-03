@@ -10,12 +10,13 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from send2trash import send2trash
 
+from defines import ColumnDef
 from widgets import *
 import ui_util
 import file_util
 import ffmpeg_util
 
-column_def = {'dir': 0, 'open': 1, 'del': 2, 'reclip': 3, 'copy setting':4, 'size':5, 'path': 6}
+column_def = ColumnDef(['dir', 'open', 'del', 'reclip', 'copy setting', 'size', 'path'])
 
 
 class MainWindow(TabledUtilWindow):
@@ -42,6 +43,7 @@ class MainWindow(TabledUtilWindow):
         self.setting_ui.apply_req.connect(self.apply_curr_settings)
 
         self.clip_model = QtGui.QStandardItemModel(0, len(column_def))
+        self.clip_model.setHorizontalHeaderLabels(column_def.header_titles)
         self.tbl_clip_result.setModel(self.clip_model)
 
         self.load_rel_clips()
@@ -73,6 +75,7 @@ class MainWindow(TabledUtilWindow):
         self.lbl_clip_total_size = TitledLabel('total size:')
         self.btn_del_all = QPushButton('del all clips')
         self.tbl_clip_result = QTableView()
+        self.tbl_clip_result.setSortingEnabled(True)
         self.set_default_table(self.tbl_clip_result)
 
         self.setCentralWidget(QWidget())

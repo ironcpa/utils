@@ -44,9 +44,9 @@ class MainWindow(TabledUtilWindow):
         self.clip_model = QtGui.QStandardItemModel(0, len(column_def))
         self.tbl_clip_result.setModel(self.clip_model)
 
-        self.load_rel_clips()
-
         self.load_settings()
+
+        self.load_rel_clips()
 
     def setup_ui(self):
         self.setGeometry(0, 0, 1280, 768)

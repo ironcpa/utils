@@ -79,7 +79,7 @@ class MainWindow(TabledUtilWindow):
         self.btn_del_all = QPushButton('delete all')
         self.txt_offset_time = LabeledLineEdit('offset time', '', 200, 250)
         self.txt_offset_time.set_input_mask('x00 : 00 : 00')
-        self.txt_offset_time.set_text('+00 : 00 : 00')
+        self.txt_offset_time.set_text('-00 : 00 : 00')
         self.btn_recapture = QPushButton('recapture')
         self.tbl_caps = QTableView()
         self.set_default_table(self.tbl_caps)
@@ -196,7 +196,7 @@ class MainWindow(TabledUtilWindow):
 
     def make_clips_from_model(self, out_prefix=''):
         captures = [self.cap_model.item(r, cap_col_def['file']).data() for r in range(self.cap_model.rowCount())]
-        capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), captures)
+        capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), captures, out_prefix)
         # result = capture_util.future_call(self.src_path(), self.clip_dir(), captures, out_prefix)
         #
         # succ, fail = 0, 0

@@ -218,12 +218,10 @@ class DB:
     def search_all(self, limit_filter_test='', limit_count='', order_text=''):
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
-            limit_filter_test = 'where ' + limit_filter_test if limit_filter_test is not '' else ''
-            order_text = order_text if order_text is not '' else 'cdate desc'
+            limit_filter_test = 'where ' + (limit_filter_test if limit_filter_test is not '' else "rate = ''")
+            order_text = order_text if order_text is not '' else ' order by cdate desc'
             sql = "select id, p_no, desc, rate, disk, location, size, cdate\n" \
-                  "from (select * from product {} limit {})\n" \
-                  "where rate = ''\n" \
-                  "order by {}\n".format(limit_filter_test, limit_count, order_text)
+                  "from (select * from product {} limit {})".format(limit_filter_test + order_text, limit_count)
             try:
                 cur.execute(sql)
                 result = cur.fetchall()

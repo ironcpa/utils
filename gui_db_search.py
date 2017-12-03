@@ -94,10 +94,6 @@ class MainWindow(TabledUtilWindow):
         super().init_setting_ui()
         self.setting_ui.closed.connect(lambda: self.tbl_result.setFocus())
 
-    def apply_curr_settings(self):
-        super().apply_curr_settings()
-        self.arrange_table()
-
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
         mod = event.modifiers()

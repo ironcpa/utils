@@ -68,6 +68,7 @@ class TabledUtilWindow(UtilWindow):
     def apply_curr_settings(self):
         super().apply_curr_settings()
         self._default_table.setStyleSheet('font: ' + self.setting_ui.table_font_size() + 'pt')
+        self.arrange_table()
 
     def load_settings(self):
         self.setting_ui.set_table_font_size(ui_util.load_settings(self, self.app_name, 'table font size', 20))
@@ -76,6 +77,10 @@ class TabledUtilWindow(UtilWindow):
     def save_settings(self):
         super().save_settings()
         ui_util.save_settings(self, self.app_name, 'table font size', self.setting_ui.table_font_size())
+
+    @abstractmethod
+    def arrange_table(self):
+        pass
 
 
 class LabeledLineEdit(QWidget):

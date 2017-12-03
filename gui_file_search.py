@@ -103,10 +103,6 @@ class MainWindow(TabledUtilWindow):
         root_layout.addWidget(self.tbl_search_result)
         root_layout.addLayout(tbl_button_group)
 
-    def apply_curr_settings(self):
-        super().apply_curr_settings()
-        self.arrange_table()
-
     def keyPressEvent(self, event):
         key = event.key()
         mod = event.modifiers()

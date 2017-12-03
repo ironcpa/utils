@@ -27,32 +27,34 @@ def create_clip(src_path, start_time, end_time, out_clip_path):
     subprocess.Popen(command)
 
 
-def merge_all_clips(src_path, clip_paths, is_async = False):
+def merge_file_path(src_path):
+    pno = file_util.get_product_no(os.path.basename(src_path))
+    merged_file_name = os.path.dirname(src_path) + os.path.sep + pno + '_con' + os.path.basename(src_path).replace(pno, '')
+    return merged_file_name
+
+
+def merge_all_clips(merged_file_path, clip_paths, is_async = False):
     if len(clip_paths) < 1:
         return
 
-    pno = file_util.get_product_no(os.path.basename(src_path))
-    # merged_file = os.path.dirname(src_path) + '\\con_' + os.path.basename(src_path)
-    merged_file = os.path.dirname(src_path) + os.path.sep + pno + '_con' + os.path.basename(src_path).replace(pno, '')
-
     if len(clip_paths) == 1:
         # shutil.move(clip_paths[0], merged_file)
-        shutil.copy(clip_paths[0], merged_file)
-        return merged_file
+        shutil.copy(clip_paths[0], merged_file_path)
+        return merged_file_path
 
     tmp_list_file_name = 'tmp_list.txt'
     with open(tmp_list_file_name, 'w') as tmp_list_file:
         for p in clip_paths:
             tmp_list_file.write("file '{}'\n".format(p))
 
-    cmd = 'ffmpeg -f concat -safe 0 -i {} -c copy "{}" -y'.format(tmp_list_file_name, merged_file)
+    cmd = 'ffmpeg -f concat -safe 0 -i {} -c copy "{}" -y'.format(tmp_list_file_name, merged_file_path)
     if is_async:
         subprocess.Popen(cmd)
     else:
         subprocess.check_output(cmd)
     os.remove(tmp_list_file_name)
 
-    return merged_file
+    return merged_file_path
 
 
 def capture(src_path, time_form, recap_tag, out_dir):

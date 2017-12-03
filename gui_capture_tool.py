@@ -217,7 +217,7 @@ class MainWindow(TabledUtilWindow):
     def make_direct_merge(self):
         src_filename = os.path.splitext(os.path.basename(self.src_path()))[0]
         clip_paths = ffmpeg_util.get_clip_paths('c:\\__clips\\', src_filename)
-        merged_path = ffmpeg_util.merge_all_clips(self.src_path(), clip_paths)
+        merged_path = ffmpeg_util.merge_all_clips(ffmpeg_util.merge_file_path(self.src_path()), clip_paths)
         for p in clip_paths:
             ui_util.delete_path(self, p, True)
         ui_util.delete_path(self, self.src_path(), True)

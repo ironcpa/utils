@@ -12,11 +12,13 @@ from send2trash import send2trash
 
 from defines import ColumnDef
 from widgets import *
+import common_util as cu
 import ui_util
 import file_util
 import ffmpeg_util
 
-column_def = ColumnDef(['dir', 'open', 'del', 'reclip', 'copy setting', 'size', 'path'])
+column_def = ColumnDef(['chk', 'dir', 'open', 'del', 'reclip', 'copy setting', 'size', 'path'],
+                       {'chk': ''})
 
 
 class MainWindow(TabledUtilWindow):
@@ -25,9 +27,11 @@ class MainWindow(TabledUtilWindow):
 
         self.flc_src_file.set_path(src_path)
 
-        src_name_only, src_ext = os.path.splitext(os.path.basename(src_path))
-        clip_name = 'clip_' + src_name_only
+        # src_name_only, src_ext = os.path.splitext(os.path.basename(src_path))
+        src_dir, src_name, src_ext = cu.split_path(src_path)
+        clip_name = 'clip_' + src_name
         self.txt_clip_name.set_text('c:\\__clips\\' + clip_name + '_{}_{}' + src_ext)
+        self.txt_merge_name.set_text(ffmpeg_util.merge_file_path(src_path))
 
         self.btn_encode.clicked.connect(self.on_encode_clicked)
         self.btn_encode_0_9_start_seconds.clicked.connect(self.on_encode_0_9_seconds_clicked)
@@ -68,6 +72,7 @@ class MainWindow(TabledUtilWindow):
         self.txt_end_time.set_input_mask('00 : 00 : 00')
         self.btn_to_start_time = QPushButton('S')
         self.txt_clip_name = LabeledLineEdit('clip name', '', col1_w)
+        self.txt_merge_name = LabeledLineEdit('merge name', '', col1_w)
         self.btn_encode = QPushButton('encode')
         self.btn_encode_0_9_start_seconds = QPushButton('encode(0-9sec)')
         self.btn_merge_all_clips = QPushButton('merge all')
@@ -101,6 +106,7 @@ class MainWindow(TabledUtilWindow):
         base_layout.addLayout(start_end_group)
 
         base_layout.addWidget(self.txt_clip_name)
+        base_layout.addWidget(self.txt_merge_name)
 
         encode_group = QHBoxLayout()
         encode_group.addWidget(self.btn_encode)
@@ -190,15 +196,28 @@ class MainWindow(TabledUtilWindow):
             self.run_ffmpeg_make_clip(start_time[0:-1], end_time, out_clip_path, True)
 
     def merge_all_clips(self):
-        model_clip_paths = [self.clip_model.item(r, column_def['path']).text() for r in range(self.clip_model.rowCount())]
-        merged_path = ffmpeg_util.merge_all_clips(self.src_path(), model_clip_paths)
-        for p in model_clip_paths:
-            ui_util.delete_path(self, p, True)
-        ui_util.delete_path(self, self.src_path(), True)
+        model_clip_paths = [self.clip_model.item(r, column_def['path']).text() for r in range(self.clip_model.rowCount())
+                            if self.tbl_clip_result.indexWidget(self.clip_model.index(r, column_def['chk'])).isChecked()]
+        merged_path = ffmpeg_util.merge_all_clips(self.txt_merge_name.text(), model_clip_paths)
+        if self.is_condenced_merge_condition() \
+                and QMessageBox.Yes == QMessageBox.question(self, 'alert', 'delete source & clips?', QMessageBox.Yes, QMessageBox.No):
+            for p in model_clip_paths:
+                ui_util.delete_path(self, p, True)
+            ui_util.delete_path(self, self.src_path(), True)
         QMessageBox.information(self, 'info', 'merge complete : {}'.format(merged_path))
 
+    def is_condenced_merge_condition(self):
+        src_dir, src_name, src_ext = cu.split_path(self.src_path())
+        src_path_wo_ext = src_dir + os.path.sep + src_name
+        return self.txt_merge_name.text().startswith(src_path_wo_ext) and '_con' in self.txt_merge_name.text()
+
     def on_dir_src_clicked(self):
-        ui_util.open_path_dir(self.src_path())
+        if os.path.exists(self.src_path()):
+            ui_util.open_path_dir(self.src_path())
+        else:
+            # try to open dir
+            src_dir, _, _ = cu.split_path(self.src_path())
+            ui_util.open_path_dir(src_dir)
 
     def on_open_src_clicked(self):
         ui_util.open_path(self.src_path())
@@ -245,37 +264,16 @@ class MainWindow(TabledUtilWindow):
         self.clip_model.setItem(row, column_def['size'], size_item)
         self.clip_model.setItem(row, column_def['path'], QtGui.QStandardItem(path))
 
-        btn_w = 60
+        ui_util.add_checkbox_on_tableview(self.tbl_clip_result, row, column_def['chk'], '', 20, None, True)
+        ui_util.add_button_on_tableview(self.tbl_clip_result, row, column_def['dir'], 'dir', None, 0, self.on_item_open_dir_clicked)
+        ui_util.add_button_on_tableview(self.tbl_clip_result, row, column_def['open'], 'open', None, 0, self.on_item_open_file_clicked)
+        ui_util.add_button_on_tableview(self.tbl_clip_result, row, column_def['del'], 'del', None, 0, self.on_item_del_file_clicked)
+        ui_util.add_button_on_tableview(self.tbl_clip_result, row, column_def['reclip'], 'reclip', None, 0, self.on_item_reclip_clicked)
+        ui_util.add_button_on_tableview(self.tbl_clip_result, row, column_def['copy setting'], 'copy setting', None, 0, self.on_item_copy_setting)
 
-        btn_open_dir = QPushButton()
-        btn_open_dir.setText('folder')
-        btn_open_dir.setFixedWidth(btn_w)
-        btn_open_dir.clicked.connect(self.on_item_open_dir_clicked)
-        self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['dir']), btn_open_dir)
+        self.arrange_table()
 
-        btn_open_file = QPushButton()
-        btn_open_file.setText('open')
-        btn_open_file.setFixedWidth(btn_w)
-        btn_open_file.clicked.connect(self.on_item_open_file_clicked)
-        self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['open']), btn_open_file)
-
-        btn_delete_file = QPushButton()
-        btn_delete_file.setText('delete')
-        btn_delete_file.setFixedWidth(btn_w)
-        btn_delete_file.clicked.connect(self.on_item_del_file_clicked)
-        self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['del']), btn_delete_file)
-
-        btn_reclip = QPushButton()
-        btn_reclip.setText('reclip')
-        btn_reclip.setFixedWidth(btn_w)
-        btn_reclip.clicked.connect(self.on_item_reclip_clicked)
-        self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['reclip']), btn_reclip)
-
-        btn_copy_setting = QPushButton()
-        btn_copy_setting.setText('copy setting')
-        btn_copy_setting.clicked.connect(self.on_item_copy_setting)
-        self.tbl_clip_result.setIndexWidget(self.clip_model.index(row, column_def['copy setting']), btn_copy_setting)
-
+    def arrange_table(self):
         self.tbl_clip_result.resizeColumnsToContents()
         self.tbl_clip_result.resizeRowsToContents()
 

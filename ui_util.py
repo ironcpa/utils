@@ -70,13 +70,14 @@ def add_button_on_tableview(tableview, row, col, label, font, width, slot=None):
     tableview.setIndexWidget(tableview.model().index(row, col), button)
 
 
-def add_checkbox_on_tableview(tableview, row, col, label, width, slot=None):
+def add_checkbox_on_tableview(tableview, row, col, label, width, slot=None, is_checked=False):
     checkbox = QCheckBox()
     checkbox.setFocusPolicy(Qt.NoFocus)
     checkbox.setText(label)
     checkbox.setFixedWidth(width)
     if slot:
         checkbox.stateChanged.connect(slot)
+    checkbox.setChecked(is_checked)
     tableview.setIndexWidget(tableview.model().index(row, col), checkbox)
 
 

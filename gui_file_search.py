@@ -6,8 +6,10 @@ import db_util
 from find_file import *
 from db_util import DB
 from widgets import *
+from defines import ColumnDef
 
-column_def = {'checkbox': 0, 'dir': 1, 'open': 2, 'del': 3, 'capture': 4, 'clip': 5, 'copy name': 6, 'size': 7, 'path': 8}
+column_def = ColumnDef(['checkbox', 'dir', 'open', 'del', 'capture', 'clip', 'copy name', 'size', 'path'],
+                       {'checkbox': ''})
 
 
 class MainWindow(TabledUtilWindow):
@@ -41,6 +43,7 @@ class MainWindow(TabledUtilWindow):
         self.setting_ui.apply_req.connect(self.apply_curr_settings)
 
         self.model = QtGui.QStandardItemModel(0, len(column_def))
+        self.model.setHorizontalHeaderLabels(column_def.header_titles)
         self.tbl_search_result.setModel(self.model)
 
         self.load_ini_file()
@@ -56,7 +59,7 @@ class MainWindow(TabledUtilWindow):
             base = os.path.basename(src_file)
             product_no = file_util.get_product_no(os.path.splitext(base)[0])
             drive = src_file[:2] + os.path.sep
-            self.txt_search_text.setText(product_no)
+            self.txt_search_text.set_text(product_no)
             self.flc_src_dir.set_path(drive)
             self.start_search(product_no, drive)
 
@@ -76,6 +79,7 @@ class MainWindow(TabledUtilWindow):
         self.btn_collect_db = QPushButton('collect db')
 
         self.tbl_search_result = QTableView()
+        self.tbl_search_result.setSortingEnabled(True)
         self.set_default_table(self.tbl_search_result)
 
         self.btn_stop = QPushButton('stop')
@@ -113,7 +117,8 @@ class MainWindow(TabledUtilWindow):
             event.ignore()
 
     def update_result(self, file_infos):
-        self.model.clear()
+        self.model.removeRows(0, self.model.rowCount())
+
         for fi in file_infos:
             path = fi.path
             size = fi.size
@@ -124,51 +129,21 @@ class MainWindow(TabledUtilWindow):
             self.model.setItem(row, column_def['size'], size_item)
             self.model.setItem(row, column_def['path'], QtGui.QStandardItem(path))
 
-            chk_box = QCheckBox(self.tbl_search_result)
-            chk_box.setText('')
-            self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['checkbox']), chk_box)
+            ui_util.add_checkbox_on_tableview(self.tbl_search_result, row, column_def['checkbox'], '', 20, None)
+            ui_util.add_button_on_tableview(self.tbl_search_result, row, column_def['dir'], 'dir', None, 0, self.on_open_dir_clicked)
+            ui_util.add_button_on_tableview(self.tbl_search_result, row, column_def['open'], 'open', None, 0, self.on_open_file_clicked)
+            ui_util.add_button_on_tableview(self.tbl_search_result, row, column_def['del'], 'del', None, 0, self.on_del_file_clicked)
+            ui_util.add_button_on_tableview(self.tbl_search_result, row, column_def['capture'], 'capture', None, 0, self.on_open_capture_tool_clicked)
+            ui_util.add_button_on_tableview(self.tbl_search_result, row, column_def['clip'], 'clip', None, 0, self.on_open_clip_tool_clicked)
+            ui_util.add_button_on_tableview(self.tbl_search_result, row, column_def['copy name'], 'copy name', None, 0, self.on_copy_name_clicked)
 
-            btn_w = 60
-
-            btn_open_dir = QPushButton()
-            btn_open_dir.setText('folder')
-            btn_open_dir.setFixedWidth(btn_w)
-            btn_open_dir.clicked.connect(self.on_open_dir_clicked)
-            self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['dir']), btn_open_dir)
-
-            btn_open_file = QPushButton()
-            btn_open_file.setText('open')
-            btn_open_file.setFixedWidth(btn_w)
-            btn_open_file.clicked.connect(self.on_open_file_clicked)
-            self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['open']), btn_open_file)
-
-            btn_delete_file = QPushButton()
-            btn_delete_file.setText('delete')
-            btn_delete_file.setFixedWidth(btn_w)
-            btn_delete_file.clicked.connect(self.on_del_file_clicked)
-            self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['del']), btn_delete_file)
-
-            btn_open_capture_tool = QPushButton()
-            btn_open_capture_tool.setText('capture')
-            btn_open_capture_tool.setFixedWidth(btn_w + 20)
-            btn_open_capture_tool.clicked.connect(self.on_open_capture_tool_clicked)
-            self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['capture']), btn_open_capture_tool)
-
-            btn_open_clip_tool = QPushButton()
-            btn_open_clip_tool.setText('clip')
-            btn_open_clip_tool.setFixedWidth(btn_w)
-            btn_open_clip_tool.clicked.connect(self.on_open_clip_tool_clicked)
-            self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['clip']), btn_open_clip_tool)
-
-            btn_copy_name = QPushButton()
-            btn_copy_name.setText('copy name')
-            btn_copy_name.clicked.connect(self.on_copy_name_clicked)
-            self.tbl_search_result.setIndexWidget(self.model.index(row, column_def['copy name']), btn_copy_name)
-
-        self.tbl_search_result.resizeColumnsToContents()
-        self.tbl_search_result.resizeRowsToContents()
+        self.arrange_table()
 
         self.update_ini_file()
+
+    def arrange_table(self):
+        self.tbl_search_result.resizeColumnsToContents()
+        self.tbl_search_result.resizeRowsToContents()
 
     def update_ini_file(self):
         # with open('search.ini', 'w') as f:

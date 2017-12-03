@@ -8,6 +8,7 @@ from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
+from defines import ColumnDef
 from widgets import *
 import common_util as co
 import capture_util
@@ -15,7 +16,7 @@ import ui_util
 import file_util
 import ffmpeg_util
 
-cap_col_def = {'seq':0, 'time': 1, 'duration': 2, 'dir':3, 'open':4, 'del': 5, 'file':6}
+column_def = ColumnDef(['seq', 'time', 'duration', 'dir', 'open', 'del', 'file'])
 
 
 class MainWindow(TabledUtilWindow):
@@ -38,8 +39,9 @@ class MainWindow(TabledUtilWindow):
 
         self.setting_ui.apply_req.connect(self.apply_curr_settings)
 
-        self.cap_model = QtGui.QStandardItemModel(0, len(cap_col_def))
-        self.tbl_caps.setModel(self.cap_model)
+        self.model = QtGui.QStandardItemModel(0, len(column_def))
+        self.model.setHorizontalHeaderLabels(column_def.header_titles)
+        self.tbl_caps.setModel(self.model)
 
         self.flc_capture_dir.set_path('c:/__potplayer_capture_for_clip')
         self.flc_clip_dir.set_path('c:/__clips')
@@ -158,7 +160,7 @@ class MainWindow(TabledUtilWindow):
         return self.tbl_caps.indexAt(widget.pos()).row()
 
     def load_rel_caps(self):
-        self.cap_model.clear()
+        self.model.removeRows(0, self.model.rowCount())
 
         # fname으로 찾는 옵션 고려
         rel_cap_paths = [os.path.join(self.cap_dir(), x) for x in os.listdir(self.cap_dir()) if x.startswith(self.src_product_no())]
@@ -169,8 +171,8 @@ class MainWindow(TabledUtilWindow):
 
     def show_total_time(self):
         total_time = 0
-        for r in range(self.cap_model.rowCount()):
-            du_item = self.cap_model.item(r, cap_col_def['duration'])
+        for r in range(self.model.rowCount()):
+            du_item = self.model.item(r, column_def['duration'])
             total_time += co.to_second(du_item.text()) if du_item is not None else 0
         self.lbl_total_time.setText('total time : {}'.format(co.second_to_time_from((total_time))))
 
@@ -195,8 +197,8 @@ class MainWindow(TabledUtilWindow):
         capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), captures)
 
     def make_clips_from_model(self, out_prefix=''):
-        captures = [self.cap_model.item(r, cap_col_def['file']).data() for r in range(self.cap_model.rowCount())]
-        capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), captures, out_prefix)
+        captures = [self.model.item(r, column_def['file']).data() for r in range(self.model.rowCount())]
+        capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), captures)
         # result = capture_util.future_call(self.src_path(), self.clip_dir(), captures, out_prefix)
         #
         # succ, fail = 0, 0
@@ -214,7 +216,7 @@ class MainWindow(TabledUtilWindow):
     def make_direct_merge(self):
         src_filename = os.path.splitext(os.path.basename(self.src_path()))[0]
         clip_paths = ffmpeg_util.get_clip_paths('c:\\__clips\\', src_filename)
-        merged_path = ffmpeg_util.merge_all_clips(self.src_path(), clip_paths)
+        merged_path = ffmpeg_util.merge_all_clips(ffmpeg_util.merge_file_path(self.src_path()), clip_paths)
         for p in clip_paths:
             ui_util.delete_path(self, p, True)
         ui_util.delete_path(self, self.src_path(), True)
@@ -231,36 +233,36 @@ class MainWindow(TabledUtilWindow):
             self.sync_timer.stop()
 
     def add_cap_result(self, cap_path):
-        row = self.cap_model.rowCount()
+        row = self.model.rowCount()
 
         time = co.to_time_form(co.get_time(cap_path))
         time_item = QtGui.QStandardItem(time)
         font = time_item.font()
         # font.setPointSize(20)
         time_item.setFont(font)
-        self.cap_model.setItem(row, cap_col_def['time'], time_item)
+        self.model.setItem(row, column_def['time'], time_item)
 
         if row % 2 == 1:
-            duration = co.get_duration_in_time_form(self.cap_model.item(row - 1, cap_col_def['time']).text(), time)
+            duration = co.get_duration_in_time_form(self.model.item(row - 1, column_def['time']).text(), time)
             duration_item = QtGui.QStandardItem(str(duration))
             duration_item.setFont(font)
-            self.cap_model.setItem(row - 1, cap_col_def['duration'], duration_item)
+            self.model.setItem(row - 1, column_def['duration'], duration_item)
             self.set_duration_color(co.to_second(duration), duration_item)
         else:
             seq_item = QtGui.QStandardItem(str(row // 2 + 1))
             seq_item.setFont(font)
-            self.cap_model.setItem(row, cap_col_def['seq'], seq_item)
+            self.model.setItem(row, column_def['seq'], seq_item)
 
         file_item = QtGui.QStandardItem(os.path.basename(cap_path))
         file_item.setData(cap_path)
         file_item.setFont(font)
-        self.cap_model.setItem(row, cap_col_def['file'], file_item)
+        self.model.setItem(row, column_def['file'], file_item)
 
         btn_font = font
         # btn_font.setPointSize(14)
-        ui_util.add_button_on_tableview(self.tbl_caps, row, cap_col_def['dir'], 'dir', btn_font, 60, self.on_item_dir_file_clicked)
-        ui_util.add_button_on_tableview(self.tbl_caps, row, cap_col_def['open'], 'open', btn_font, 70, self.on_item_open_file_clicked)
-        ui_util.add_button_on_tableview(self.tbl_caps, row, cap_col_def['del'], 'del', btn_font, 60, self.on_item_del_file_clicked)
+        ui_util.add_button_on_tableview(self.tbl_caps, row, column_def['dir'], 'dir', btn_font, 60, self.on_item_dir_file_clicked)
+        ui_util.add_button_on_tableview(self.tbl_caps, row, column_def['open'], 'open', btn_font, 70, self.on_item_open_file_clicked)
+        ui_util.add_button_on_tableview(self.tbl_caps, row, column_def['del'], 'del', btn_font, 60, self.on_item_del_file_clicked)
 
         self.tbl_caps.resizeColumnsToContents()
         self.tbl_caps.resizeRowsToContents()
@@ -278,13 +280,13 @@ class MainWindow(TabledUtilWindow):
     def del_all_capture_files(self):
         ok = QMessageBox.question(self, 'alert', 'Sure to delete all?', QMessageBox.Yes, QMessageBox.No)
         if ok == QMessageBox.Yes:
-            for r in range(self.cap_model.rowCount()):
-                path = self.cap_model.item(r, cap_col_def['file']).data()
+            for r in range(self.model.rowCount()):
+                path = self.model.item(r, column_def['file']).data()
                 ui_util.send2trash(path)
         self.load_rel_caps()
 
     def recapture_all(self):
-        if self.cap_model.rowCount() == 0:
+        if self.model.rowCount() == 0:
             return
 
         offset_str = self.txt_offset_time.text().replace(' ', '')
@@ -301,16 +303,16 @@ class MainWindow(TabledUtilWindow):
         if ok != QMessageBox.Yes:
             return
 
-        for r in range(self.cap_model.rowCount()):
-            o_time = self.cap_model.item(r, cap_col_def['time']).text()
+        for r in range(self.model.rowCount()):
+            o_time = self.model.item(r, column_def['time']).text()
             n_time = co.second_to_time_from(co.to_second(o_time) + offset_sec)
-            ui_util.send2trash(self.cap_model.item(r, cap_col_def['file']).data())
+            ui_util.send2trash(self.model.item(r, column_def['file']).data())
             ffmpeg_util.capture(self.src_path(), n_time, 'recap', self.cap_dir())
 
         self.load_rel_caps()
 
     def get_path_on_widget(self, widget):
-        return self.cap_model.item(self.get_table_row(widget), cap_col_def['file']).data()
+        return self.model.item(self.get_table_row(widget), column_def['file']).data()
 
     def on_item_dir_file_clicked(self):
         ui_util.open_path_dir(self.get_path_on_widget(self.sender()))
@@ -321,7 +323,7 @@ class MainWindow(TabledUtilWindow):
     def on_item_del_file_clicked(self):
         row = self.get_table_row(self.sender())
         if ui_util.delete_path(self, self.get_path_on_widget(self.sender())):
-            self.cap_model.removeRow(row)
+            self.model.removeRow(row)
 
 
 old_hook = sys.excepthook

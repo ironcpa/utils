@@ -57,7 +57,7 @@ def focus_to_text(lineedit):
     lineedit.select_all()
 
 
-def add_button_on_tableview(tableview, row, col, label, font, width, slot):
+def add_button_on_tableview(tableview, row, col, label, font, width, slot=None):
     button = QPushButton()
     button.setFocusPolicy(Qt.NoFocus)
     button.setText(label)
@@ -65,16 +65,19 @@ def add_button_on_tableview(tableview, row, col, label, font, width, slot):
         button.setFont(font)
     # button.setFixedWidth(width)
     # button.setFixedWidth(button.fontMetrics().boundingRect(label).width() + 24)
-    button.clicked.connect(slot)
+    if slot:
+        button.clicked.connect(slot)
     tableview.setIndexWidget(tableview.model().index(row, col), button)
 
 
-def add_checkbox_on_tableview(tableview, row, col, label, width, slot):
+def add_checkbox_on_tableview(tableview, row, col, label, width, slot=None, is_checked=False):
     checkbox = QCheckBox()
     checkbox.setFocusPolicy(Qt.NoFocus)
     checkbox.setText(label)
     checkbox.setFixedWidth(width)
-    checkbox.stateChanged.connect(slot)
+    if slot:
+        checkbox.stateChanged.connect(slot)
+    checkbox.setChecked(is_checked)
     tableview.setIndexWidget(tableview.model().index(row, col), checkbox)
 
 

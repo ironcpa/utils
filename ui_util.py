@@ -74,7 +74,8 @@ def add_checkbox_on_tableview(tableview, row, col, label, width, slot):
     checkbox.setFocusPolicy(Qt.NoFocus)
     checkbox.setText(label)
     checkbox.setFixedWidth(width)
-    checkbox.stateChanged.connect(slot)
+    if slot:
+        checkbox.stateChanged.connect(slot)
     tableview.setIndexWidget(tableview.model().index(row, col), checkbox)
 
 

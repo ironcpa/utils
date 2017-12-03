@@ -34,7 +34,6 @@ class MainWindow(TabledUtilWindow):
         self.setting_ui.apply_req.connect(self.apply_curr_settings)
 
         self.model = QtGui.QStandardItemModel(0, len(column_def))
-        # self.model.setHorizontalHeaderLabels([*column_def])
         self.model.setHorizontalHeaderLabels(header_titles)
         self.tbl_result.setModel(self.model)
 

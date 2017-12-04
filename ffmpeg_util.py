@@ -27,6 +27,29 @@ def create_clip(src_path, start_time, end_time, out_clip_path):
     subprocess.Popen(command)
 
 
+def create_clip_for_refactor(src_path, start_time, end_time, out_clip_path, is_reencode=False, is_async_call=False):
+    """asyncio call 적용 위한 임시 테스트 인터페이스"""
+    command = ''
+    if is_reencode:
+        command = 'ffmpeg -i "{}" -ss {} -to {} {} -y'.format(src_path, start_time, end_time, out_clip_path)
+    else:
+        command = 'ffmpeg -i "{}" -ss {} -to {} -c copy {} -y'.format(src_path, start_time, end_time,
+                                                                      out_clip_path)
+    print(command)
+    if is_async_call:
+        subprocess.Popen(command)
+        return True, None
+    else:
+        try:
+            subprocess.check_output(command, stderr=subprocess.STDOUT)
+            # self.remove_old_same_result(out_clip_path)
+            # self.add_clip_result(out_clip_path, file_util.get_file_size(out_clip_path))
+            # self.show_total_clip_size()
+            return True, None
+        except subprocess.CalledProcessError as e:
+            return False, e
+
+
 def merge_file_path(src_path):
     pno = file_util.get_product_no(os.path.basename(src_path))
     merged_file_name = os.path.dirname(src_path) + os.path.sep + pno + '_con' + os.path.basename(src_path).replace(pno, '')

@@ -4,6 +4,7 @@ import subprocess
 import sys
 import os
 import re
+import asyncio
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import *
@@ -64,11 +65,11 @@ class MainWindow(TabledUtilWindow):
         self.btn_dir_src = QPushButton('src dir')
         self.btn_open_src = QPushButton('src open')
         self.btn_del_src = QPushButton('src delete')
-        self.txt_start_time = LabeledLineEdit('start', '', col1_w, col1_w)
+        self.txt_start_time = FFMPEGTimeLineEdit('start', '', col1_w, col1_w)
         self.txt_start_time.set_input_mask('00 : 00 : 00')
         self.btn_to_end_time = QPushButton('E')
         self.chk_include_samples = QCheckBox('include samples')
-        self.txt_end_time = LabeledLineEdit('end', '', col1_w, col1_w)
+        self.txt_end_time = FFMPEGTimeLineEdit('end', '', col1_w, col1_w)
         self.txt_end_time.set_input_mask('00 : 00 : 00')
         self.btn_to_start_time = QPushButton('S')
         self.txt_clip_name = LabeledLineEdit('clip name', '', col1_w)
@@ -170,12 +171,12 @@ class MainWindow(TabledUtilWindow):
             event.ignore()
 
     def on_encode_clicked(self):
-        start_time = self.txt_start_time.text().replace(' ', '')
-        end_time = self.txt_end_time.text().replace(' ', '')
+        start_time = self.txt_start_time.ffmpeg_time()
+        end_time = self.txt_end_time.ffmpeg_time()
         clip_file_form = self.txt_clip_name.text()
-        out_clip_path = clip_file_form.format(start_time.replace(':', ''), end_time.replace(':', ''))
+        out_clip_path = clip_file_form.format(start_time, end_time)
 
-        ok, err = self.run_ffmpeg_make_clip(start_time, end_time, out_clip_path)
+        ok, err = self.create_clip(start_time, end_time, out_clip_path)
         if ok:
             QMessageBox.information(self, 'info', 'encoding complete')
             # self.close()
@@ -184,16 +185,17 @@ class MainWindow(TabledUtilWindow):
             QMessageBox.critical(self, 'error', 'encoding failed\n{}'.format(err))
 
     def on_encode_0_9_seconds_clicked(self):
-        start_time = self.txt_start_time.text().replace(' ', '')
-        end_time = self.txt_end_time.text().replace(' ', '')
-        if len(start_time) < 8:
-            return False, 'no start time set'
-        for s in range(10):
-            new_start_time = start_time[0:-1] + str(s)
-            clip_file_form = self.txt_clip_name.text()
-            out_clip_path = clip_file_form.format(new_start_time.replace(':', ''), end_time.replace(':', ''))
+        start_time = self.txt_start_time.ffmpeg_time()
+        end_time = self.txt_end_time.ffmpeg_time()
+        if len(start_time) < 6:
+            QMessageBox.critical(self, 'error', 'no start time')
+            return
 
-            self.run_ffmpeg_make_clip(start_time[0:-1], end_time, out_clip_path, True)
+        clip_file_form = self.txt_clip_name.text()
+        loop = asyncio.new_event_loop()
+        funcs = [self.async_create_clip(loop, start_time[0:-1], end_time, clip_file_form.format(start_time[0:-1] + str(s), end_time)) for s in range(10)]
+        result = cu.asyncio_call(loop, funcs)
+        ui_util.show_create_clip_result(self, result)
 
     def merge_all_clips(self):
         model_clip_paths = [self.clip_model.item(r, column_def['path']).text() for r in range(self.clip_model.rowCount())
@@ -226,23 +228,15 @@ class MainWindow(TabledUtilWindow):
         ui_util.delete_path(self, self.src_path())
 
     def copy_end_to_start_time(self):
-        self.txt_start_time.setText(self.txt_end_time.text())
+        self.txt_start_time.set_text(self.txt_end_time.text())
 
     def copy_start_to_end_time(self):
-        self.txt_end_time.setText(self.txt_start_time.text())
+        self.txt_end_time.set_text(self.txt_start_time.text())
 
-    def run_ffmpeg_make_clip(self, start_time, end_time, out_clip_path, is_async_call=False):
-        # if os.path.exists(out_clip_path):
-        #     return False, 'already exists'
-
-        src_file = self.flc_src_file.path()
-        command = ''
-        if self.chk_reencode.isChecked():
-            command = 'ffmpeg -i "{}" -ss {} -to {} {} -y'.format(src_file, start_time, end_time, out_clip_path)
-        else:
-            command = 'ffmpeg -i "{}" -ss {} -to {} -c copy {} -y'.format(src_file, start_time, end_time,
-                                                                          out_clip_path)
-        print(command)
+    def create_clip(self, start_time, end_time, out_clip_path, is_async_call=False):
+        src_path = self.flc_src_file.path()
+        is_reencode = self.chk_reencode.isChecked()
+        command = ffmpeg_util.create_clip_command(src_path, start_time, end_time, out_clip_path, is_reencode)
         if is_async_call:
             subprocess.Popen(command)
             return True, None
@@ -255,6 +249,20 @@ class MainWindow(TabledUtilWindow):
                 return True, None
             except subprocess.CalledProcessError as e:
                 return False, e
+
+    async def async_create_clip(self, async_loop, start_time, end_time, out_clip_path):
+        src_path = self.flc_src_file.path()
+        is_reencode = self.chk_reencode.isChecked()
+        command = ffmpeg_util.create_clip_command(src_path, start_time, end_time, out_clip_path, is_reencode)
+        try:
+            # subprocess.check_output(command, stderr=subprocess.STDOUT)
+            await async_loop.run_in_executor(None, subprocess.check_output, command)
+            self.remove_old_same_result(out_clip_path)
+            self.add_clip_result(out_clip_path, file_util.get_file_size(out_clip_path))
+            self.show_total_clip_size()
+            return True, None
+        except subprocess.CalledProcessError as e:
+            return False, e
 
     def add_clip_result(self, path, size):
         row = self.clip_model.rowCount()
@@ -306,7 +314,7 @@ class MainWindow(TabledUtilWindow):
         clip_file_form = self.txt_clip_name.text()
         out_clip_path = clip_file_form.format(start_time.replace(':', ''), end_time.replace(':', ''))
 
-        ok, err = self.run_ffmpeg_make_clip(start_time, end_time, out_clip_path)
+        ok, err = self.create_clip(start_time, end_time, out_clip_path)
         if ok:
             QMessageBox.information(self, 'info', 'encoding complete')
             # self.close()

@@ -127,6 +127,11 @@ class LabeledLineEdit(QWidget):
         self.lineedit.setInputMask(mask)
 
 
+class FFMPEGTimeLineEdit(LabeledLineEdit):
+    def ffmpeg_time(self):
+        return self.lineedit.text().replace(' ', '').replace(':', '')
+
+
 class TitledLabel(QWidget):
     def __init__(self, title='', text='', title_w=0, text_w=0):
         super().__init__()

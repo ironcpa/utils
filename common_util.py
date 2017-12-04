@@ -1,6 +1,7 @@
 # -*-coding:utf-8-*-
 
 import win32api
+import asyncio
 from defines import *
 
 
@@ -96,3 +97,17 @@ def modify_product(org_product, id = None, product_no = None, desc = None, rate 
         size if size else org_product.size,
         cdate if cdate else org_product.cdate
     )
+
+
+def asyncio_call(loop, funcs):
+    result = loop.run_until_complete(gather_asyncio_future_results(funcs))
+    loop.close()
+
+    return result
+
+
+async def gather_asyncio_future_results(funcs):
+    futures = [asyncio.ensure_future(f) for f in funcs]
+    result = await asyncio.gather(*futures)
+    print(result)
+    return result

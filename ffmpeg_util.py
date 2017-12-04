@@ -20,15 +20,7 @@ def get_clip_paths(clip_dir, filename):
             if x.startswith('clip_{}'.format(file_util.get_product_no(filename)))]
 
 
-def create_clip(src_path, start_time, end_time, out_clip_path):
-    command = 'ffmpeg -i "{}" -ss {} -to {} -c copy "{}" -y'.format(src_path, co.to_time_form(start_time),
-                                                                    co.to_time_form(end_time), out_clip_path)
-    print(command)
-    subprocess.Popen(command)
-
-
-def create_clip_for_refactor(src_path, start_time, end_time, out_clip_path, is_reencode=False, is_async_call=False):
-    """asyncio call 적용 위한 임시 테스트 인터페이스"""
+def create_clip_command(src_path, start_time, end_time, out_clip_path, is_reencode=False):
     command = ''
     if is_reencode:
         command = 'ffmpeg -i "{}" -ss {} -to {} {} -y'.format(src_path, start_time, end_time, out_clip_path)
@@ -36,6 +28,17 @@ def create_clip_for_refactor(src_path, start_time, end_time, out_clip_path, is_r
         command = 'ffmpeg -i "{}" -ss {} -to {} -c copy {} -y'.format(src_path, start_time, end_time,
                                                                       out_clip_path)
     print(command)
+    return command
+
+
+def create_clip(src_path, start_time, end_time, out_clip_path):
+    subprocess.Popen(create_clip_command(src_path, start_time, end_time, out_clip_path))
+
+
+def create_clip_for_refactor(src_path, start_time, end_time, out_clip_path, is_reencode=False, is_async_call=False):
+    """asyncio call 적용 위한 임시 테스트 인터페이스"""
+    command = create_clip_command(src_path, start_time, end_time, out_clip_path, is_reencode)
+
     if is_async_call:
         subprocess.Popen(command)
         return True, None

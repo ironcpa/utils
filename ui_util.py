@@ -12,6 +12,19 @@ from send2trash import send2trash
 import file_util
 
 
+def load_settings(self, app_name, key, default):
+    self.settings = QSettings('hjchoi', app_name)
+    # return self.settings.value(app_name + '_' + key, default)
+    return self.settings.value(key, default)
+
+    # self.setting_ui.set_font_size(self.settings.value(app_name + '_font_size', 20))
+
+
+def save_settings(self, app_name, key, value):
+    # self.settings.setValue(app_name + '_' + key, value)
+    self.settings.setValue(key, value)
+
+
 def open_path_dir(path):
     cmd = 'explorer /select,"{}"'.format(path.replace('/', '\\'))
     print(cmd)
@@ -81,17 +94,15 @@ def add_checkbox_on_tableview(tableview, row, col, label, width, slot=None, is_c
     tableview.setIndexWidget(tableview.model().index(row, col), checkbox)
 
 
-def load_settings(self, app_name, key, default):
-    self.settings = QSettings('hjchoi', app_name)
-    # return self.settings.value(app_name + '_' + key, default)
-    return self.settings.value(key, default)
-
-    # self.setting_ui.set_font_size(self.settings.value(app_name + '_font_size', 20))
-
-
-def save_settings(self, app_name, key, value):
-    # self.settings.setValue(app_name + '_' + key, value)
-    self.settings.setValue(key, value)
+def show_create_clip_result(parent, result):
+    if result:
+        succ, fail = 0, 0
+        for r in result:
+            if r[1]:
+                succ += 1
+            else:
+                fail += 1
+        QMessageBox.information(parent, 'result', '{} completed, {} failed'.format(succ, fail))
 
 
 def catch_exceptions(self, t, val, tb):

@@ -46,6 +46,7 @@ class MainWindow(TabledUtilWindow):
         self.flc_capture_dir.set_path('c:/__potplayer_capture_for_clip')
         self.flc_clip_dir.set_path('c:/__clips')
 
+        self.load_settings()
         self.load_rel_caps()
 
         self.txt_sync_time.setText(str(5))
@@ -57,8 +58,6 @@ class MainWindow(TabledUtilWindow):
         self.sync_timer.timeout.connect(self.load_rel_caps)
         if self.sync_on():
             self.sync_timer.start(self.sync_miliseconds())
-
-        self.load_settings()
 
     def setup_ui(self):
         self.setGeometry(0, 0, 1024, 760)
@@ -198,7 +197,7 @@ class MainWindow(TabledUtilWindow):
 
     def make_clips_from_model(self, out_prefix=''):
         captures = [self.model.item(r, column_def['file']).data() for r in range(self.model.rowCount())]
-        capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), captures)
+        capture_util.create_clips_from_captures(self.src_path(), self.cap_dir(), self.clip_dir(), captures, out_prefix)
         # result = capture_util.future_call(self.src_path(), self.clip_dir(), captures, out_prefix)
         #
         # succ, fail = 0, 0
@@ -264,6 +263,9 @@ class MainWindow(TabledUtilWindow):
         ui_util.add_button_on_tableview(self.tbl_caps, row, column_def['open'], 'open', btn_font, 70, self.on_item_open_file_clicked)
         ui_util.add_button_on_tableview(self.tbl_caps, row, column_def['del'], 'del', btn_font, 60, self.on_item_del_file_clicked)
 
+        self.arrange_table()
+
+    def arrange_table(self):
         self.tbl_caps.resizeColumnsToContents()
         self.tbl_caps.resizeRowsToContents()
         self.tbl_caps.scrollToBottom()

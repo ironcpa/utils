@@ -12,40 +12,22 @@ import ffmpeg_util
 START_TIME_PAD = 1
 
 
-def create_clips_from_captures(src_path, cap_dir, clip_dir, captures, header = ''):
-    src_dir, src_file = os.path.split(src_path)
-    src_name, src_ext = os.path.splitext(src_file)
+def create_clips_from_captures(src_path, clip_dir, captures, prefix='', is_async_call=True):
     times = [cu.get_time(f) for f in captures]
+    if is_async_call:
+        '''this is not working cuz target function is async'''
+        for i, t in enumerate(times):
+            if i % 2 == 1:
+                start_time = times[i - 1]
+                end_time = t
+                create_clip_from_capture(None, clip_dir, src_path, start_time, end_time, prefix)
+    else:
+        async_loop = asyncio.new_event_loop()
+        async_calls = [create_clip_from_capture(async_loop, clip_dir, src_path, times[i - 1], t, prefix)
+                            for i, t in enumerate(times) if i % 2 == 1]
+        result = cu.asyncio_call(async_loop, async_calls)
 
-    for i, t in enumerate(times):
-        if i % 2 == 1:
-            s = times[i - 1]
-            start_pad = START_TIME_PAD if int(s) > 0 else 0
-            start_time = '{:06d}'.format(int(s) - start_pad)
-            end_time = t
-            out_file = '{}clip_{}_{}_{}{}'.format(header, src_name, start_time, end_time, src_ext)
-            out_clip_path = os.path.join(clip_dir, out_file)
-
-            ffmpeg_util.create_clip(src_path, start_time, end_time, out_clip_path)
-
-
-def future_call(src_path, clip_dir, captures, header=''):
-    """for async call stub"""
-    loop = asyncio.new_event_loop()
-    result = loop.run_until_complete(async_create_clips_from_captures(loop, src_path, clip_dir, captures, header))
-    loop.close()
-
-    return result
-
-
-async def async_create_clips_from_captures(async_loop, src_path, clip_dir, captures, prefix=''):
-    """async test"""
-    times = [cu.get_time(f) for f in captures]
-    futures = [asyncio.ensure_future(create_clip_from_capture(async_loop, clip_dir, src_path, times[i - 1], t, prefix))
-               for i, t in enumerate(times) if i % 2 == 1]
-    result = await asyncio.gather(*futures)
-    print(result)
-    return result
+        return result
 
 
 async def create_clip_from_capture(async_loop, out_dir, src_path, start_time, end_time, prefix):
@@ -57,10 +39,7 @@ async def create_clip_from_capture(async_loop, out_dir, src_path, start_time, en
     out_file = '{}clip_{}_{}_{}{}'.format(prefix, src_name, start_time, end_time, src_ext)
     out_clip_path = os.path.join(out_dir, out_file)
 
-    # ffmpeg_util.create_clip(src_path, start_time, end_time, out_clip_path)
-    command = 'ffmpeg -i "{}" -ss {} -to {} -c copy "{}" -y'.format(src_path, cu.to_time_form(start_time),
-                                                                    cu.to_time_form(end_time), out_clip_path)
-    print(command)
+    command = ffmpeg_util.create_clip_command(src_path, start_time, end_time, out_clip_path)
     try:
         # subprocess.check_output(command, stderr=subprocess.STDOUT)
         await async_loop.run_in_executor(None, subprocess.check_output, command)

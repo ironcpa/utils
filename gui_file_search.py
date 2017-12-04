@@ -78,7 +78,7 @@ class MainWindow(TabledUtilWindow):
         self.btn_search_all_drives = QPushButton('search all drives')
         self.btn_collect_db = QPushButton('collect db')
 
-        self.tbl_search_result = QTableView()
+        self.tbl_search_result = SearchView(column_def['checkbox'])
         self.tbl_search_result.setSortingEnabled(True)
         self.set_default_table(self.tbl_search_result)
 

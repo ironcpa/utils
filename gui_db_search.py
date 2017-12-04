@@ -72,17 +72,17 @@ class MainWindow(TabledUtilWindow):
 
         filter_group = QGridLayout()
         filter_group.setColumnStretch(0, 4)
-        self.txt_limit_filter = LabeledLineEdit('limit by')
+        self.txt_limit_filter = LabeledLineEdit('limit by', '', 180)
         filter_group.addWidget(self.txt_limit_filter, 0, 0)
         self.txt_limit_count = LabeledLineEdit('count', 200, 120, 120)
         filter_group.addWidget(self.txt_limit_count, 0, 1)
-        self.txt_order = LabeledLineEdit('order by')
+        self.txt_order = LabeledLineEdit('order by', '', 180)
         filter_group.addWidget(self.txt_order, 1, 0, 1, 2)
         all_control_group.addLayout(filter_group)
 
         base_layout.addLayout(all_control_group)
 
-        self.tbl_result = SearchView()
+        self.tbl_result = SearchView(column_def['chk'])
         self.set_default_table(self.tbl_result)
         self.tbl_result.setSortingEnabled(True)
         base_layout.addWidget(self.tbl_result)

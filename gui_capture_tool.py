@@ -83,7 +83,8 @@ class MainWindow(TabledUtilWindow):
         self.txt_offset_time.set_input_mask('x00 : 00 : 00')
         self.txt_offset_time.set_text('-00 : 00 : 00')
         self.btn_recapture = QPushButton('recapture')
-        self.tbl_caps = QTableView()
+        self.tbl_caps = SearchView()
+        self.tbl_caps.setSortingEnabled(True)
         self.set_default_table(self.tbl_caps)
 
         self.setCentralWidget(QWidget())

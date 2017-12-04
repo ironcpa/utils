@@ -213,24 +213,25 @@ class FileChooser(QWidget):
 
 
 class SearchViewDelegate(QStyledItemDelegate):
-    def __init__(self, parent):
+    def __init__(self, parent, check_index):
         super().__init__(parent)
 
         self.color_curr_highlight = Qt.green
+        self.check_index = check_index
 
     def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QModelIndex):
         if index.row() == self.parent().currentIndex().row():
             painter.fillRect(option.rect, self.color_curr_highlight)
-        elif self.parent().indexWidget(index.model().index(index.row(), 10)).isChecked():
+        elif self.check_index and self.parent().indexWidget(index.model().index(index.row(), self.check_index)).isChecked():
             painter.fillRect(option.rect, Qt.red)
 
         super(SearchViewDelegate, self).paint(painter, option, index)
 
 
 class SearchView(QTableView):
-    def __init__(self):
+    def __init__(self, check_index=None):
         super().__init__()
-        self.setItemDelegate(SearchViewDelegate(self))
+        self.setItemDelegate(SearchViewDelegate(self, check_index))
 
     def keyPressEvent(self, e: QtGui.QKeyEvent):
         key = e.key()

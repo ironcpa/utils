@@ -28,7 +28,6 @@ class MainWindow(TabledUtilWindow):
 
         self.flc_src_file.set_path(src_path)
 
-        # src_name_only, src_ext = os.path.splitext(os.path.basename(src_path))
         src_dir, src_name, src_ext = cu.split_path(src_path)
         clip_name = 'clip_' + src_name
         self.txt_clip_name.set_text('c:\\__clips\\' + clip_name + '_{}_{}' + src_ext)
@@ -80,7 +79,7 @@ class MainWindow(TabledUtilWindow):
         self.chk_reencode = QCheckBox('re-encode?')
         self.lbl_clip_total_size = TitledLabel('total size:')
         self.btn_del_all = QPushButton('del all clips')
-        self.tbl_clip_result = QTableView()
+        self.tbl_clip_result = SearchView()
         self.tbl_clip_result.setSortingEnabled(True)
         self.set_default_table(self.tbl_clip_result)
 

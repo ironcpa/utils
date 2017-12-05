@@ -1,5 +1,6 @@
 import os
 import sys
+import urllib
 from abc import ABC, abstractmethod
 
 from PyQt5 import QtGui
@@ -31,6 +32,14 @@ class UtilWindow(QMainWindow):
         self.save_settings()
 
         e.accept()
+
+    def keyPressEvent(self, event: QtGui.QKeyEvent):
+        key = event.key()
+        mod = event.modifiers()
+        if key == Qt.Key_S and mod == Qt.ControlModifier:
+            self.setting_ui.show()
+        else:
+            event.ignore()
 
     def load_settings(self):
         self.move(ui_util.load_settings(self, self.app_name, 'pos', QPoint(0, 0)))
@@ -391,17 +400,108 @@ class TableBaseSettingUI(BaseSettingUI):
         return self.setting_lineedits['table font size'].text()
 
 
+class ImageWidget(QWidget):
+    def __init__(self, img_path, parent=None):
+        super().__init__(parent)
+        self.setGeometry(0, 0, 100, 100)
+        self.pixmap = QtGui.QPixmap(img_path).scaled(self.size(), Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
+        self.setMinimumSize(self.pixmap.size())
+
+    def paintEvent(self, e: QtGui.QPaintEvent):
+        painter = QtGui.QPainter(self)
+        painter.drawPixmap(0, 0, self.pixmap)
+
+
+# class UrlImageWidget(QWidget):
+#     def __init__(self, url, parent=None):
+#         super().__init__(parent)
+#         self.setGeometry(0, 0, 100, 100)
+#
+#         data = urllib.request.urlopen(url).read()
+#         image = QtGui.QImage()
+#         image.loadFromData(data)
+#         self.pixmap = QtGui.QPixmap(image).scaled(self.size(), Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
+#         self.setMinimumSize(self.pixmap.size())
+#
+#     def paintEvent(self, e: QtGui.QPaintEvent):
+#         painter = QtGui.QPainter(self)
+#         painter.drawPixmap(0, 0, self.pixmap)
+
+
 class TestWindow(QWidget):
     def __init__(self):
         super().__init__()
+
+        self.setGeometry(0, 0, 800, 600)
 
         self.setup_ui()
 
     def setup_ui(self):
         self.setLayout(QGridLayout())
 
-        db_setting = BaseSettingUI(self)
-        self.layout().addWidget(db_setting, 0, 0)
+        # db_setting = BaseSettingUI(self)
+        # self.layout().addWidget(db_setting, 0, 0)
+
+        # img_widget = ImageWidget('C:\\Users\\hjchoi\\Pictures\\소혜\\images.jpg', self)
+        # self.layout().addWidget(img_widget, 0, 0)
+
+        '''
+        remote image
+        '''
+        url = 'http://pythonscraping.com/img/gifts/img1.jpg'
+        data = urllib.request.urlopen(url).read()
+        image = QtGui.QImage()
+        image.loadFromData(data)
+
+        img_widget = ImageWidget(image, self)
+        self.layout().addWidget(img_widget, 0, 0)
+
+        # img_label = QLabel()
+        # img_label.setPixmap(QtGui.QPixmap('C:\\Users\\hjchoi\\Pictures\\소혜\\images.jpg'))
+        # self.layout().addWidget(img_label, 0, 0)
+
+
+        self.tableview = SearchView()
+        # self.tableview.setRowHeight(100)
+        model = QtGui.QStandardItemModel(0, 2)
+        self.tableview.setModel(model)
+        self.layout().addWidget(self.tableview, 1, 0)
+
+        img_paths = [
+            '4a8314b9fd9b7425174d63002dcf8f99',
+            '5beb2e3f90a6cc9c67d6556a7d2dc3ea',
+            '5fed02e3380d361c05590c790c6c2918',
+            '13a281e5d8ab9511762465265bc1becf',
+            '978ddb217acf437bb9afeff3dfdd6d09',
+            'b013a3f393ca2da751583352c4fdc5d2',
+            '3dc25e35e0a096fef64349d8453c0bfd',
+            'bdb27f687c880f2f5f39f6cf404a4530',
+            'c8a6ad7a8ddf7c36583f21f632c2703b',
+            'd671948368d79d0f350bd79f2632e6b4',
+            'f21fec3ff73e5c809c3e6233fd3f5287',
+            'images',
+            '다운로드',
+        ]
+        dir = 'C:\\Users\\hjchoi\\Pictures\\소혜\\'
+        for r, img in enumerate(img_paths):
+            item = QtGui.QStandardItem(str(r))
+            model.setItem(r, 0, item)
+
+            path = dir + img + '.jpg'
+            img_widget = ImageWidget(path)
+            self.tableview.setIndexWidget(model.index(r, 1), img_widget)
+
+            # img_label = QLabel()
+            # # img_label.setFixedSize(100, 100)
+            # # img_label.setScaledContents(True)
+            # # img_label.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+            #
+            # img_label.setPixmap(QtGui.QPixmap(path).scaled(100, 100, Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation))
+            # # img_label.setPixmap(QtGui.QPixmap(path))
+            # self.tableview.setIndexWidget(model.index(r, 1), img_label)
+
+        self.tableview.resizeRowsToContents()
+        self.tableview.resizeColumnsToContents()
 
 
 def catch_exceptions(self, t, val, tb):

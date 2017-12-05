@@ -4,7 +4,7 @@ from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
 
-def search_web(pno):
+def search_titles(pno):
     max_page_row = 100
     search_url = 'http://www.kukudas.com/bbs/search.php?srows={}&sfl=wr_subject&stx={}&sop=and&gr_id=jav&onetable=JAV1A'
 
@@ -20,3 +20,12 @@ def search_web(pno):
         return [m.a.get_text().replace('\n', '') for m in media_tags]
     else:
         return ['no result']
+
+
+def search_detail_list(search_text):
+    return [
+        ('title1', 'desc1', 'http://pythonscraping.com/img/gifts/img1.jpg'),
+        ('title2', 'desc2', 'http://pythonscraping.com/img/gifts/img1.jpg'),
+        ('title3', 'desc3', 'http://pythonscraping.com/img/gifts/img1.jpg'),
+        ('title4', 'desc4', 'http://pythonscraping.com/img/gifts/img1.jpg'),
+    ]

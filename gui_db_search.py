@@ -129,10 +129,8 @@ class MainWindow(TabledUtilWindow):
             ui_util.copy_to_clipboard(self.get_pno_on_curr_row())
         elif key == Qt.Key_N and mod == Qt.ControlModifier:
             self.copy_curr_row_file_name_from_checked_row(self.get_widget_at(self.tbl_result.currentIndex().row(), column_def['chk']))
-        elif key == Qt.Key_S and mod == Qt.ControlModifier:
-            self.setting_ui.show()
         else:
-            event.ignore()
+            super().keyPressEvent(event)
 
     def get_search_text(self):
         return self.txt_search.text()
@@ -405,7 +403,7 @@ class MainWindow(TabledUtilWindow):
 
     def show_web_search_result(self):
         pno = self.get_pno_on_curr_row()
-        results = web_scrapper.search_web(pno)
+        results = web_scrapper.search_titles(pno)
         QMessageBox.information(self, 'search', '\n'.join(results))
 
 

@@ -21,11 +21,13 @@ def get_clip_paths(clip_dir, filename):
 
 
 def create_clip_command(src_path, start_time, end_time, out_clip_path, is_reencode=False):
+    start_time_form = co.to_time_form(start_time)
+    end_time_form = co.to_time_form(end_time)
     command = ''
     if is_reencode:
-        command = 'ffmpeg -i "{}" -ss {} -to {} {} -y'.format(src_path, start_time, end_time, out_clip_path)
+        command = 'ffmpeg -i "{}" -ss {} -to {} {} -y'.format(src_path, start_time_form, end_time_form, out_clip_path)
     else:
-        command = 'ffmpeg -i "{}" -ss {} -to {} -c copy {} -y'.format(src_path, start_time, end_time,
+        command = 'ffmpeg -i "{}" -ss {} -to {} -c copy {} -y'.format(src_path, start_time_form, end_time_form,
                                                                       out_clip_path)
     print(command)
     return command

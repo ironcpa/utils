@@ -9,6 +9,7 @@ from PyQt5 import uic, QtGui, QtCore
 import ui_util
 import defines
 import file_util
+import web_scrapper
 import common_util as cu
 from db_util import DB
 from widgets import *
@@ -115,7 +116,8 @@ class MainWindow(TabledUtilWindow):
         elif key == Qt.Key_D and mod == Qt.ControlModifier:
             self.open_curr_row_db_search()
         elif key == Qt.Key_F and mod == Qt.ControlModifier:
-            self.open_curr_row_file_search()
+            # self.open_curr_row_file_search()
+            self.show_web_search_result()
         elif key == Qt.Key_Z and mod == Qt.ControlModifier:
             self.open_curr_row_capture_tool(self.get_del_button_at(self.tbl_result.currentIndex().row()))
         elif key == Qt.Key_Delete:
@@ -400,6 +402,11 @@ class MainWindow(TabledUtilWindow):
         self.model.item(row, column_def['location']).setText(product.location)
         self.model.item(row, column_def['size']).setText(product.size)
         self.model.item(row, column_def['date']).setText(product.cdate)
+
+    def show_web_search_result(self):
+        pno = self.get_pno_on_curr_row()
+        results = web_scrapper.search_web(pno)
+        QMessageBox.information(self, 'search', '\n'.join(results))
 
 
 old_hook = sys.excepthook

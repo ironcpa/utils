@@ -63,6 +63,8 @@ class TabledUtilWindow(UtilWindow):
         self._default_table = None
         super().__init__(app_name, parent)
 
+        self.setting_ui.apply_req.connect(self.apply_curr_settings)
+
     @abstractmethod
     def setup_ui(self):
         pass

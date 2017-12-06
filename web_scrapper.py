@@ -23,6 +23,8 @@ def search_titles(pno):
 
 
 def search_detail_list(search_text):
+
+
     return [
         ('title1', 'desc1', 'http://pythonscraping.com/img/gifts/img1.jpg'),
         ('title2', 'desc2', 'http://pythonscraping.com/img/gifts/img1.jpg'),

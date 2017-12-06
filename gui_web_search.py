@@ -1,6 +1,11 @@
 # -*-coding:utf-8-*-
 
 import sys
+import urllib
+import subprocess
+import os
+import functools
+import urllib.request
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 import ui_util
@@ -9,7 +14,7 @@ from defines import ColumnDef
 from widgets import *
 
 
-column_def = ColumnDef(['chk', 'title', 'desc', 'img'],
+column_def = ColumnDef(['chk', 'title', 'desc', 'torrent', 'img'],
                        {'chk': ''})
 
 
@@ -18,10 +23,12 @@ class MainWindow(TabledUtilWindow):
         super().__init__('web search')
 
         self.btn_search.clicked.connect(self.search_product)
+        self.btn_download_torrent.clicked.connect(self.download_checked_torrents)
 
         self.model = QtGui.QStandardItemModel(0, len(column_def))
         self.model.setHorizontalHeaderLabels(column_def.header_titles)
         self.tableview.setModel(self.model)
+        # self.model.setItem(0, 1, QtGui.QStandardItem('[FHD]JUX-999 타니하라 노조미(谷原希美, Nozomi Tanihara)'))
 
         self.load_settings()
 
@@ -59,6 +66,14 @@ class MainWindow(TabledUtilWindow):
 
         base_layout.addWidget(self.tableview)
 
+    def keyPressEvent(self, event: QtGui.QKeyEvent):
+        key = event.key()
+        mod = event.modifiers()
+        if key == Qt.Key_Return:
+            self.search_product()
+        else:
+            super().keyPressEvent(event)
+
     def arrange_table(self):
         self.tableview.resizeRowsToContents()
         self.tableview.resizeColumnsToContents()
@@ -67,6 +82,8 @@ class MainWindow(TabledUtilWindow):
         return self.txt_search_text.text()
 
     def search_product(self):
+        self.model.removeRows(0, self.model.rowCount())
+
         results = web_scrapper.search_detail_list(self.search_text())
 
         for r in results:
@@ -75,15 +92,41 @@ class MainWindow(TabledUtilWindow):
             ui_util.add_checkbox_on_tableview(self.tableview, row, column_def['chk'], '', 20, None, True)
             self.model.setItem(row, column_def['title'], QtGui.QStandardItem(r[0]))
             self.model.setItem(row, column_def['desc'], QtGui.QStandardItem(r[1]))
-            url = r[2]
-            image = self.img_cache[url] if url in self.img_cache else None
+            # self.model.setItem(row, column_def['torrent'], QtGui.QStandardItem(r[3]))
+            ui_util.add_button_on_tableview(self.tableview, row, column_def['torrent'], 'download', None, 0, functools.partial(self.download_torrent, r[3], r[4]))
+            # lbl_torrent_link = QLabel(r[3])
+            # lbl_torrent_link.setOpenExternalLinks(True)
+            # self.tableview.setIndexWidget(self.model.index(row, column_def['torrent']), lbl_torrent_link)
+            img_url = r[2]
+            image = self.img_cache[img_url] if img_url in self.img_cache else None
             if not image:
-                data = urllib.request.urlopen(url).read()
+                data = urllib.request.urlopen(img_url).read()
                 image = QtGui.QImage()
                 image.loadFromData(data)
-            self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(image))
+            self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(image, 50, 50))
 
         self.arrange_table()
+
+    def download_torrent(self, url, content_url):
+        # opener = urllib.request.build_opener()
+        # opener.addheaders = [('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36')]
+        # urllib.request.install_opener(opener)
+        # urllib.request.urlretrieve(url, 'test_download.torrent')
+
+        # subprocess.Popen('explorer')
+        # # command = 'start "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" "{}"'.format(url)
+        print(url)
+        command = 'start chrome "{}"'.format(content_url)
+        os.system(command)
+        command = 'start chrome "{}"'.format(url)
+        # subprocess.Popen(command)
+        os.system(command)
+
+        # QtGui.QDesktopServices.openUrl(QtCore.QUrl(url))
+
+    def download_checked_torrents(self):
+        for r in range(self.model.rowCount()):
+            self.tableview.indexWidget(self.model.index(r, column_def['torrent'])).clicked.emit()
 
 
 old_hook = sys.excepthook

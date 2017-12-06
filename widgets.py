@@ -20,6 +20,8 @@ class UtilWindow(QMainWindow):
         self.setup_ui()
         self.init_setting_ui()
 
+        self.setting_ui.apply_req.connect(self.apply_curr_settings)
+
     @abstractmethod
     def setup_ui(self):
         pass
@@ -62,8 +64,6 @@ class TabledUtilWindow(UtilWindow):
     def __init__(self, app_name, parent=None):
         self._default_table = None
         super().__init__(app_name, parent)
-
-        self.setting_ui.apply_req.connect(self.apply_curr_settings)
 
     @abstractmethod
     def setup_ui(self):
@@ -403,9 +403,9 @@ class TableBaseSettingUI(BaseSettingUI):
 
 
 class ImageWidget(QWidget):
-    def __init__(self, img_path, parent=None):
+    def __init__(self, img_path, w, h, parent=None):
         super().__init__(parent)
-        self.setGeometry(0, 0, 100, 100)
+        self.setGeometry(0, 0, w, h)
         self.pixmap = QtGui.QPixmap(img_path).scaled(self.size(), Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
         self.setMinimumSize(self.pixmap.size())
 

@@ -2,8 +2,11 @@
 
 import re
 
+import urllib
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
+from selenium import webdriver
+import time
 
 
 def search_result(max_count, text):
@@ -43,7 +46,7 @@ def search_titles(pno):
         return ['no result']
 
 
-def search_detail_list(search_text):
+def search_detail_list(search_text, max_count):
     # return [
     #     # ('title0', 'SDMU-738 카토 모모카(加藤ももか, Momoka Kato)\nSOD의 새로운 마사지 게임 개발에 실험체가 된 것은 카토 모모카(加藤ももか) (21)', '', None, None),
     #     # ('[FHD]JUX-999 타니하라 노조미(谷原希美, Nozomi Tanihara)', '이웃 사람 조교 ~유부녀가 교화되어 암캐 성 봉사~', 'http://pythonscraping.com/img/gifts/img1.jpg', None, None),
@@ -54,7 +57,7 @@ def search_detail_list(search_text):
     #     ('title4', 'desc4', 'http://pythonscraping.com/img/gifts/img1.jpg', None, None),
     # ]
 
-    content = search_result(3, search_text)
+    content = search_result(max_count, search_text)
     bs = BeautifulSoup(content, 'html.parser')
 
     media_root = bs.find('div', {'class': 'search-media'})
@@ -67,7 +70,7 @@ def search_detail_list(search_text):
     for m in medias:
         title = m.find('div', {'class': 'media-heading'}).a.get_text().replace('\n', '')
         desc = m.find('div', {'class': 'media-content'}).find('span', {'class': 'text-muted'}).get_text().replace('\n', '')
-        desc = desc[:desc.index('imgdream.net')]
+        desc = desc[:desc.index('imgdream.net')] if 'imgdream.net' in desc else desc
         img_url = m.find('div', {'class': 'photo pull-left'}).img.attrs['src']
         content_url = 'https://www.kukudas.com/bbs' + m.find('div', {'class': 'media-content'}).a.attrs['href'][1:]
         torrent_url, _, _ = get_content_detail(content_url)
@@ -112,3 +115,17 @@ def get_content_detail(content_url):
     print(torrent_url)
 
     return torrent_url, desc, img_url
+
+
+def download_torrents(content_download_url_pairs):
+    """
+    not completed
+    doesn't work as expected -> 오류 페이지 다운
+    """
+    driver = webdriver.PhantomJS()
+    for p in content_download_url_pairs:
+        driver.get(p[0])
+        time.sleep(1)
+        urllib.request.urlretrieve(p[1], 'test_download_phantomjs')
+    driver.close()
+    print('downloaded')

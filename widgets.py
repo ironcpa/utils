@@ -111,6 +111,8 @@ class LabeledLineEdit(QWidget):
 
         self.lineedit.returnPressed.connect(lambda: self.return_pressed.emit(self.lineedit.text()))
 
+        self.setMaximumWidth(self.label.width() + self.lineedit.width())
+
     def init_ui(self):
         settingLayout = QHBoxLayout()
         settingLayout.setContentsMargins(0, 0, 0, 0)
@@ -442,6 +444,28 @@ class ImageWidget(QWidget):
 #     def paintEvent(self, e: QtGui.QPaintEvent):
 #         painter = QtGui.QPainter(self)
 #         painter.drawPixmap(0, 0, self.pixmap)
+
+
+class SearchCounter(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setGeometry(0, 0, 300, 100)
+
+        self.setLayout(QVBoxLayout())
+
+        self.lbl_counter = QLabel()
+        self.layout().addWidget(self.lbl_counter)
+
+    def paintEvent(self, e: QtGui.QPaintEvent):
+        painter = QtGui.QPainter()
+        painter.begin(self)
+        painter.fillRect(self.rect(), Qt.yellow)
+        painter.end()
+        super().paintEvent(e)
+
+    def update(self, remain, total):
+        counter_str = '{} / {} fetched'.format(remain, total)
+        self.lbl_counter.setText(counter_str)
 
 
 class TestWindow(QWidget):

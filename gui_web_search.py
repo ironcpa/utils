@@ -7,6 +7,7 @@ import os
 import functools
 import urllib.request
 from PyQt5 import QtCore, QtGui, QtWidgets
+import time
 
 import ui_util
 import web_scrapper
@@ -14,13 +15,50 @@ from defines import ColumnDef
 from widgets import *
 
 
+
 column_def = ColumnDef(['chk', 'desc', 'torrent', 'img'],
                        {'chk': ''})
 
 
+class SearchWorker(QObject):
+    fetched = pyqtSignal(int, int)
+    finished = pyqtSignal(list)
+
+    def __init__(self):
+        super().__init__()
+
+    def on_search_keyword_req(self, keyword, max_count):
+        print('on_search_req')
+        results = web_scrapper.search_detail_list(keyword, max_count)
+        self.finished.emit(results)
+
+    def on_search_today_req(self, page_count):
+        print('on_search_today_req')
+        results = web_scrapper.search_main_page(page_count)
+        self.finished.emit(results)
+
+    def on_stop_req(self):
+        print('on_stop_req')
+
+
 class MainWindow(TabledUtilWindow):
+    search_keyword_req = pyqtSignal(str, int)
+    search_today_req = pyqtSignal(int)
+    stop_req = pyqtSignal()
+
     def __init__(self, search_text):
         super().__init__('web search')
+
+        self.thread = QThread()
+        self.thread.start()
+
+        self.search_worker = SearchWorker()
+        self.search_worker.moveToThread(self.thread)
+        self.search_worker.finished.connect(self.on_search_finished)
+
+        self.search_keyword_req.connect(self.search_worker.on_search_keyword_req)
+        self.search_today_req.connect(self.search_worker.on_search_today_req)
+        self.stop_req.connect(self.search_worker.on_stop_req)
 
         self.btn_search.clicked.connect(self.search_product)
         self.btn_get_today.clicked.connect(self.search_today)
@@ -41,9 +79,11 @@ class MainWindow(TabledUtilWindow):
         self.setGeometry(0, 0, 1000, 600)
 
         self.txt_search_text = LabeledLineEdit('search text')
+        self.txt_max_count = LabeledLineEdit('max', '100', 80, 100)
         self.btn_search = QPushButton('search')
         self.btn_get_today = QPushButton('get today')
         self.btn_download_torrent = QPushButton('download torrent')
+        self.btn_stop_search = QPushButton('stop')
         self.tableview = SearchView()
         self.set_default_table(self.tableview)
 
@@ -57,12 +97,14 @@ class MainWindow(TabledUtilWindow):
 
         control_sub1 = QHBoxLayout()
         control_sub1.addWidget(self.txt_search_text)
+        control_sub1.addWidget(self.txt_max_count)
         control_sub1.addWidget(self.btn_search)
         control_group.addLayout(control_sub1)
 
         control_sub2 = QHBoxLayout()
         control_sub2.addWidget(self.btn_get_today)
         control_sub2.addWidget(self.btn_download_torrent)
+        control_sub2.addWidget(self.btn_stop_search)
         control_group.addLayout(control_sub2)
 
         base_layout.addWidget(self.tableview)
@@ -70,13 +112,24 @@ class MainWindow(TabledUtilWindow):
         self.img_big_picture = ImageWidget(None, 50, 50, self)
         self.img_big_picture.hide()
 
+        self.search_counter = SearchCounter(self)
+        self.search_counter.hide()
+
+    def load_settings(self):
+        self.txt_max_count.set_text(str(ui_util.load_settings(self, self.app_name, 'max count', 10)))
+        super().load_settings()
+
+    def save_settings(self):
+        ui_util.save_settings(self, self.app_name, 'max count', self.get_max_count())
+
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
         mod = event.modifiers()
         if key == Qt.Key_Return and mod == Qt.ControlModifier:
             self.show_big_picture()
         elif key == Qt.Key_Return:
-            self.search_product()
+            if self.is_search_enabled():
+                self.search_product()
         elif key == Qt.Key_Escape:
             if self.img_big_picture.isVisible():
                 self.img_big_picture.hide()
@@ -88,14 +141,31 @@ class MainWindow(TabledUtilWindow):
         self.tableview.resizeRowsToContents()
         self.tableview.resizeColumnsToContents()
 
+    def get_search_text(self):
+        return self.txt_search_text.text()
+
+    def get_max_count(self):
+        return int(self.txt_max_count.text())
+
     def is_checked(self, row):
-        return self.tableview.indexWidget(self.model.index(row, column_def['chk']).isChecked())
+        return self.tableview.indexWidget(self.model.index(row, column_def['chk'])).isChecked()
 
     def row_content_url(self, row=None):
         if not row:
             row = self.tableview.currentIndex().row()
 
         return self.model.item(row, column_def['desc']).data()
+
+    def enable_search(self):
+        self.btn_search.setEnabled(True)
+        self.btn_get_today.setEnabled(True)
+
+    def disable_search(self):
+        self.btn_search.setEnabled(False)
+        self.btn_get_today.setEnabled(False)
+
+    def is_search_enabled(self):
+        return self.btn_search.isEnabled() and self.btn_get_today.isEnabled()
 
     def load_image(self, url):
         image = self.img_cache[url] if url in self.img_cache else None
@@ -108,9 +178,6 @@ class MainWindow(TabledUtilWindow):
 
     def load_content_big_image_from_cache(self, content_url):
         return self.img_cache[content_url] if content_url in self.img_cache else None
-
-    def search_text(self):
-        return self.txt_search_text.text()
 
     def update_model(self, results):
         self.model.removeRows(0, self.model.rowCount())
@@ -131,27 +198,33 @@ class MainWindow(TabledUtilWindow):
         self.arrange_table()    # need to be double arrange call here : to perfect fit row height(for long text)
 
     def search_product(self):
-        self.update_model(web_scrapper.search_detail_list(self.search_text()))
+        # self.update_model(web_scrapper.search_detail_list(self.search_text()))
+
+        print('search_product')
+        self.disable_search()
+        self.search_keyword_req.emit(self.get_search_text(), self.get_max_count())
 
     def search_today(self):
-        self.update_model(web_scrapper.search_main_page(3))
+        # self.update_model(web_scrapper.search_main_page(3))
+
+        print('search_today')
+        self.disable_search()
+        self.search_today_req.emit(1)
+
+    def on_search_finished(self, results):
+        print('on_search_finishied')
+        self.update_model(results)
+        self.enable_search()
 
     def download_torrent(self, url, content_url):
-        # opener = urllib.request.build_opener()
-        # opener.addheaders = [('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36')]
-        # urllib.request.install_opener(opener)
-        # urllib.request.urlretrieve(url, 'test_download.torrent')
-
-        # subprocess.Popen('explorer')
-        # # command = 'start "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" "{}"'.format(url)
         print(url)
         command = 'start chrome "{}"'.format(content_url)
         os.system(command)
+        time.sleep(0.1)
         command = 'start chrome "{}"'.format(url)
-        # subprocess.Popen(command)
         os.system(command)
 
-        # QtGui.QDesktopServices.openUrl(QtCore.QUrl(url))
+        # web_scrapper.download_torrents([(content_url, url)])
 
     def download_checked_torrents(self):
         for r in range(self.model.rowCount()):

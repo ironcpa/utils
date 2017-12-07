@@ -109,7 +109,7 @@ class MainWindow(TabledUtilWindow):
 
         base_layout.addWidget(self.tableview)
 
-        self.img_big_picture = ImageWidget(None, 50, 50, self)
+        self.img_big_picture = ImageWidget(None, 600, 400, self)
         self.img_big_picture.hide()
 
         self.search_counter = SearchCounter(self)
@@ -191,8 +191,8 @@ class MainWindow(TabledUtilWindow):
             ui_util.add_checkbox_on_tableview(self.tableview, row, column_def['chk'], '', 20, None, True)
             ui_util.add_button_on_tableview(self.tableview, row, column_def['torrent'], 'download', None, 0, functools.partial(self.download_torrent, r[3], r[4]))
             img_url = r[2]
-            # self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(self.load_image(img_url), 210, 268))
-            self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(self.load_image(img_url), 50, 50))
+            self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(self.load_image(img_url), 210, 268))
+            # self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(self.load_image(img_url), 50, 50))
 
         self.arrange_table()
         self.arrange_table()    # need to be double arrange call here : to perfect fit row height(for long text)
@@ -209,7 +209,7 @@ class MainWindow(TabledUtilWindow):
 
         print('search_today')
         self.disable_search()
-        self.search_today_req.emit(1)
+        self.search_today_req.emit(3)
 
     def on_search_finished(self, results):
         print('on_search_finishied')
@@ -238,7 +238,7 @@ class MainWindow(TabledUtilWindow):
             _, _, img_url = web_scrapper.get_content_detail(content_url)
             image = self.load_image(img_url)
             self.img_cache[content_url] = image
-        self.img_big_picture.show_img(image)
+        self.img_big_picture.show_img(image, False)
         self.img_big_picture.show()
 
 

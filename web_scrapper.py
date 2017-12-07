@@ -11,7 +11,9 @@ import time
 
 def search_result(max_count, text):
     search_url = 'https://www.kukudas.com/bbs/search.php?srows={}&sfl=wr_subject&stx={}&sop=and&gr_id=jav&onetable=JAV1A'
-    html = urlopen(search_url.format(max_count, text))
+
+    search_string = '+'.join(text.split())
+    html = urlopen(search_url.format(max_count, search_string))
     content = html.read().decode('utf-8')
     # print(content)
 
@@ -81,26 +83,26 @@ def search_detail_list(search_text, max_count):
 
 def search_main_page(page_count=1):
     search_url = 'https://www.kukudas.com/bbs/board.php?bo_table=JAV1A&page={}'
-    html = urlopen(search_url.format(1))
-    content = html.read().decode('utf-8')
-
-    bs = BeautifulSoup(content, 'html.parser')
 
     results = []
+    for page in range(page_count):
+        html = urlopen(search_url.format(page))
+        content = html.read().decode('utf-8')
 
-    list_tags = bs.find('div', {'class': 'list-body'}).find_all('div', {'class': 'list-row'})
-    list_tags = list_tags[:1]
-    for l in list_tags:
-        desc_tag = l.find('div', {'class': 'list-desc'})
-        img_tag = l.find('div', {'class': 'list-img'})
+        bs = BeautifulSoup(content, 'html.parser')
 
-        title = desc_tag.a.strong.get_text()
-        img_url = img_tag.find('div', {'class': 'img-item'}).img.attrs['src']
-        content_url = desc_tag.a.attrs['href']
-        torrent_url, desc, _ = get_content_detail(content_url)
+        list_tags = bs.find('div', {'class': 'list-body'}).find_all('div', {'class': 'list-row'})
+        # list_tags = list_tags[:1]
+        for l in list_tags:
+            desc_tag = l.find('div', {'class': 'list-desc'})
+            img_tag = l.find('div', {'class': 'list-img'})
 
-        results.append((title, desc, img_url, torrent_url, content_url))
+            title = desc_tag.a.strong.get_text()
+            img_url = img_tag.find('div', {'class': 'img-item'}).img.attrs['src']
+            content_url = desc_tag.a.attrs['href']
+            torrent_url, desc, _ = get_content_detail(content_url)
 
+            results.append((title, desc, img_url, torrent_url, content_url))
     return results
 
 

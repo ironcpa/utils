@@ -409,10 +409,6 @@ class ImageWidget(QWidget):
         super().__init__(parent)
         self.setGeometry(0, 0, w, h)
         self.show_img(img_src)
-        if img_src:
-            self.pixmap = QtGui.QPixmap(img_src).scaled(self.size(), Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
-            self.setMinimumSize(self.pixmap.size())
-            self.setMaximumSize(self.pixmap.size())
 
     def paintEvent(self, e: QtGui.QPaintEvent):
         painter = QtGui.QPainter(self)
@@ -423,9 +419,13 @@ class ImageWidget(QWidget):
         self.move((self.parent().width() - self.width()) // 2, (self.parent().height() - self.height()) // 2)
         super().show()
 
-    def show_img(self, img_src):
+    def show_img(self, img_src, is_scaled=True):
         if img_src:
-            self.pixmap = QtGui.QPixmap(img_src).scaled(self.size(), Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
+            if is_scaled:
+                self.pixmap = QtGui.QPixmap(img_src).scaled(self.size(), Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
+            else:
+                self.pixmap = QtGui.QPixmap(img_src)
+            self.setGeometry(0, 0, self.pixmap.width(), self.pixmap.height())
             self.setMinimumSize(self.pixmap.size())
             self.setMaximumSize(self.pixmap.size())
 

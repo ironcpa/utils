@@ -45,10 +45,13 @@ def search_titles(pno):
 
 def search_detail_list(search_text):
     # return [
-    #     ('title1', 'desc1', 'http://pythonscraping.com/img/gifts/img1.jpg'),
-    #     ('title2', 'desc2', 'http://pythonscraping.com/img/gifts/img1.jpg'),
-    #     ('title3', 'desc3', 'http://pythonscraping.com/img/gifts/img1.jpg'),
-    #     ('title4', 'desc4', 'http://pythonscraping.com/img/gifts/img1.jpg'),
+    #     # ('title0', 'SDMU-738 카토 모모카(加藤ももか, Momoka Kato)\nSOD의 새로운 마사지 게임 개발에 실험체가 된 것은 카토 모모카(加藤ももか) (21)', '', None, None),
+    #     # ('[FHD]JUX-999 타니하라 노조미(谷原希美, Nozomi Tanihara)', '이웃 사람 조교 ~유부녀가 교화되어 암캐 성 봉사~', 'http://pythonscraping.com/img/gifts/img1.jpg', None, None),
+    #     ('[FHD]JUX-999 타니하라 노조미(Nozomi Tanihara)', '이웃 사람 조교 ~유부녀가 교화되어 암캐 성 봉사', 'http://pythonscraping.com/img/gifts/img1.jpg', None, None),
+    #     ('title1', 'desc1', 'http://pythonscraping.com/img/gifts/img1.jpg', None, None),
+    #     ('title2', 'desc2', 'http://pythonscraping.com/img/gifts/img1.jpg', None, None),
+    #     ('title3', 'desc3', 'http://pythonscraping.com/img/gifts/img1.jpg', None, None),
+    #     ('title4', 'desc4', 'http://pythonscraping.com/img/gifts/img1.jpg', None, None),
     # ]
 
     content = search_result(3, search_text)
@@ -64,20 +67,47 @@ def search_detail_list(search_text):
     for m in medias:
         title = m.find('div', {'class': 'media-heading'}).a.get_text().replace('\n', '')
         desc = m.find('div', {'class': 'media-content'}).find('span', {'class': 'text-muted'}).get_text().replace('\n', '')
+        desc = desc[:desc.index('imgdream.net')]
         img_url = m.find('div', {'class': 'photo pull-left'}).img.attrs['src']
         content_url = 'https://www.kukudas.com/bbs' + m.find('div', {'class': 'media-content'}).a.attrs['href'][1:]
-        torrent_url = get_torrent_url(content_url)
+        torrent_url = get_content_detail(content_url)
         results.append((title, desc, img_url, torrent_url, content_url))
 
     return results
 
 
-def get_torrent_url(content_url):
-    # content_url = 'https://www.kukudas.com/bbs' + content_url[1:]
+def search_main_page(page_count=1):
+    search_url = 'https://www.kukudas.com/bbs/board.php?bo_table=JAV1A&page={}'
+    html = urlopen(search_url.format(1))
+    content = html.read().decode('utf-8')
+
+    bs = BeautifulSoup(content, 'html.parser')
+
+    results = []
+
+    list_tags = bs.find('div', {'class': 'list-body'}).find_all('div', {'class': 'list-row'})
+    # list_tags = list_tags[:1]
+    for l in list_tags:
+        desc_tag = l.find('div', {'class': 'list-desc'})
+        img_tag = l.find('div', {'class': 'list-img'})
+
+        title = desc_tag.a.strong.get_text()
+        img_url = img_tag.find('div', {'class': 'img-item'}).img.attrs['src']
+        content_url = desc_tag.a.attrs['href']
+        torrent_url, desc = get_content_detail(content_url)
+
+        results.append((title, desc, img_url, torrent_url, content_url))
+
+    return results
+
+
+def get_content_detail(content_url):
     html = urlopen(content_url)
     content = html.read().decode('utf-8')
     bs = BeautifulSoup(content, 'html.parser')
 
-    download_url = bs.find(text=re.compile('torrent')).parent.attrs['href']
-    print(download_url)
-    return download_url
+    torrent_url = bs.find(text=re.compile('torrent')).parent.attrs['href']
+    desc = bs.find('div', {'class': 'view-content'}).find_all('p')[2].get_text()
+    print(torrent_url)
+
+    return torrent_url, desc

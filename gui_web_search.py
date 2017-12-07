@@ -14,7 +14,7 @@ from defines import ColumnDef
 from widgets import *
 
 
-column_def = ColumnDef(['chk', 'title', 'desc', 'torrent', 'img'],
+column_def = ColumnDef(['chk', 'desc', 'torrent', 'img'],
                        {'chk': ''})
 
 
@@ -23,6 +23,7 @@ class MainWindow(TabledUtilWindow):
         super().__init__('web search')
 
         self.btn_search.clicked.connect(self.search_product)
+        self.btn_get_today.clicked.connect(self.search_today)
         self.btn_download_torrent.clicked.connect(self.download_checked_torrents)
 
         self.model = QtGui.QStandardItemModel(0, len(column_def))
@@ -81,31 +82,32 @@ class MainWindow(TabledUtilWindow):
     def search_text(self):
         return self.txt_search_text.text()
 
-    def search_product(self):
+    def update_model(self, results):
         self.model.removeRows(0, self.model.rowCount())
-
-        results = web_scrapper.search_detail_list(self.search_text())
 
         for r in results:
             row = self.model.rowCount()
 
+            self.model.setItem(row, column_def['desc'], QtGui.QStandardItem(r[0] + '\n' + r[1]))
             ui_util.add_checkbox_on_tableview(self.tableview, row, column_def['chk'], '', 20, None, True)
-            self.model.setItem(row, column_def['title'], QtGui.QStandardItem(r[0]))
-            self.model.setItem(row, column_def['desc'], QtGui.QStandardItem(r[1]))
-            # self.model.setItem(row, column_def['torrent'], QtGui.QStandardItem(r[3]))
             ui_util.add_button_on_tableview(self.tableview, row, column_def['torrent'], 'download', None, 0, functools.partial(self.download_torrent, r[3], r[4]))
-            # lbl_torrent_link = QLabel(r[3])
-            # lbl_torrent_link.setOpenExternalLinks(True)
-            # self.tableview.setIndexWidget(self.model.index(row, column_def['torrent']), lbl_torrent_link)
             img_url = r[2]
             image = self.img_cache[img_url] if img_url in self.img_cache else None
-            if not image:
+            if not image and img_url:
                 data = urllib.request.urlopen(img_url).read()
                 image = QtGui.QImage()
                 image.loadFromData(data)
+            # self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(image, 210, 268))
             self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(image, 50, 50))
 
         self.arrange_table()
+        self.arrange_table()    # need to be double arrange call here : to perfect fit row height(for long text)
+
+    def search_product(self):
+        self.update_model(web_scrapper.search_detail_list(self.search_text()))
+
+    def search_today(self):
+        self.update_model(web_scrapper.search_main_page(3))
 
     def download_torrent(self, url, content_url):
         # opener = urllib.request.build_opener()
@@ -126,7 +128,11 @@ class MainWindow(TabledUtilWindow):
 
     def download_checked_torrents(self):
         for r in range(self.model.rowCount()):
-            self.tableview.indexWidget(self.model.index(r, column_def['torrent'])).clicked.emit()
+            if self.is_checked(r):
+                self.tableview.indexWidget(self.model.index(r, column_def['torrent'])).clicked.emit()
+
+    def is_checked(self, row):
+        return self.tableview.indexWidget(self.model.index(row, column_def['chk']).isChecked())
 
 
 old_hook = sys.excepthook

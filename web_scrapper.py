@@ -85,7 +85,7 @@ def search_main_page(page_count=1):
     search_url = 'https://www.kukudas.com/bbs/board.php?bo_table=JAV1A&page={}'
 
     results = []
-    for page in range(page_count):
+    for page in range(1, page_count+1):
         html = urlopen(search_url.format(page))
         content = html.read().decode('utf-8')
 

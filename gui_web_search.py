@@ -134,6 +134,8 @@ class MainWindow(TabledUtilWindow):
             if self.img_big_picture.isVisible():
                 self.img_big_picture.hide()
                 event.accept()
+        elif key == Qt.Key_C and mod == Qt.ControlModifier:
+            self.toggle_checked()
         else:
             super().keyPressEvent(event)
 
@@ -149,6 +151,11 @@ class MainWindow(TabledUtilWindow):
 
     def is_checked(self, row):
         return self.tableview.indexWidget(self.model.index(row, column_def['chk'])).isChecked()
+
+    def toggle_checked(self, row=None):
+        chk = self.tableview.indexWidget(self.tableview.currentIndex())
+        if chk:
+            chk.setChecked(not chk.isChecked())
 
     def row_content_url(self, row=None):
         if not row:
@@ -191,7 +198,8 @@ class MainWindow(TabledUtilWindow):
             ui_util.add_checkbox_on_tableview(self.tableview, row, column_def['chk'], '', 20, None, True)
             ui_util.add_button_on_tableview(self.tableview, row, column_def['torrent'], 'download', None, 0, functools.partial(self.download_torrent, r[3], r[4]))
             img_url = r[2]
-            self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(self.load_image(img_url), 210, 268))
+            # self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(self.load_image(img_url), 210, 268))
+            self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(self.load_image(img_url), 400, 600))
             # self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(self.load_image(img_url), 50, 50))
 
         self.arrange_table()

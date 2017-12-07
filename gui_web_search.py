@@ -67,17 +67,47 @@ class MainWindow(TabledUtilWindow):
 
         base_layout.addWidget(self.tableview)
 
+        self.img_big_picture = ImageWidget(None, 50, 50, self)
+        self.img_big_picture.hide()
+
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
         mod = event.modifiers()
-        if key == Qt.Key_Return:
+        if key == Qt.Key_Return and mod == Qt.ControlModifier:
+            self.show_big_picture()
+        elif key == Qt.Key_Return:
             self.search_product()
+        elif key == Qt.Key_Escape:
+            if self.img_big_picture.isVisible():
+                self.img_big_picture.hide()
+                event.accept()
         else:
             super().keyPressEvent(event)
 
     def arrange_table(self):
         self.tableview.resizeRowsToContents()
         self.tableview.resizeColumnsToContents()
+
+    def is_checked(self, row):
+        return self.tableview.indexWidget(self.model.index(row, column_def['chk']).isChecked())
+
+    def row_content_url(self, row=None):
+        if not row:
+            row = self.tableview.currentIndex().row()
+
+        return self.model.item(row, column_def['desc']).data()
+
+    def load_image(self, url):
+        image = self.img_cache[url] if url in self.img_cache else None
+        if not image and url:
+            data = urllib.request.urlopen(url).read()
+            image = QtGui.QImage()
+            image.loadFromData(data)
+            self.img_cache[url] = image
+        return image
+
+    def load_content_big_image_from_cache(self, content_url):
+        return self.img_cache[content_url] if content_url in self.img_cache else None
 
     def search_text(self):
         return self.txt_search_text.text()
@@ -88,17 +118,14 @@ class MainWindow(TabledUtilWindow):
         for r in results:
             row = self.model.rowCount()
 
-            self.model.setItem(row, column_def['desc'], QtGui.QStandardItem(r[0] + '\n' + r[1]))
+            desc_item = QtGui.QStandardItem(r[0] + '\n' + r[1])
+            desc_item.setData(r[4]) # save content url for later use
+            self.model.setItem(row, column_def['desc'], desc_item)
             ui_util.add_checkbox_on_tableview(self.tableview, row, column_def['chk'], '', 20, None, True)
             ui_util.add_button_on_tableview(self.tableview, row, column_def['torrent'], 'download', None, 0, functools.partial(self.download_torrent, r[3], r[4]))
             img_url = r[2]
-            image = self.img_cache[img_url] if img_url in self.img_cache else None
-            if not image and img_url:
-                data = urllib.request.urlopen(img_url).read()
-                image = QtGui.QImage()
-                image.loadFromData(data)
-            # self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(image, 210, 268))
-            self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(image, 50, 50))
+            # self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(self.load_image(img_url), 210, 268))
+            self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(self.load_image(img_url), 50, 50))
 
         self.arrange_table()
         self.arrange_table()    # need to be double arrange call here : to perfect fit row height(for long text)
@@ -131,8 +158,15 @@ class MainWindow(TabledUtilWindow):
             if self.is_checked(r):
                 self.tableview.indexWidget(self.model.index(r, column_def['torrent'])).clicked.emit()
 
-    def is_checked(self, row):
-        return self.tableview.indexWidget(self.model.index(row, column_def['chk']).isChecked())
+    def show_big_picture(self):
+        content_url = self.row_content_url()
+        image = self.load_content_big_image_from_cache(content_url)
+        if not image:
+            _, _, img_url = web_scrapper.get_content_detail(content_url)
+            image = self.load_image(img_url)
+            self.img_cache[content_url] = image
+        self.img_big_picture.show_img(image)
+        self.img_big_picture.show()
 
 
 old_hook = sys.excepthook

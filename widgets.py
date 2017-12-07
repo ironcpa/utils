@@ -403,15 +403,29 @@ class TableBaseSettingUI(BaseSettingUI):
 
 
 class ImageWidget(QWidget):
-    def __init__(self, img_path, w, h, parent=None):
+    def __init__(self, img_src, w, h, parent=None):
         super().__init__(parent)
         self.setGeometry(0, 0, w, h)
-        self.pixmap = QtGui.QPixmap(img_path).scaled(self.size(), Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
-        self.setMinimumSize(self.pixmap.size())
+        self.show_img(img_src)
+        if img_src:
+            self.pixmap = QtGui.QPixmap(img_src).scaled(self.size(), Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
+            self.setMinimumSize(self.pixmap.size())
+            self.setMaximumSize(self.pixmap.size())
 
     def paintEvent(self, e: QtGui.QPaintEvent):
         painter = QtGui.QPainter(self)
-        painter.drawPixmap(0, 0, self.pixmap)
+        if self.pixmap:
+            painter.drawPixmap(0, 0, self.pixmap)
+
+    def show(self):
+        self.move((self.parent().width() - self.width()) // 2, (self.parent().height() - self.height()) // 2)
+        super().show()
+
+    def show_img(self, img_src):
+        if img_src:
+            self.pixmap = QtGui.QPixmap(img_src).scaled(self.size(), Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
+            self.setMinimumSize(self.pixmap.size())
+            self.setMaximumSize(self.pixmap.size())
 
 
 # class UrlImageWidget(QWidget):

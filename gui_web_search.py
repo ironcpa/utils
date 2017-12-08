@@ -42,25 +42,9 @@ class SearchWorker(QObject):
         print('on_stop_req')
 
 
-# class ContentLoadWorker(QObject):
-#     fetched = pyqtSignal(int, str, str)
-#
-#     def __init__(self):
-#         super().__init__()
-#
-#     def on_load_req(self, rows, urls):
-#         print('on_load_req, {}, {}'.format(len(rows), len(urls)))
-#         for row, url in zip(rows, urls):
-#             self.fetched.emit(*self.load(row, url))
-#
-#     def load(self, row, url):
-#         print('load: {}, {}'.format(row, url))
-#         torrent_url, _, img_url = wsc.get_content_detail(url)
-#         return row, torrent_url, img_url
-
-
 class ContentLoadWorker(QObject):
-    fetched = pyqtSignal(int, str, QtGui.QImage)
+    fetched = pyqtSignal(int, str, str, str, QtGui.QImage)
+    finished = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -75,40 +59,19 @@ class ContentLoadWorker(QObject):
     async def fetch_contents(self, rows, urls):
         futures = [asyncio.ensure_future(self.load(row, url)) for row, url in zip(rows, urls)]
         for f in asyncio.as_completed(futures):
-            row, torrent_url, img_url = await f
+            row, date, torrent_url, desc, img_url = await f
             print('fetch_contents finished: {}'.format(row))
-            self.fetched.emit(row, torrent_url, img_url)
+            self.fetched.emit(row, date, torrent_url, desc, img_url)
+        self.finished.emit()
 
     async def load(self, row, url):
         try:
             print('load: {}, {}'.format(row, url))
-            torrent_url, _, image = await self.loop.run_in_executor(None, wsc.get_content_with_image, url)
-            return row, torrent_url, image
+            date, torrent_url, desc, image = await self.loop.run_in_executor(None, wsc.get_content_with_image, url)
+            return row, date, torrent_url, desc, image
         except Exception as e:
             print('exception on {}, {}'.format(row, url))
-
-
-class ContentLoader:
-    def __init__(self):
-        super().__init__()
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
-    def load_all(self, rows, urls):
-        print('load_all, {}, {}'.format(len(rows), len(urls)))
-        results = self.loop.run_until_complete(self.fetch_contents(rows, urls))
-        self.loop.close()
-        return results
-
-    async def fetch_contents(self, rows, urls):
-        futures = [asyncio.ensure_future(self.load(row, url)) for row, url in zip(rows, urls)]
-        results = await asyncio.gather(*futures)
-        return results
-
-    async def load(self, row, url):
-        print('load: {}, {}'.format(row, url))
-        torrent_url, _, img_url = await self.loop.run_in_executor(None, wsc.get_content_detail, url)
-        return row, torrent_url, img_url
+            print(e)
 
 
 class MyEventFilter(QObject):
@@ -146,6 +109,7 @@ class MainWindow(TabledUtilWindow):
         self.content_load_worker = ContentLoadWorker()
         self.content_load_worker.moveToThread(self.thread)
         self.content_load_worker.fetched.connect(self.on_content_fetched)
+        self.content_load_worker.finished.connect(self.arrange_table)
 
         self.content_load_req.connect(self.content_load_worker.on_load_req)
 
@@ -250,6 +214,9 @@ class MainWindow(TabledUtilWindow):
     def is_checked(self, row):
         return self.tableview.indexWidget(self.model.index(row, column_def['chk'])).isChecked()
 
+    def detail_format(self, row_data):
+        return row_data.date + '\n' + row_data.title + '\n' + row_data.desc
+
     def toggle_checked(self, row=None):
         cur_chk_index = self.model.index(self.tableview.currentIndex().row(), column_def['chk'])
         chk = self.tableview.indexWidget(cur_chk_index)
@@ -260,7 +227,7 @@ class MainWindow(TabledUtilWindow):
         if not row:
             row = self.tableview.currentIndex().row()
 
-        return self.model.item(row, column_def['desc']).data()
+        return self.model.item(row, column_def['desc']).data().content_url
 
     def enable_search(self):
         self.btn_search.setEnabled(True)
@@ -291,7 +258,7 @@ class MainWindow(TabledUtilWindow):
         for r in results:
             row = self.model.rowCount()
 
-            desc_item = QtGui.QStandardItem(r.title + '\n' + r.desc)
+            desc_item = QtGui.QStandardItem(self.detail_format(r))
             desc_item.setData(r) # save content url for later use
             self.model.setItem(row, column_def['desc'], desc_item)
             ui_util.add_checkbox_on_tableview(self.tableview, row, column_def['chk'], '', 40, None, True)
@@ -307,7 +274,7 @@ class MainWindow(TabledUtilWindow):
         # self.update_model(wsc.search_detail_list(self.search_text()))
 
         print('search_product')
-        self.start_t = time.time()
+        self.set_start_time()
         self.disable_search()
         self.search_keyword_req.emit(self.get_search_text(), self.get_max_count())
 
@@ -315,10 +282,9 @@ class MainWindow(TabledUtilWindow):
         # self.update_model(wsc.search_main_page(3))
 
         print('search_today')
+        self.set_start_time()
         self.disable_search()
         self.search_today_req.emit(3)
-        if self.is_lazy_content_load:
-            self.load_content_data_background()
 
     def on_search_finished(self, results):
         print('on_search_finishied')
@@ -326,9 +292,12 @@ class MainWindow(TabledUtilWindow):
         self.enable_search()
         if self.is_lazy_content_load:
             self.load_content_data_background()
-        self.show_elapsed()
+        self.show_elapsed_time()
 
-    def show_elapsed(self):
+    def set_start_time(self):
+        self.start_t = time.time()
+
+    def show_elapsed_time(self):
         print('elapse={}'.format(time.time() -self.start_t))
 
     def load_content_data_background(self):
@@ -339,16 +308,19 @@ class MainWindow(TabledUtilWindow):
 
         self.content_load_req.emit(rows, content_urls)
 
-    def on_content_fetched(self, row, torrent_url, image):
+    def on_content_fetched(self, row, date, torrent_url, desc, image):
         print('on content fetched, {}, {}'.format(row, torrent_url))
 
         row_data = self.model.item(row, column_def['desc']).data()
+        row_data.date = date if date != '' else row_data.date
         row_data.torrent_url = torrent_url
+        row_data.desc = desc if desc != '' else row_data.desc
 
         self.model.setItem(row, column_def['state'], QtGui.QStandardItem('loaded'))
+        self.model.item(row, column_def['desc']).setText(self.detail_format(row_data))
         ui_util.add_image_widget_on_tableview(self.tableview, row, column_def['img'], image,
                                               self.setting_ui.row_image_size())
-        self.show_elapsed()
+        self.show_elapsed_time()
 
     def download_torrent(self, url, content_url):
         print(url)
@@ -356,7 +328,7 @@ class MainWindow(TabledUtilWindow):
         os.system(command)
 
         if url is '':
-            url, _, _ = wsc.get_content_detail(content_url)
+            _, url, _, _ = wsc.get_content_detail(content_url)
         else:
             time.sleep(0.1)
         command = 'start chrome "{}"'.format(url)
@@ -377,7 +349,7 @@ class MainWindow(TabledUtilWindow):
         content_url = self.row_content_url()
         image = self.load_content_big_image_from_cache(content_url)
         if not image:
-            _, _, img_url = wsc.get_content_detail(content_url)
+            _, _, _, img_url = wsc.get_content_detail(content_url)
             image = self.load_image(img_url)
             self.img_cache[content_url] = image
         self.img_big_picture.show_img(image, False)

@@ -13,7 +13,8 @@ from PyQt5 import QtGui
 
 
 class WebSearchResult:
-    def __init__(self, title, desc, content_url, img_url, torrent_url):
+    def __init__(self, date, title, desc, content_url, img_url, torrent_url):
+        self.date = date
         self.title = title
         self.desc = desc
         self.content_url = content_url
@@ -82,6 +83,7 @@ def search_detail_list(search_text, max_count, load_content=False):
 
     medias = media_root.find_all('div', 'media')
     for m in medias:
+        date = ''
         title = m.find('div', {'class': 'media-heading'}).a.get_text().replace('\n', '')
         desc = m.find('div', {'class': 'media-content'}).find('span', {'class': 'text-muted'}).get_text().replace('\n', '')
         desc = desc[:desc.index('imgdream.net')] if 'imgdream.net' in desc else desc
@@ -89,8 +91,8 @@ def search_detail_list(search_text, max_count, load_content=False):
         content_url = 'https://www.kukudas.com/bbs' + m.find('div', {'class': 'media-content'}).a.attrs['href'][1:]
         torrent_url, img_url = '', ''
         if load_content:
-            torrent_url, _, img_url = get_content_detail(content_url)
-        results.append(WebSearchResult(title, desc, content_url, img_url, torrent_url))
+            date, torrent_url, _, img_url = get_content_detail(content_url)
+        results.append(WebSearchResult(date, title, desc, content_url, img_url, torrent_url))
 
     return results
 
@@ -111,15 +113,16 @@ def search_main_page(page_count=1, load_content=False):
             desc_tag = l.find('div', {'class': 'list-desc'})
             img_tag = l.find('div', {'class': 'list-img'})
 
+            date = l.find('div', {'class': 'wr-date en'}).get_text()
             title = desc_tag.a.strong.get_text()
-            img_url = img_tag.find('div', {'class': 'img-item'}).img.attrs['src']
+            # img_url = img_tag.find('div', {'class': 'img-item'}).img.attrs['src']
             content_url = desc_tag.a.attrs['href']
-            torrent_url, desc = '', ''
+            torrent_url, desc, img_url = '', '', ''
             if load_content:
-                torrent_url, desc, _ = get_content_detail(content_url)
+                date, torrent_url, desc, _ = get_content_detail(content_url)
 
             # results.append((title, desc, img_url, torrent_url, content_url))
-            results.append(WebSearchResult(title, desc, content_url, img_url, torrent_url))
+            results.append(WebSearchResult(date, title, desc, content_url, img_url, torrent_url))
 
     return results
 
@@ -129,21 +132,22 @@ def get_content_detail(content_url):
     content = html.read().decode('utf-8')
     bs = BeautifulSoup(content, 'html.parser')
 
+    date = bs.find('div', {'class': 'wr-date en'}).get_text()
     torrent_url = bs.find(text=re.compile('torrent')).parent.attrs['href']
     desc = bs.find('div', {'class': 'view-content'}).find_all('p')[2].get_text()
     img_url = bs.find('div', {'class': 'view-content'}).find('img').attrs['src']
     print('get_content_detail: {}'.format(torrent_url))
 
-    return torrent_url, desc, img_url
+    return date, torrent_url, desc, img_url
 
 
 def get_content_with_image(content_url):
-    torrent_url, desc, img_url = get_content_detail(content_url)
+    date, torrent_url, desc, img_url = get_content_detail(content_url)
     data = urllib.request.urlopen(img_url).read()
     image = QtGui.QImage()
     image.loadFromData(data)
 
-    return torrent_url, desc, image
+    return date, torrent_url, desc, image
 
 
 def download_torrents(content_download_url_pairs):

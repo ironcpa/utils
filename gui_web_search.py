@@ -206,8 +206,7 @@ class MainWindow(TabledUtilWindow):
             desc_item.setData(r[4]) # save content url for later use
             self.model.setItem(row, column_def['desc'], desc_item)
             ui_util.add_checkbox_on_tableview(self.tableview, row, column_def['chk'], '', 20, None, True)
-            if r[3]:
-                ui_util.add_button_on_tableview(self.tableview, row, column_def['torrent'], 'download', None, 0, functools.partial(self.download_torrent, r[3], r[4]))
+            ui_util.add_button_on_tableview(self.tableview, row, column_def['torrent'], 'download', None, 0, functools.partial(self.download_torrent, r[3], r[4]))
             img_url = r[2]
             img_size = self.setting_ui.row_image_size()
             img_widget = ImageWidget(self.load_image(img_url), img_size.width(), img_size.height())
@@ -239,7 +238,11 @@ class MainWindow(TabledUtilWindow):
         print(url)
         command = 'start chrome "{}"'.format(content_url)
         os.system(command)
-        time.sleep(0.1)
+
+        if url is '':
+            url, _, _ = web_scrapper.get_content_detail(content_url)
+        else:
+            time.sleep(0.1)
         command = 'start chrome "{}"'.format(url)
         os.system(command)
 

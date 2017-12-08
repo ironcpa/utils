@@ -85,6 +85,8 @@ def add_button_on_tableview(tableview, row, col, label, font, width, slot=None):
 
 def add_checkbox_on_tableview(tableview, row, col, label, width, slot=None, is_checked=False):
     checkbox = QCheckBox()
+    if width > 0:
+        checkbox.setStyleSheet('QCheckBox::indicator { width: ' + str(width) + 'px; height: ' + str(width) + 'px;\}')
     checkbox.setFocusPolicy(Qt.NoFocus)
     checkbox.setText(label)
     checkbox.setFixedWidth(width)

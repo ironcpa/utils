@@ -1,6 +1,7 @@
 import os
 import sys
 import urllib
+import urllib.request
 from abc import ABC, abstractmethod
 
 from PyQt5 import QtGui
@@ -487,6 +488,11 @@ class SearchCounter(QWidget):
         self.lbl_counter.setText(counter_str)
 
 
+def add_image_widget_on_tableview(tableview, row, col, image, size):
+    img_widget = ImageWidget(image, size.width(), size.height())
+    tableview.setIndexWidget(tableview.model().index(row, col), img_widget)
+
+
 class TestWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -512,7 +518,7 @@ class TestWindow(QWidget):
         image = QtGui.QImage()
         image.loadFromData(data)
 
-        img_widget = ImageWidget(image, self)
+        img_widget = ImageWidget(image, 0, 0, self)
         self.layout().addWidget(img_widget, 0, 0)
 
         # img_label = QLabel()
@@ -525,6 +531,10 @@ class TestWindow(QWidget):
         model = QtGui.QStandardItemModel(0, 2)
         self.tableview.setModel(model)
         self.layout().addWidget(self.tableview, 1, 0)
+
+        chkbox = QCheckBox()
+        chkbox.setStyleSheet('QCheckBox::indicator {width:100px; height:100px}')
+        self.layout().addWidget(chkbox, 2, 0)
 
         img_paths = [
             '4a8314b9fd9b7425174d63002dcf8f99',
@@ -546,9 +556,13 @@ class TestWindow(QWidget):
             item = QtGui.QStandardItem(str(r))
             model.setItem(r, 0, item)
 
-            path = dir + img + '.jpg'
-            img_widget = ImageWidget(path)
-            self.tableview.setIndexWidget(model.index(r, 1), img_widget)
+            # path = dir + img + '.jpg'
+            # img_widget = ImageWidget(path, 0, 0)
+            # self.tableview.setIndexWidget(model.index(r, 1), img_widget)
+
+            chkbox = QCheckBox()
+            chkbox.setStyleSheet('indicator {width: 200px; height: 100px}')
+            self.tableview.setIndexWidget(model.index(r, 1), chkbox)
 
             # img_label = QLabel()
             # # img_label.setFixedSize(100, 100)

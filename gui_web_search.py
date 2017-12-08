@@ -261,11 +261,11 @@ class MainWindow(TabledUtilWindow):
             desc_item = QtGui.QStandardItem(self.detail_format(r))
             desc_item.setData(r) # save content url for later use
             self.model.setItem(row, column_def['desc'], desc_item)
-            ui_util.add_checkbox_on_tableview(self.tableview, row, column_def['chk'], '', 40, None, True)
+            ui_util.add_checkbox_on_tableview(self.tableview, row, column_def['chk'], '', 60, None, True)
             slot = functools.partial(self.download_torrent, r.torrent_url, r.content_url)
             ui_util.add_button_on_tableview(self.tableview, row, column_def['torrent'], 'download', None, 0, slot)
             if r.img_url is not '':
-                ui_util.add_image_widget_on_tableview(self.tableview, row, column_def['img'], self.load_image(r.img_url), self.setting_ui.row_image_size())
+                add_image_widget_on_tableview(self.tableview, row, column_def['img'], self.load_image(r.img_url), self.setting_ui.row_image_size())
 
         self.arrange_table()
         self.arrange_table()    # need to be double arrange call here : to perfect fit row height(for long text)
@@ -318,7 +318,7 @@ class MainWindow(TabledUtilWindow):
 
         self.model.setItem(row, column_def['state'], QtGui.QStandardItem('loaded'))
         self.model.item(row, column_def['desc']).setText(self.detail_format(row_data))
-        ui_util.add_image_widget_on_tableview(self.tableview, row, column_def['img'], image,
+        add_image_widget_on_tableview(self.tableview, row, column_def['img'], image,
                                               self.setting_ui.row_image_size())
         self.show_elapsed_time()
 

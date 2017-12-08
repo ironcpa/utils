@@ -16,7 +16,7 @@ from widgets import *
 
 
 
-column_def = ColumnDef(['chk', 'desc', 'torrent', 'img'],
+column_def = ColumnDef(['chk', 'state', 'desc', 'torrent', 'img'],
                        {'chk': ''})
 
 
@@ -202,14 +202,14 @@ class MainWindow(TabledUtilWindow):
         for r in results:
             row = self.model.rowCount()
 
-            desc_item = QtGui.QStandardItem(r[0] + '\n' + r[1])
-            desc_item.setData(r[4]) # save content url for later use
+            desc_item = QtGui.QStandardItem(r.title + '\n' + r.desc)
+            desc_item.setData(r) # save content url for later use
             self.model.setItem(row, column_def['desc'], desc_item)
             ui_util.add_checkbox_on_tableview(self.tableview, row, column_def['chk'], '', 20, None, True)
-            ui_util.add_button_on_tableview(self.tableview, row, column_def['torrent'], 'download', None, 0, functools.partial(self.download_torrent, r[3], r[4]))
-            img_url = r[2]
+            slot = functools.partial(self.download_torrent, r.torrent_url, r.content_url)
+            ui_util.add_button_on_tableview(self.tableview, row, column_def['torrent'], 'download', None, 0, slot)
             img_size = self.setting_ui.row_image_size()
-            img_widget = ImageWidget(self.load_image(img_url), img_size.width(), img_size.height())
+            img_widget = ImageWidget(self.load_image(r.img_url), img_size.width(), img_size.height())
             self.tableview.setIndexWidget(self.model.index(row, column_def['img']), img_widget)
 
         self.arrange_table()
@@ -233,6 +233,16 @@ class MainWindow(TabledUtilWindow):
         print('on_search_finishied')
         self.update_model(results)
         self.enable_search()
+        self.load_content_data_background()
+
+    def load_content_data_background(self):
+        for r in range(self.model.rowCount()):
+            row_data = self.model.item(r, column_def['desc']).data()
+            torrent_url, _, img_url = web_scrapper.get_content_detail(row_data.content_url)
+            row_data.img_url = img_url
+            row_data.torrent_url = torrent_url
+
+            self.model.setItem(r, column_def['state'], QtGui.QStandardItem('loaded'))
 
     def download_torrent(self, url, content_url):
         print(url)

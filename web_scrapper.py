@@ -1,12 +1,22 @@
 # -*-coding:utf-8-*-
 
 import re
+import collections
 
 import urllib
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import time
+
+
+class WebSearchResult:
+    def __init__(self, title, desc, content_url, img_url, torrent_url):
+        self.title = title
+        self.desc = desc
+        self.content_url = content_url
+        self.img_url = img_url
+        self.torrent_url = torrent_url
 
 
 def search_result(max_count, text):
@@ -77,7 +87,8 @@ def search_detail_list(search_text, max_count):
         content_url = 'https://www.kukudas.com/bbs' + m.find('div', {'class': 'media-content'}).a.attrs['href'][1:]
         # torrent_url, _, _ = get_content_detail(content_url)
         torrent_url = ''
-        results.append((title, desc, img_url, torrent_url, content_url))
+        # results.append((title, desc, img_url, torrent_url, content_url))
+        results.append(WebSearchResult(title, desc, content_url, img_url, torrent_url))
 
     return results
 
@@ -104,7 +115,9 @@ def search_main_page(page_count=1):
             # torrent_url, desc, _ = get_content_detail(content_url)
             torrent_url, desc = '', ''
 
-            results.append((title, desc, img_url, torrent_url, content_url))
+            # results.append((title, desc, img_url, torrent_url, content_url))
+            results.append(WebSearchResult(title, desc, content_url, img_url, torrent_url))
+
     return results
 
 

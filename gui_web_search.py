@@ -49,6 +49,8 @@ class MainWindow(TabledUtilWindow):
     def __init__(self, search_text):
         super().__init__('web search')
 
+        self.row_image_size = None
+
         self.thread = QThread()
         self.thread.start()
 
@@ -115,12 +117,20 @@ class MainWindow(TabledUtilWindow):
         self.search_counter = SearchCounter(self)
         self.search_counter.hide()
 
+    def init_setting_ui(self):
+        self.setting_ui = WebSearchSettingUI(self)
+        self.setting_ui.hide()
+
     def load_settings(self):
         self.txt_max_count.set_text(str(ui_util.load_settings(self, self.app_name, 'max count', 10)))
+        row_image_size = ui_util.load_settings(self, self.app_name, self.setting_ui.KEY_ROW_IMAGE_SIZE, QSize(210, 268))
+        self.setting_ui.set_row_image_size(row_image_size.width(), row_image_size.height())
         super().load_settings()
 
     def save_settings(self):
+        super().save_settings()
         ui_util.save_settings(self, self.app_name, 'max count', self.get_max_count())
+        ui_util.save_settings(self, self.app_name, self.setting_ui.KEY_ROW_IMAGE_SIZE, self.setting_ui.row_image_size())
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
@@ -196,11 +206,12 @@ class MainWindow(TabledUtilWindow):
             desc_item.setData(r[4]) # save content url for later use
             self.model.setItem(row, column_def['desc'], desc_item)
             ui_util.add_checkbox_on_tableview(self.tableview, row, column_def['chk'], '', 20, None, True)
-            ui_util.add_button_on_tableview(self.tableview, row, column_def['torrent'], 'download', None, 0, functools.partial(self.download_torrent, r[3], r[4]))
+            if r[3]:
+                ui_util.add_button_on_tableview(self.tableview, row, column_def['torrent'], 'download', None, 0, functools.partial(self.download_torrent, r[3], r[4]))
             img_url = r[2]
-            # self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(self.load_image(img_url), 210, 268))
-            self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(self.load_image(img_url), 400, 600))
-            # self.tableview.setIndexWidget(self.model.index(row, column_def['img']), ImageWidget(self.load_image(img_url), 50, 50))
+            img_size = self.setting_ui.row_image_size()
+            img_widget = ImageWidget(self.load_image(img_url), img_size.width(), img_size.height())
+            self.tableview.setIndexWidget(self.model.index(row, column_def['img']), img_widget)
 
         self.arrange_table()
         self.arrange_table()    # need to be double arrange call here : to perfect fit row height(for long text)

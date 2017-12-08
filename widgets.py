@@ -404,6 +404,25 @@ class TableBaseSettingUI(BaseSettingUI):
         return self.setting_lineedits['table font size'].text()
 
 
+class WebSearchSettingUI(TableBaseSettingUI):
+    KEY_ROW_IMAGE_SIZE = 'row image size'
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def setup_ui(self):
+        super().setup_ui()
+
+        self.add_setting_ui(self.KEY_ROW_IMAGE_SIZE, '210 268')
+
+    def set_row_image_size(self, w, h):
+        self.setting_lineedits[self.KEY_ROW_IMAGE_SIZE].setText('{} {}'.format(w, h))
+
+    def row_image_size(self):
+        values = [int(v) for v in self.setting_lineedits[self.KEY_ROW_IMAGE_SIZE].text().split()]
+        return QSize(values[0], values[1])
+
+
 class ImageWidget(QWidget):
     def __init__(self, img_src, w, h, parent=None):
         super().__init__(parent)

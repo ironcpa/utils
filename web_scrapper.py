@@ -75,7 +75,8 @@ def search_detail_list(search_text, max_count):
         desc = desc[:desc.index('imgdream.net')] if 'imgdream.net' in desc else desc
         img_url = m.find('div', {'class': 'photo pull-left'}).img.attrs['src']
         content_url = 'https://www.kukudas.com/bbs' + m.find('div', {'class': 'media-content'}).a.attrs['href'][1:]
-        torrent_url, _, _ = get_content_detail(content_url)
+        # torrent_url, _, _ = get_content_detail(content_url)
+        torrent_url = None
         results.append((title, desc, img_url, torrent_url, content_url))
 
     return results
@@ -100,7 +101,8 @@ def search_main_page(page_count=1):
             title = desc_tag.a.strong.get_text()
             img_url = img_tag.find('div', {'class': 'img-item'}).img.attrs['src']
             content_url = desc_tag.a.attrs['href']
-            torrent_url, desc, _ = get_content_detail(content_url)
+            # torrent_url, desc, _ = get_content_detail(content_url)
+            torrent_url, desc = None, ''
 
             results.append((title, desc, img_url, torrent_url, content_url))
     return results

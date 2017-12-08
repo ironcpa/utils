@@ -10,6 +10,7 @@ from PyQt5.QtCore import QSettings, QPoint
 from send2trash import send2trash
 
 import file_util
+from widgets import ImageWidget
 
 
 def load_settings(self, app_name, key, default):
@@ -86,7 +87,7 @@ def add_button_on_tableview(tableview, row, col, label, font, width, slot=None):
 def add_checkbox_on_tableview(tableview, row, col, label, width, slot=None, is_checked=False):
     checkbox = QCheckBox()
     if width > 0:
-        checkbox.setStyleSheet('QCheckBox::indicator { width: ' + str(width) + 'px; height: ' + str(width) + 'px;\}')
+        checkbox.setStyleSheet('QCheckBox::indicator { width: ' + str(width) + 'px; height: ' + str(width) + 'px;}')
     checkbox.setFocusPolicy(Qt.NoFocus)
     checkbox.setText(label)
     checkbox.setFixedWidth(width)
@@ -94,6 +95,11 @@ def add_checkbox_on_tableview(tableview, row, col, label, width, slot=None, is_c
         checkbox.stateChanged.connect(slot)
     checkbox.setChecked(is_checked)
     tableview.setIndexWidget(tableview.model().index(row, col), checkbox)
+
+
+def add_image_widget_on_tableview(tableview, row, col, image, size):
+    img_widget = ImageWidget(image, size.width(), size.height())
+    tableview.setIndexWidget(tableview.model().index(row, col), img_widget)
 
 
 def show_create_clip_result(parent, result):

@@ -9,6 +9,8 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 import time
 
+from PyQt5 import QtGui
+
 
 class WebSearchResult:
     def __init__(self, title, desc, content_url, img_url, torrent_url):
@@ -58,7 +60,7 @@ def search_titles(pno):
         return ['no result']
 
 
-def search_detail_list(search_text, max_count):
+def search_detail_list(search_text, max_count, load_content=False):
     # return [
     #     # ('title0', 'SDMU-738 카토 모모카(加藤ももか, Momoka Kato)\nSOD의 새로운 마사지 게임 개발에 실험체가 된 것은 카토 모모카(加藤ももか) (21)', '', None, None),
     #     # ('[FHD]JUX-999 타니하라 노조미(谷原希美, Nozomi Tanihara)', '이웃 사람 조교 ~유부녀가 교화되어 암캐 성 봉사~', 'http://pythonscraping.com/img/gifts/img1.jpg', None, None),
@@ -83,17 +85,17 @@ def search_detail_list(search_text, max_count):
         title = m.find('div', {'class': 'media-heading'}).a.get_text().replace('\n', '')
         desc = m.find('div', {'class': 'media-content'}).find('span', {'class': 'text-muted'}).get_text().replace('\n', '')
         desc = desc[:desc.index('imgdream.net')] if 'imgdream.net' in desc else desc
-        img_url = m.find('div', {'class': 'photo pull-left'}).img.attrs['src']
+        # img_url = m.find('div', {'class': 'photo pull-left'}).img.attrs['src']
         content_url = 'https://www.kukudas.com/bbs' + m.find('div', {'class': 'media-content'}).a.attrs['href'][1:]
-        # torrent_url, _, _ = get_content_detail(content_url)
-        torrent_url = ''
-        # results.append((title, desc, img_url, torrent_url, content_url))
+        torrent_url, img_url = '', ''
+        if load_content:
+            torrent_url, _, img_url = get_content_detail(content_url)
         results.append(WebSearchResult(title, desc, content_url, img_url, torrent_url))
 
     return results
 
 
-def search_main_page(page_count=1):
+def search_main_page(page_count=1, load_content=False):
     search_url = 'https://www.kukudas.com/bbs/board.php?bo_table=JAV1A&page={}'
 
     results = []
@@ -112,8 +114,9 @@ def search_main_page(page_count=1):
             title = desc_tag.a.strong.get_text()
             img_url = img_tag.find('div', {'class': 'img-item'}).img.attrs['src']
             content_url = desc_tag.a.attrs['href']
-            # torrent_url, desc, _ = get_content_detail(content_url)
             torrent_url, desc = '', ''
+            if load_content:
+                torrent_url, desc, _ = get_content_detail(content_url)
 
             # results.append((title, desc, img_url, torrent_url, content_url))
             results.append(WebSearchResult(title, desc, content_url, img_url, torrent_url))
@@ -129,9 +132,18 @@ def get_content_detail(content_url):
     torrent_url = bs.find(text=re.compile('torrent')).parent.attrs['href']
     desc = bs.find('div', {'class': 'view-content'}).find_all('p')[2].get_text()
     img_url = bs.find('div', {'class': 'view-content'}).find('img').attrs['src']
-    print(torrent_url)
+    print('get_content_detail: {}'.format(torrent_url))
 
     return torrent_url, desc, img_url
+
+
+def get_content_with_image(content_url):
+    torrent_url, desc, img_url = get_content_detail(content_url)
+    data = urllib.request.urlopen(img_url).read()
+    image = QtGui.QImage()
+    image.loadFromData(data)
+
+    return torrent_url, desc, image
 
 
 def download_torrents(content_download_url_pairs):

@@ -99,7 +99,7 @@ def modify_product(org_product, id = None, product_no = None, desc = None, rate 
     )
 
 
-def asyncio_call(loop, funcs):
+def asyncio_gatter_call(loop, funcs):
     result = loop.run_until_complete(gather_asyncio_future_results(funcs))
     loop.close()
 
@@ -111,3 +111,9 @@ async def gather_asyncio_future_results(funcs):
     result = await asyncio.gather(*futures)
     print(result)
     return result
+
+
+async def as_completed_asyncio_future_results(funcs):
+    futures = [asyncio.ensure_future(f) for f in funcs]
+    for f in asyncio.as_completed(futures):
+        await f

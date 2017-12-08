@@ -193,7 +193,7 @@ class MainWindow(TabledUtilWindow):
         clip_file_form = self.txt_clip_name.text()
         loop = asyncio.new_event_loop()
         funcs = [self.async_create_clip(loop, start_time[0:-1], end_time, clip_file_form.format(start_time[0:-1] + str(s), end_time)) for s in range(10)]
-        result = cu.asyncio_call(loop, funcs)
+        result = cu.asyncio_gatter_call(loop, funcs)
         ui_util.show_create_clip_result(self, result)
 
     def merge_all_clips(self):

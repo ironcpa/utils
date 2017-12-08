@@ -25,7 +25,7 @@ def create_clips_from_captures(src_path, clip_dir, captures, prefix='', is_async
         async_loop = asyncio.new_event_loop()
         async_calls = [create_clip_from_capture(async_loop, clip_dir, src_path, times[i - 1], t, prefix)
                             for i, t in enumerate(times) if i % 2 == 1]
-        result = cu.asyncio_call(async_loop, async_calls)
+        result = cu.asyncio_gatter_call(async_loop, async_calls)
 
         return result
 

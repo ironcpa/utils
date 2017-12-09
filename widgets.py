@@ -439,10 +439,13 @@ class ImageWidget(QWidget):
         self.move((self.parent().width() - self.width()) // 2, (self.parent().height() - self.height()) // 2)
         super().show()
 
-    def show_img(self, img_src, is_scaled=True):
+    def show_img(self, img_src, is_scaled=True, size=None):
         if img_src:
             if is_scaled:
-                self.pixmap = QtGui.QPixmap(img_src).scaled(self.size(), Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
+                if size:
+                    self.pixmap = QtGui.QPixmap(img_src).scaled(size, Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
+                else:
+                    self.pixmap = QtGui.QPixmap(img_src).scaled(self.size(), Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
             else:
                 self.pixmap = QtGui.QPixmap(img_src)
             self.setGeometry(0, 0, self.pixmap.width(), self.pixmap.height())

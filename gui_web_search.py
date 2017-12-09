@@ -11,6 +11,7 @@ import time
 import asyncio
 
 import ui_util
+import file_util
 import web_scrapper as wsc
 from defines import ColumnDef
 from widgets import *
@@ -127,6 +128,10 @@ class MainWindow(TabledUtilWindow):
 
         self.img_cache = {}
 
+        if search_text and search_text != '':
+            self.txt_search_text.set_text(search_text)
+            self.search_product()
+
     def setup_ui(self):
         super().setup_ui()
 
@@ -163,7 +168,7 @@ class MainWindow(TabledUtilWindow):
 
         base_layout.addWidget(self.tableview)
 
-        self.img_big_picture = ImageWidget(None, 600, 400, self)
+        self.img_big_picture = ImageWidget(None, 768, 1024, self)
         self.img_big_picture.hide()
 
         self.search_counter = SearchCounter(self)
@@ -187,15 +192,21 @@ class MainWindow(TabledUtilWindow):
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
         mod = event.modifiers()
-        if key == Qt.Key_Return and mod == Qt.ControlModifier:
+        if key == Qt.Key_Return and mod == Qt.ShiftModifier:
             self.show_big_picture()
+        elif key == Qt.Key_Return and mod == Qt.ControlModifier:
+            self.open_local_file()
         elif key == Qt.Key_Return:
             if self.is_search_enabled():
                 self.search_product()
+        elif key == Qt.Key_Tab and mod == Qt.ControlModifier:
+            self.close()
         elif key == Qt.Key_Escape:
             if self.img_big_picture.isVisible():
                 self.img_big_picture.hide()
                 event.accept()
+            else:
+                ui_util.focus_to_text(self.txt_search_text)
         elif key == Qt.Key_C and mod == Qt.ControlModifier:
             self.toggle_checked()
         else:
@@ -223,11 +234,14 @@ class MainWindow(TabledUtilWindow):
         if chk:
             chk.setChecked(not chk.isChecked())
 
-    def row_content_url(self, row=None):
+    def row_data(self, row=None):
         if not row:
             row = self.tableview.currentIndex().row()
 
-        return self.model.item(row, column_def['desc']).data().content_url
+        return self.model.item(row, column_def['desc']).data()
+
+    def row_content_url(self, row=None):
+        return self.row_data().content_url
 
     def enable_search(self):
         self.btn_search.setEnabled(True)
@@ -290,6 +304,7 @@ class MainWindow(TabledUtilWindow):
         print('on_search_finishied')
         self.update_model(results)
         self.enable_search()
+        self.tableview.setFocus()
         if self.is_lazy_content_load:
             self.load_content_data_background()
         self.show_elapsed_time()
@@ -345,6 +360,11 @@ class MainWindow(TabledUtilWindow):
         self.search_stop_req.emit()
         self.enable_search()
 
+    def calc_big_picture_size(self):
+        h = self.height()
+        w = h * (768.0 / 1024.0)
+        return QSize(w, h)
+
     def show_big_picture(self):
         content_url = self.row_content_url()
         image = self.load_content_big_image_from_cache(content_url)
@@ -352,8 +372,12 @@ class MainWindow(TabledUtilWindow):
             _, _, _, img_url = wsc.get_content_detail(content_url)
             image = self.load_image(img_url)
             self.img_cache[content_url] = image
-        self.img_big_picture.show_img(image, False)
+        self.img_big_picture.show_img(image, True, self.calc_big_picture_size())
         self.img_big_picture.show()
+
+    def open_local_file(self):
+        pno = file_util.parse_product_no(self.row_data().title)
+        print(pno)
 
 
 old_hook = sys.excepthook

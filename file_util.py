@@ -27,6 +27,11 @@ REMOVE_STRS = ["[Thz.la]",
                "big-cup.tv-",
                "1203-javbo.net_",
                "youiv.net-",
+               '[fhd-60fps]',
+               '[Fhd60fps]',
+               '[FHD60fps]',
+               '[Fhd]',
+               '[FHD]',
               ]
 REMOVE_STRS_3PLENET = ['{:03d}_'.format(x) + '3xplanet_' for x in range(1, 100)]
 REMOVE_STRS.extend(REMOVE_STRS_3PLENET)
@@ -37,8 +42,8 @@ TIME_FORMAT = '%Y%m%d-%H%M%S'
 def remove_unused(src_name):
     new_name = src_name
     for rs in REMOVE_STRS:
-        if src_name.find(rs) >= 0:
-            new_name = src_name.replace(rs, "")
+        if new_name.find(rs) >= 0:
+            new_name = new_name.replace(rs, "")
     return new_name
 
 
@@ -103,6 +108,16 @@ def backup_file_name(log_name, old_path, new_path):
         f.write("{} <- {}\n".format(new_path, old_path))
 
 
+def parse_product_no(name):
+    new_name = name
+    if not ('1pon' in name and 'carib' in name):
+        new_name = remove_date_prefix(new_name)
+    new_name = remove_unused(new_name)
+    new_name = make_valid_product_name(new_name)
+
+    return new_name
+
+
 def rename_files(path):
     log_name = create_log_name(path)
 
@@ -112,12 +127,13 @@ def rename_files(path):
                 continue
 
             name, ext = os.path.splitext(file_name)
-            new_name = name
-
-            if not ('1pon' in name and 'carib' in name):
-                new_name = remove_date_prefix(new_name)
-            new_name = remove_unused(new_name)
-            new_name = make_valid_product_name(new_name)
+            # new_name = name
+            #
+            # if not ('1pon' in name and 'carib' in name):
+            #     new_name = remove_date_prefix(new_name)
+            # new_name = remove_unused(new_name)
+            # new_name = make_valid_product_name(new_name)
+            new_name = parse_product_no(name)
             new_name += ext
 
             if new_name == file_name:

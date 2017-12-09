@@ -115,6 +115,8 @@ class MainWindow(TabledUtilWindow):
             ui_util.focus_to_text(self.txt_search)
         elif key == Qt.Key_D and mod == Qt.ControlModifier:
             self.open_curr_row_db_search()
+        elif key == Qt.Key_Q and mod == Qt.ControlModifier:
+            self.open_curr_row_web_search()
         elif key == Qt.Key_F and mod == Qt.ControlModifier:
             # self.open_curr_row_file_search()
             self.show_web_search_result()
@@ -290,8 +292,11 @@ class MainWindow(TabledUtilWindow):
         subprocess.Popen(command)
 
     def open_curr_row_file_search(self):
-        '''not completed'''
         command = 'pythonw c:/__devroot/utils/gui_file_search.py "file" "{}"'.format(self.get_path_on_curr_row())
+        subprocess.Popen(command)
+
+    def open_curr_row_web_search(self):
+        command = 'pythonw c:/__devroot/utils/gui_web_search.py "{}"'.format(self.get_pno_on_curr_row())
         subprocess.Popen(command)
 
     def del_curr_row_file(self, widget):

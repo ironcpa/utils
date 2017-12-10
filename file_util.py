@@ -194,17 +194,21 @@ def get_cmd_path_arg(arg):
 
 
 if __name__ == '__main__':
-    file_name = "pppd-605FHD.mp4"
-    name, ext = os.path.splitext(file_name)
-    new_name = name
-    # if not ('1pon' in file_name and 'carib' in file_name):
-    #     new_name = remove_date_prefix(new_name)
-    # new_name = remove_unused(new_name)
-    new_name = make_valid_product_name(new_name) + ext
-    print(new_name)
-
-    # test_dir = './test_area'
-    # # test_dir = 'c:/__devroot/util/test_area'
-    # copy_sample_to_test_area(test_dir)
+    # file_name = "pppd-605FHD.mp4"
+    # name, ext = os.path.splitext(file_name)
+    # new_name = name
+    # # if not ('1pon' in file_name and 'carib' in file_name):
+    # #     new_name = remove_date_prefix(new_name)
+    # # new_name = remove_unused(new_name)
+    # new_name = make_valid_product_name(new_name) + ext
+    # print(new_name)
     #
-    # rename_files(test_dir)
+    # # test_dir = './test_area'
+    # # # test_dir = 'c:/__devroot/util/test_area'
+    # # copy_sample_to_test_area(test_dir)
+    # #
+    # # rename_files(test_dir)
+
+    name = '[FHD]JUX-999 타니하라 노조미'
+    pno = parse_product_no(name)
+    print(pno)

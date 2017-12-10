@@ -198,8 +198,8 @@ class MainWindow(TabledUtilWindow):
         mod = event.modifiers()
         if key == Qt.Key_Return and mod == Qt.ShiftModifier:
             self.show_big_picture()
-        elif key == Qt.Key_Return and mod == Qt.ControlModifier:
-            self.open_local_file()
+        elif key == Qt.Key_D and mod == Qt.ControlModifier:
+            self.open_db_search()
         elif key == Qt.Key_Return:
             if self.is_search_enabled():
                 self.search_product()
@@ -388,9 +388,11 @@ class MainWindow(TabledUtilWindow):
         self.img_big_picture.show_img(image, True, self.calc_big_picture_size())
         self.img_big_picture.show()
 
-    def open_local_file(self):
+    def open_db_search(self):
         pno = file_util.parse_product_no(self.row_data().title)
-        print(pno)
+        fixed_pno = pno[:7] if len(pno) >= 7 else pno
+        command = 'pythonw c:/__devroot/utils/gui_db_search.py "{}"'.format(fixed_pno)
+        subprocess.Popen(command)
 
 
 old_hook = sys.excepthook

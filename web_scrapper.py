@@ -97,12 +97,13 @@ def search_detail_list(search_text, max_count, load_content=False):
     return results
 
 
-def search_main_page(page_count=1, load_content=False):
+def search_main_page(start_page, page_count, load_content=False):
     search_url = 'https://www.kukudas.com/bbs/board.php?bo_table=JAV1A&page={}'
 
     results = []
-    for page in range(1, page_count+1):
-        html = urlopen(search_url.format(page))
+    for page in range(start_page, start_page+page_count):
+        url = search_url.format(page)
+        html = urlopen(url)
         content = html.read().decode('utf-8')
 
         bs = BeautifulSoup(content, 'html.parser')
@@ -132,7 +133,7 @@ def get_content_detail(content_url):
     content = html.read().decode('utf-8')
     bs = BeautifulSoup(content, 'html.parser')
 
-    date = bs.find('div', {'class': 'wr-date en'}).get_text()
+    date = bs.find('div', {'class': 'panel-heading'}).find('span', {'class': 'hidden-xs pull-right'}).get_text().replace('\n', '')
     torrent_url = bs.find(text=re.compile('torrent')).parent.attrs['href']
     desc = bs.find('div', {'class': 'view-content'}).find_all('p')[2].get_text()
     img_url = bs.find('div', {'class': 'view-content'}).find('img').attrs['src']

@@ -34,9 +34,9 @@ class SearchWorker(QObject):
         results = wsc.search_detail_list(keyword, max_count, not self.lazy_content_load)
         self.finished.emit(results)
 
-    def on_search_today_req(self, page_count):
+    def on_search_today_req(self, start_page, page_count):
         print('on_search_today_req')
-        results = wsc.search_main_page(page_count, not self.lazy_content_load)
+        results = wsc.search_main_page(start_page, page_count, not self.lazy_content_load)
         self.finished.emit(results)
 
     def on_stop_req(self):
@@ -85,7 +85,7 @@ class MyEventFilter(QObject):
 
 class MainWindow(TabledUtilWindow):
     search_keyword_req = pyqtSignal(str, int)
-    search_today_req = pyqtSignal(int)
+    search_today_req = pyqtSignal(int, int)
     search_stop_req = pyqtSignal()
     content_load_req = pyqtSignal(list, list)
 
@@ -93,6 +93,7 @@ class MainWindow(TabledUtilWindow):
         super().__init__('web search')
 
         self.start_t = None
+        self.cur_page = 0
 
         self.is_lazy_content_load = True
 
@@ -116,6 +117,7 @@ class MainWindow(TabledUtilWindow):
 
         self.btn_search.clicked.connect(self.search_product)
         self.btn_get_today.clicked.connect(self.search_today)
+        self.btn_1_more_page.clicked.connect(self.search_next_page)
         self.btn_download_torrent.clicked.connect(self.download_checked_torrents)
         self.btn_stop_search.clicked.connect(self.stop_search)
 
@@ -141,6 +143,7 @@ class MainWindow(TabledUtilWindow):
         self.txt_max_count = LabeledLineEdit('max', '100', 80, 100)
         self.btn_search = QPushButton('search')
         self.btn_get_today = QPushButton('get today')
+        self.btn_1_more_page = QPushButton('1 more page')
         self.btn_download_torrent = QPushButton('download torrent')
         self.btn_stop_search = QPushButton('stop')
         self.tableview = SearchView()
@@ -162,6 +165,7 @@ class MainWindow(TabledUtilWindow):
 
         control_sub2 = QHBoxLayout()
         control_sub2.addWidget(self.btn_get_today)
+        control_sub2.addWidget(self.btn_1_more_page)
         control_sub2.addWidget(self.btn_download_torrent)
         control_sub2.addWidget(self.btn_stop_search)
         control_group.addLayout(control_sub2)
@@ -246,10 +250,12 @@ class MainWindow(TabledUtilWindow):
     def enable_search(self):
         self.btn_search.setEnabled(True)
         self.btn_get_today.setEnabled(True)
+        self.btn_1_more_page.setEnabled(True)
 
     def disable_search(self):
         self.btn_search.setEnabled(False)
         self.btn_get_today.setEnabled(False)
+        self.btn_1_more_page.setEnabled(False)
 
     def is_search_enabled(self):
         return self.btn_search.isEnabled() and self.btn_get_today.isEnabled()
@@ -298,7 +304,14 @@ class MainWindow(TabledUtilWindow):
         print('search_today')
         self.set_start_time()
         self.disable_search()
-        self.search_today_req.emit(3)
+        self.cur_page = 3
+        self.search_today_req.emit(1, 3)
+
+    def search_next_page(self):
+        self.set_start_time()
+        self.disable_search()
+        self.cur_page += 1
+        self.search_today_req.emit(self.cur_page, 1)
 
     def on_search_finished(self, results):
         print('on_search_finishied')

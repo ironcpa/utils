@@ -237,7 +237,7 @@ class SearchViewDelegate(QStyledItemDelegate):
         if index.row() == self.parent().currentIndex().row():
             painter.fillRect(option.rect, self.color_curr_highlight)
         elif self.check_index and self.parent().indexWidget(index.model().index(index.row(), self.check_index)).isChecked():
-            painter.fillRect(option.rect, Qt.red)
+            painter.fillRect(option.rect, Qt.cyan)
 
         super(SearchViewDelegate, self).paint(painter, option, index)
 
@@ -261,6 +261,17 @@ class SearchView(QTableView):
         for c in range(self.model().columnCount()):
             self.update(self.model().index(current.row(), c))
         super().currentChanged(current, previous)
+
+    def toggle_checked(self, row=None):
+        chk_col = self.itemDelegate().check_index
+        cur_chk_index = None
+        if row:
+            cur_chk_index = self.model().index(row, chk_col)
+        else:
+            cur_chk_index = self.model().index(self.currentIndex().row(), chk_col)
+        chk = self.indexWidget(cur_chk_index)
+        if chk:
+            chk.setChecked(not chk.isChecked())
 
 
 class NameEditor(QWidget):

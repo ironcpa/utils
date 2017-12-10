@@ -127,7 +127,7 @@ class MainWindow(TabledUtilWindow):
         elif key == Qt.Key_Left and mod == Qt.ControlModifier:
             self.set_prev_search_text()
         elif key == Qt.Key_C and mod == Qt.ControlModifier:
-            self.turn_on_curr_checkbox()
+            self.tbl_result.toggle_checked()
             ui_util.copy_to_clipboard(self.get_pno_on_curr_row())
         elif key == Qt.Key_N and mod == Qt.ControlModifier:
             self.copy_curr_row_file_name_from_checked_row(self.get_widget_at(self.tbl_result.currentIndex().row(), column_def['chk']))
@@ -353,10 +353,6 @@ class MainWindow(TabledUtilWindow):
             if checkbox != widget and checkbox.isChecked():
                 checkbox.setChecked(False)
         self.model.layoutChanged.emit()
-
-    def turn_on_curr_checkbox(self):
-        r = self.tbl_result.currentIndex().row()
-        self.tbl_result.indexWidget(self.model.index(r, column_def['chk'])).setChecked(True)
 
     def set_prev_search_text(self):
         search_tuple = self.search_stack.pop()

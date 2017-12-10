@@ -163,3 +163,21 @@ def download_torrents(content_download_url_pairs):
         urllib.request.urlretrieve(p[1], 'test_download_phantomjs')
     driver.close()
     print('downloaded')
+
+
+def download_torrents_chromedriver(content_download_url_pairs):
+    # driver = webdriver.Chrome('C:\\__devenv\\chromedriver\\chromedriver.exe')
+    options = webdriver.ChromeOptions()
+    options.add_experimental_option('prefs', {
+        'download.prompt_for_download': False,
+        'download.directory_upgrade': True,
+        'safebrowsing.enabled': True
+    })
+    driver = webdriver.Chrome(executable_path='C:\\__devenv\\chromedriver\\chromedriver.exe', chrome_options=options)
+    for p in content_download_url_pairs:
+        driver.get(p[0])
+        time.sleep(1)
+        # urllib.request.urlretrieve(p[1], 'test_download_chrome.torrent')
+        driver.get(p[1])
+    # driver.close()
+    print('downloaded')

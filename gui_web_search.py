@@ -146,7 +146,7 @@ class MainWindow(TabledUtilWindow):
         self.btn_1_more_page = QPushButton('1 more page')
         self.btn_download_torrent = QPushButton('download torrent')
         self.btn_stop_search = QPushButton('stop')
-        self.tableview = SearchView()
+        self.tableview = SearchView(column_def['chk'])
         self.set_default_table(self.tableview)
 
         self.setCentralWidget(QWidget())
@@ -212,7 +212,7 @@ class MainWindow(TabledUtilWindow):
             else:
                 ui_util.focus_to_text(self.txt_search_text)
         elif key == Qt.Key_C and mod == Qt.ControlModifier:
-            self.toggle_checked()
+            self.tableview.toggle_checked()
         else:
             super().keyPressEvent(event)
 
@@ -231,12 +231,6 @@ class MainWindow(TabledUtilWindow):
 
     def detail_format(self, row_data):
         return row_data.date + '\n' + row_data.title + '\n' + row_data.desc
-
-    def toggle_checked(self, row=None):
-        cur_chk_index = self.model.index(self.tableview.currentIndex().row(), column_def['chk'])
-        chk = self.tableview.indexWidget(cur_chk_index)
-        if chk:
-            chk.setChecked(not chk.isChecked())
 
     def row_data(self, row=None):
         if not row:
@@ -363,6 +357,7 @@ class MainWindow(TabledUtilWindow):
         os.system(command)
 
         # wsc.download_torrents([(content_url, url)])
+        # wsc.download_torrents_chromedriver([(content_url, url)])
 
     def download_checked_torrents(self):
         for r in range(self.model.rowCount()):

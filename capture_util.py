@@ -35,7 +35,7 @@ async def create_clip_from_capture(async_loop, out_dir, src_path, start_time, en
     src_dir, src_name, src_ext = cu.split_path(src_path)
 
     start_pad = START_TIME_PAD if int(start_time) > 0 else 0
-    start_time = '{:06d}'.format(int(start_time) - start_pad)
+    start_time = cu.second_to_time_from(cu.to_second(cu.to_time_form(start_time)) - start_pad).replace(':', '')
     out_file = '{}clip_{}_{}_{}{}'.format(prefix, src_name, start_time, end_time, src_ext)
     out_clip_path = os.path.join(out_dir, out_file)
 

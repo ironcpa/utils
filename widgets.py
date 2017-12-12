@@ -3,6 +3,7 @@ import sys
 import urllib
 import urllib.request
 from abc import ABC, abstractmethod
+import time
 
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
@@ -14,6 +15,7 @@ import ui_util
 class UtilWindow(QMainWindow):
     def __init__(self, app_name, parent = None):
         super().__init__(parent)
+        self.start_t = None
 
         self.app_name = app_name
         self.setting_ui = None
@@ -59,6 +61,13 @@ class UtilWindow(QMainWindow):
         ui_util.save_settings(self, self.app_name, 'pos', self.pos())
         ui_util.save_settings(self, self.app_name, 'size', self.size())
         ui_util.save_settings(self, self.app_name, 'font size', self.setting_ui.font_size())
+
+    def set_start_time(self):
+        self.start_t = time.time()
+
+    def show_elapsed_time(self):
+        if self.start_t:
+            print('elapse={}'.format(time.time() -self.start_t))
 
 
 class TabledUtilWindow(UtilWindow):
@@ -234,12 +243,19 @@ class SearchViewDelegate(QStyledItemDelegate):
         self.check_index = check_index
 
     def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QModelIndex):
+        painter.save()
+
         if index.row() == self.parent().currentIndex().row():
             painter.fillRect(option.rect, self.color_curr_highlight)
-        elif self.check_index and self.parent().indexWidget(index.model().index(index.row(), self.check_index)).isChecked():
-            painter.fillRect(option.rect, Qt.cyan)
+        elif self.check_index is not None and self.parent().indexWidget(index.model().index(index.row(), self.check_index)).isChecked():
+            painter.fillRect(option.rect, Qt.darkCyan)
+            painter.setPen(QtGui.QPen(Qt.white))
 
-        super(SearchViewDelegate, self).paint(painter, option, index)
+        value = index.data(Qt.DisplayRole)
+        painter.drawText(option.rect, Qt.AlignLeft | Qt.AlignVCenter, value)
+        # super(SearchViewDelegate, self).paint(painter, option, index)
+
+        painter.restore()
 
 
 class SearchView(QTableView):

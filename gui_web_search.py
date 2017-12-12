@@ -275,7 +275,7 @@ class MainWindow(TabledUtilWindow):
             desc_item = QtGui.QStandardItem(self.detail_format(r))
             desc_item.setData(r) # save content url for later use
             self.model.setItem(row, column_def['desc'], desc_item)
-            ui_util.add_checkbox_on_tableview(self.tableview, row, column_def['chk'], '', 60, None, True)
+            ui_util.add_checkbox_on_tableview(self.tableview, row, column_def['chk'], '', 60, None)
             slot = functools.partial(self.download_torrent, r.torrent_url, r.content_url)
             ui_util.add_button_on_tableview(self.tableview, row, column_def['torrent'], 'download', None, 0, slot)
             if r.img_url is not '':
@@ -316,11 +316,11 @@ class MainWindow(TabledUtilWindow):
             self.load_content_data_background()
         self.show_elapsed_time()
 
-    def set_start_time(self):
-        self.start_t = time.time()
-
-    def show_elapsed_time(self):
-        print('elapse={}'.format(time.time() -self.start_t))
+    # def set_start_time(self):
+    #     self.start_t = time.time()
+    #
+    # def show_elapsed_time(self):
+    #     print('elapse={}'.format(time.time() -self.start_t))
 
     def load_content_data_background(self):
         rows, content_urls = [], []

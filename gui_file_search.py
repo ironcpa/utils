@@ -1,8 +1,10 @@
 # -*-coding:utf-8-*-
 
+import time
 import common_util as cu
 import ui_util
 import db_util
+import find_file as ff
 from find_file import *
 from db_util import DB
 from widgets import *
@@ -185,6 +187,7 @@ class MainWindow(TabledUtilWindow):
         self.start_search(self.get_search_re_text(), src_dir)
 
     def on_search_all_drives_clicked(self):
+        self.set_start_time()
         self.start_search(self.get_search_re_text(), '')
 
     def enable_req_buttons(self, t):
@@ -194,6 +197,7 @@ class MainWindow(TabledUtilWindow):
     def on_search_finished(self):
         self.update_result(self.search_worker.search_results)
         self.enable_req_buttons(True)
+        self.show_elapsed_time()
         QMessageBox.information(self, 'info', 'complete results={}'.format(len(self.search_worker.search_results)))
 
     def on_collect_finished(self):
@@ -324,31 +328,31 @@ class SearchWorker(QObject):
         rex = re.compile(file_name, re.IGNORECASE)
         # print(root_folder)
         for root, dirs, files in os.walk(root_folder):
+            if not self.is_working:
+                return founds
             # for thread stop
-            for extension in ('*.avi', '*.wmv', '*.mp4', '*.mpg', '*.asf', '*.mov', '*.mkv', '*.iso'):
-                # for f in files:
-                for f in fnmatch.filter(files, extension):
-                    if not self.is_working:
-                        return founds
-
+            for ext in ff.EXTENSIONS:
+                for f in fnmatch.filter(files, ext):
                     result = rex.search(f)
                     if result:
                         full_path = os.path.join(root, f)
-                        # ignore path patterns
-                        if not (ignore_path is None) and (ignore_path in full_path):
-                            print('ignore path ' + ignore_path)
-                            continue
-                        if r"C:\Users\hjchoi\Documents" in full_path:  # downloading torrent
-                            print('ignore ' + full_path)
-                            continue
-                        if r"C:\Windows\Sys" in full_path:  # why some files found in system folders?
-                            print('ignore system ' + full_path)
-                            continue
-                        if full_path.endswith(SYMLINK_SUFFIX):
-                            print('ignore symlink file ' + full_path)
+                        if ff.is_ignore_dir(full_path, ignore_path):
                             continue
                         founds.append(FileInfo(full_path.replace('/', '\\'), file_util.get_file_size(full_path), file_util.get_ctime(full_path)))  # for windows cmd call
                         # print(full_path + ", size=" + format(os.path.getsize(full_path) / 1000, ','))
+
+        # # use list comprehension
+        # for f, full_path in [(fname, os.path.join(path, fname)) for path, _, fnames in os.walk(root_folder)
+        #                                                             if not ff.is_ignore_dir(path, ignore_path)
+        #                                                         for fname in fnames
+        #                                                         for ext in ff.EXTENSIONS if ext[1:] in fname]:
+        #     result = rex.search(f)
+        #     if result:
+        #         founds.append(FileInfo(full_path.replace('/', '\\'), file_util.get_file_size(full_path),
+        #                                file_util.get_ctime(full_path)))  # for windows cmd call
+        #         # print(full_path + ", size=" + format(os.path.getsize(full_path) / 1000, ','))
+        #     if not self.is_working:
+        #         return founds
         return founds
 
     def find_file_in_all_drives(self, file_name, ignore_path=None):

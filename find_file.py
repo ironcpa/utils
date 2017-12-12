@@ -38,30 +38,51 @@ def create_dir_if_not_exists(path):
         print('create new dir : {}'.format(path))
 
 
+EXTENSIONS = ('*.avi', '*.wmv', '*.mp4', '*.mpg', '*.asf', '*.mov', '*.mkv', '*.iso')
+
+
+def is_ignore_dir(path, ignore_path):
+    if not (ignore_path is None) and (ignore_path in path):
+        print('ignore path ' + ignore_path)
+        return True
+    if r"C:\Users\hjchoi\Documents" in path:  # downloading torrent
+        print('ignore ' + path)
+        return True
+    if r"C:\Windows\Sys" in path:  # why some files found in system folders?
+        print('ignore system ' + path)
+        return True
+    if path.endswith(SYMLINK_SUFFIX):
+        print('ignore symlink file ' + path)
+        return True
+    return False
+
+
 def find_file(root_folder, file_name, ignore_path = None):
     founds = []
     rex = re.compile(file_name, re.IGNORECASE)
     print( root_folder)
     for root, dirs, files in os.walk(root_folder):
-        for extension in ('*.avi', '*.wmv', '*.mp4', '*.mpg', '*.asf', '*.mov', '*.mkv', '*.iso'):
+        for ext in EXTENSIONS:
             #for f in files:
-            for f in fnmatch.filter(files, extension):
+            for f in fnmatch.filter(files, ext):
                 result = rex.search(f)
                 if result:
                     full_path = os.path.join(root, f)
                     #ignore path patterns
-                    if not (ignore_path is None) and (ignore_path in full_path):
-                        print('ignore path ' + ignore_path)
+                    if is_ignore_dir(full_path, ignore_path):
                         continue
-                    if r"C:\Users\hjchoi\Documents" in full_path:   # downloading torrent
-                        print('ignore ' + full_path)
-                        continue
-                    if r"C:\Windows\Sys" in full_path:      # why some files found in system folders? 
-                        print('ignore system ' + full_path)
-                        continue
-                    if full_path.endswith(SYMLINK_SUFFIX):
-                        print('ignore symlink file ' + full_path)
-                        continue
+                    # if not (ignore_path is None) and (ignore_path in full_path):
+                    #     print('ignore path ' + ignore_path)
+                    #     continue
+                    # if r"C:\Users\hjchoi\Documents" in full_path:   # downloading torrent
+                    #     print('ignore ' + full_path)
+                    #     continue
+                    # if r"C:\Windows\Sys" in full_path:      # why some files found in system folders?
+                    #     print('ignore system ' + full_path)
+                    #     continue
+                    # if full_path.endswith(SYMLINK_SUFFIX):
+                    #     print('ignore symlink file ' + full_path)
+                    #     continue
                     founds.append(FileInfo(full_path.replace('/', '\\'), file_util.get_file_size(full_path),
                                            file_util.get_ctime(full_path)))  # for windows cmd call
                     # founds.append(full_path)
@@ -136,22 +157,33 @@ def create_symlinks(search_text, dest_dir):
 
 
 if __name__ == '__main__':
-    search_text = 'vicd(.*)362'
-    # search_text = '(.*)75'
-    dest_dir = r'C:\__vid_temps\__find_1018' + '\\'
+    # search_text = 'vicd(.*)362'
+    # # search_text = '(.*)75'
+    # dest_dir = r'C:\__vid_temps\__find_1018' + '\\'
+    #
+    # # remove_dup_files_in_dest(search_text, dest_dir)
+    # # find_file_in_all_drives( search_text )
+    # # find_file('c:\\', "star(.*)752")
+    # # move_files(search_text, dest_dir)
+    # # create_symlinks(search_text, dest_dir)
+    #
+    # # symlink(r'xxxx', r'yyyy')
+    # # xcopy('test_file.wmv', 'test_filder')
+    # # create_dir_if_not_exists(dest_dir)
+    #
+    # # results = find_file('c:\\__devroot\\utils\\sample_data\\', 'aaa')
+    # results = find_file('c:\\__devroot\\utils\\sample_data\\', '*')
+    # print(results)
+    #
+    # # win32ui.MessageBox("Script End", "Python", 4096)
 
-    # remove_dup_files_in_dest(search_text, dest_dir)
-    # find_file_in_all_drives( search_text )
-    # find_file('c:\\', "star(.*)752")
-    # move_files(search_text, dest_dir)
-    # create_symlinks(search_text, dest_dir)
-
-    # symlink(r'xxxx', r'yyyy')
-    # xcopy('test_file.wmv', 'test_filder')
-    # create_dir_if_not_exists(dest_dir)
-
-    # results = find_file('c:\\__devroot\\utils\\sample_data\\', 'aaa')
-    results = find_file('c:\\__devroot\\utils\\sample_data\\', '*')
-    print(results)
-
-    # win32ui.MessageBox("Script End", "Python", 4096)
+    root_dir = 'C:\\__devroot\\utils'
+    exclude_dir = ['.git', '.idea']
+    visits = 0
+    for root, dirs, files in os.walk(root_dir):
+        visits += 1
+        # if '.git' in root:
+        #     continue
+        dirs[:] = [d for d in dirs if not any(exc in d for exc in exclude_dir)]
+        print(str(visits), root)
+        # print(str(visits), root, dirs, files)

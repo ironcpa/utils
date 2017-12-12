@@ -22,13 +22,14 @@ class WebSearchResult:
         self.torrent_url = torrent_url
 
 
-def search_result(max_count, text):
-    search_url = 'https://www.kukudas.com/bbs/search.php?srows={}&sfl=wr_subject&stx={}&sop=and&gr_id=jav&onetable=JAV1A'
+def search_result(max_count, page_no, text):
+    search_url_form = 'https://www.kukudas.com/bbs/search.php?srows={}&sfl=wr_subject&stx={}&sop=and&gr_id=jav&onetable=JAV1A&page={}'
 
     search_string = '+'.join(text.split())
-    html = urlopen(search_url.format(max_count, search_string))
+    search_url = search_url_form.format(max_count, search_string, page_no)
+    print(search_url)
+    html = urlopen(search_url)
     content = html.read().decode('utf-8')
-    # print(content)
 
     return content
 
@@ -37,7 +38,7 @@ def search_titles(pno):
     if 'cd' in pno:
         pno = pno[:pno.index('cd')]
 
-    content = search_result(100, pno)
+    content = search_result(100, 1, pno)
 
     bs = BeautifulSoup(content, 'html.parser')
     # media_tags = bs.find_all('div', {'class': "media-heading"})
@@ -61,7 +62,7 @@ def search_titles(pno):
         return ['no result']
 
 
-def search_detail_list(search_text, max_count, load_content=False):
+def search_detail_list(search_text, max_count, page_no, load_content=False):
     # return [
     #     # ('title0', 'SDMU-738 카토 모모카(加藤ももか, Momoka Kato)\nSOD의 새로운 마사지 게임 개발에 실험체가 된 것은 카토 모모카(加藤ももか) (21)', '', None, None),
     #     # ('[FHD]JUX-999 타니하라 노조미(谷原希美, Nozomi Tanihara)', '이웃 사람 조교 ~유부녀가 교화되어 암캐 성 봉사~', 'http://pythonscraping.com/img/gifts/img1.jpg', None, None),
@@ -72,7 +73,7 @@ def search_detail_list(search_text, max_count, load_content=False):
     #     ('title4', 'desc4', 'http://pythonscraping.com/img/gifts/img1.jpg', None, None),
     # ]
 
-    content = search_result(max_count, search_text)
+    content = search_result(max_count, page_no, search_text)
     bs = BeautifulSoup(content, 'html.parser')
 
     media_root = bs.find('div', {'class': 'search-media'})

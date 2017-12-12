@@ -29,9 +29,9 @@ class SearchWorker(QObject):
         super().__init__()
         self.lazy_content_load = lazy_content_load
 
-    def on_search_keyword_req(self, keyword, max_count):
+    def on_search_keyword_req(self, keyword, max_count, page_no):
         print('on_search_req')
-        results = wsc.search_detail_list(keyword, max_count, not self.lazy_content_load)
+        results = wsc.search_detail_list(keyword, max_count, page_no, not self.lazy_content_load)
         self.finished.emit(results)
 
     def on_search_today_req(self, start_page, page_count):
@@ -56,6 +56,12 @@ class ContentLoadWorker(QObject):
         print('on_load_req, {}, {}'.format(len(rows), len(urls)))
         self.loop.run_until_complete(self.fetch_contents(rows, urls))
         # self.loop.close()
+
+    def on_stop_req(self):
+        print('on_stop_req : content load worker is_running={}'.format(self.loop.is_running()))
+        if self.loop.is_running():
+            self.loop.stop()
+            self.finished.emit()
 
     async def fetch_contents(self, rows, urls):
         futures = [asyncio.ensure_future(self.load(row, url)) for row, url in zip(rows, urls)]
@@ -84,16 +90,17 @@ class MyEventFilter(QObject):
 
 
 class MainWindow(TabledUtilWindow):
-    search_keyword_req = pyqtSignal(str, int)
+    cur_page = 0
+    cur_search_type = None
+
+    search_keyword_req = pyqtSignal(str, int, int)
     search_today_req = pyqtSignal(int, int)
     search_stop_req = pyqtSignal()
     content_load_req = pyqtSignal(list, list)
+    content_load_stop_req = pyqtSignal()
 
     def __init__(self, search_text):
         super().__init__('web search')
-
-        self.start_t = None
-        self.cur_page = 0
 
         self.is_lazy_content_load = True
 
@@ -114,8 +121,9 @@ class MainWindow(TabledUtilWindow):
         self.content_load_worker.finished.connect(self.arrange_table)
 
         self.content_load_req.connect(self.content_load_worker.on_load_req)
+        self.content_load_stop_req.connect(self.content_load_worker.on_stop_req)
 
-        self.btn_search.clicked.connect(self.search_product)
+        self.btn_search.clicked.connect(self.search_keyword)
         self.btn_get_today.clicked.connect(self.search_today)
         self.btn_1_more_page.clicked.connect(self.search_next_page)
         self.btn_download_torrent.clicked.connect(self.download_checked_torrents)
@@ -132,7 +140,7 @@ class MainWindow(TabledUtilWindow):
 
         if search_text and search_text != '':
             self.txt_search_text.set_text(search_text)
-            self.search_product()
+            self.search_keyword()
 
     def setup_ui(self):
         super().setup_ui()
@@ -202,7 +210,7 @@ class MainWindow(TabledUtilWindow):
             self.open_db_search()
         elif key == Qt.Key_Return:
             if self.is_search_enabled():
-                self.search_product()
+                self.search_keyword()
         elif key == Qt.Key_Tab and mod == Qt.ControlModifier:
             self.close()
         elif key == Qt.Key_Escape:
@@ -284,13 +292,15 @@ class MainWindow(TabledUtilWindow):
         self.arrange_table()
         self.arrange_table()    # need to be double arrange call here : to perfect fit row height(for long text)
 
-    def search_product(self):
+    def search_keyword(self):
         # self.update_model(wsc.search_detail_list(self.search_text()))
 
         print('search_product')
         self.set_start_time()
         self.disable_search()
-        self.search_keyword_req.emit(self.get_search_text(), self.get_max_count())
+        self.cur_page = 1
+        self.cur_search_type = 'keyword'
+        self.search_keyword_req.emit(self.get_search_text(), self.get_max_count(), self.cur_page)
 
     def search_today(self):
         # self.update_model(wsc.search_main_page(3))
@@ -299,13 +309,17 @@ class MainWindow(TabledUtilWindow):
         self.set_start_time()
         self.disable_search()
         self.cur_page = 3
+        self.cur_search_type = 'today'
         self.search_today_req.emit(1, 3)
 
     def search_next_page(self):
         self.set_start_time()
         self.disable_search()
         self.cur_page += 1
-        self.search_today_req.emit(self.cur_page, 1)
+        if self.cur_search_type == 'today':
+            self.search_today_req.emit(self.cur_page, 1)
+        elif self.cur_search_type == 'keyword':
+            self.search_keyword_req.emit(self.get_search_text(), self.get_max_count(), self.cur_page)
 
     def on_search_finished(self, results):
         print('on_search_finishied')
@@ -366,6 +380,7 @@ class MainWindow(TabledUtilWindow):
 
     def stop_search(self):
         self.search_stop_req.emit()
+        self.content_load_stop_req.emit()
         self.enable_search()
 
     def calc_big_picture_size(self):

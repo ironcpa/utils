@@ -400,7 +400,7 @@ class MainWindow(TabledUtilWindow):
 
     def open_db_search(self):
         pno = file_util.parse_product_no(self.row_data().title)
-        fixed_pno = pno[:7] if len(pno) >= 7 else pno
+        fixed_pno = pno[:8] if len(pno) >= 7 else pno
         command = 'pythonw c:/__devroot/utils/gui_db_search.py "{}"'.format(fixed_pno)
         subprocess.Popen(command)
 
@@ -409,6 +409,8 @@ old_hook = sys.excepthook
 sys.excepthook = ui_util.catch_exceptions
 
 if __name__ == '__main__':
+    ui_util.kill_same_script()
+
     app = QApplication(sys.argv)
 
     search_text = sys.argv[1] if len(sys.argv) > 1 else None

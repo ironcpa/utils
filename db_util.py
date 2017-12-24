@@ -218,7 +218,12 @@ class DB:
     def search_all(self, limit_filter_test='', limit_count='', order_text=''):
         with sqlite.connect(self.db_file) as c:
             cur = c.cursor()
-            default_limit_filter = "p_no not in ('sample', 't', 'clip') and p_no not like '$%' and rate = '' and desc not like '%삼성중앙%'"
+            default_limit_filter = "p_no not in ('sample', 't', 'clip') " \
+                                   "and p_no not like '$%' " \
+                                   "and rate = '' " \
+                                   "and desc not like '%삼성중앙%' " \
+                                   "and desc not like '%소혜%' " \
+                                   "and desc not like '%movie%' "
             limit_filter_test = 'where ' + (limit_filter_test if limit_filter_test is not '' else default_limit_filter)
             order_text = ' order by ' + (order_text if order_text is not '' else 'cdate desc')
             sql = "select id, p_no, desc, rate, disk, location, size, cdate\n" \

@@ -182,3 +182,20 @@ def download_torrents_chromedriver(content_download_url_pairs):
         driver.get(p[1])
     # driver.close()
     print('downloaded')
+
+
+if __name__ == '__main__':
+    html = urlopen('https://hentaku.net/poombun.php')
+    content = html.read().decode('utf-8')
+    bs = BeautifulSoup(content, 'html.parser')
+    print(content)
+
+    # hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+    #        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    #        'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+    #        'Accept-Encoding': 'none',
+    #        'Accept-Language': 'en-US,en;q=0.8',
+    #        'Connection': 'keep-alive'}
+    # req = urllib.request.Request('https://hentaku.net/poombun.php')
+    # req.add_header("User-Agent","Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.2.149.29 Safari/525.13")
+

@@ -96,6 +96,19 @@ def add_checkbox_on_tableview(tableview, row, col, label, width, slot=None, is_c
     tableview.setIndexWidget(tableview.model().index(row, col), checkbox)
 
 
+def show_messagebox(title, text, *buttons):
+    msgbox = QMessageBox()
+    msgbox.setWindowTitle(title)
+    msgbox.setText(text)
+    msgbox.addButton(QPushButton('OK'), QMessageBox.YesRole)
+    msgbox.addButton(QPushButton('Cancel'), QMessageBox.RejectRole)
+
+    for btn in buttons:
+        msgbox.addButton(btn, QMessageBox.NoRole)
+
+    return msgbox.exec_()
+
+
 def show_create_clip_result(parent, result):
     if result:
         succ, fail = 0, 0

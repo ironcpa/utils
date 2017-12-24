@@ -5,6 +5,7 @@ import sys
 import os
 import re
 import asyncio
+import functools
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import *
@@ -205,7 +206,10 @@ class MainWindow(TabledUtilWindow):
             for p in model_clip_paths:
                 ui_util.delete_path(self, p, True)
             ui_util.delete_path(self, self.src_path(), True)
-        QMessageBox.information(self, 'info', 'merge complete : {}'.format(merged_path))
+
+        btn_open_merged = QPushButton('Open')
+        btn_open_merged.clicked.connect(functools.partial(ui_util.open_path, merged_path))
+        result = ui_util.show_messagebox('info', 'merge complete : {}'.format(merged_path), btn_open_merged)
 
     def is_condenced_merge_condition(self):
         src_dir, src_name, src_ext = cu.split_path(self.src_path())

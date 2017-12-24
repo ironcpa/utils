@@ -78,6 +78,7 @@ class MainWindow(TabledUtilWindow):
         self.btn_encode_0_9_start_seconds = QPushButton('encode(0-9sec)')
         self.btn_merge_all_clips = QPushButton('merge all')
         self.chk_reencode = QCheckBox('re-encode?')
+        self.chk_output_to_clip_path = QCheckBox('to-clip_path')
         self.lbl_clip_total_size = TitledLabel('total size:')
         self.btn_del_all = QPushButton('del all clips')
         self.tbl_clip_result = SearchView()
@@ -114,6 +115,7 @@ class MainWindow(TabledUtilWindow):
         encode_group.addWidget(self.btn_encode_0_9_start_seconds)
         encode_group.addWidget(self.btn_merge_all_clips)
         encode_group.addWidget(self.chk_reencode)
+        encode_group.addWidget(self.chk_output_to_clip_path)
         base_layout.addLayout(encode_group)
 
         table_button_group = QGridLayout()
@@ -200,7 +202,10 @@ class MainWindow(TabledUtilWindow):
     def merge_all_clips(self):
         model_clip_paths = [self.clip_model.item(r, column_def['path']).text() for r in range(self.clip_model.rowCount())
                             if self.tbl_clip_result.indexWidget(self.clip_model.index(r, column_def['chk'])).isChecked()]
-        merged_path = ffmpeg_util.merge_all_clips(self.txt_merge_name.text(), model_clip_paths)
+        target_path = self.txt_merge_name.text()
+        if self.chk_output_to_clip_path:
+            target_path = 'c:\\__clips\\' + os.path.split(self.txt_merge_name.text())[1]
+        merged_path = ffmpeg_util.merge_all_clips(target_path, model_clip_paths)
         if self.is_condenced_merge_condition() \
                 and QMessageBox.Yes == QMessageBox.question(self, 'alert', 'delete source & clips?', QMessageBox.Yes, QMessageBox.No):
             for p in model_clip_paths:

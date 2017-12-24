@@ -1,14 +1,17 @@
 # -*-coding:utf-8-*-
 
 import time
+
 import common_util as cu
+
+from defines import ColumnDef
 import ui_util
 import db_util
 import find_file as ff
+import ffmpeg_util
 from find_file import *
 from db_util import DB
 from widgets import *
-from defines import ColumnDef
 
 column_def = ColumnDef(['checkbox', 'dir', 'open', 'del', 'capture', 'clip', 'copy name', 'size', 'path'],
                        {'checkbox': ''})

@@ -13,7 +13,7 @@ START_TIME_PAD = 1
 
 
 def create_clips_from_captures(src_path, clip_dir, captures, prefix='', is_async_call=True):
-    times = [cu.get_time(f) for f in captures]
+    times = [cu.get_capture_time(f) for f in captures]
     if is_async_call:
         '''this is not working cuz target function is async'''
         for i, t in enumerate(times):

@@ -16,7 +16,7 @@ def better_filename(self, product):
     return '{}_{}_{}'.format(p.p_no, p.desc.replace(' ', '_'), p.rate)
 
 
-def get_time(capture_path):
+def get_capture_time(capture_path):
     # need to have validation
     return capture_path[-14:][:6]
 

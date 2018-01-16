@@ -203,8 +203,8 @@ class MainWindow(TabledUtilWindow):
         model_clip_paths = [self.clip_model.item(r, column_def['path']).text() for r in range(self.clip_model.rowCount())
                             if self.tbl_clip_result.indexWidget(self.clip_model.index(r, column_def['chk'])).isChecked()]
         target_path = self.txt_merge_name.text()
-        if self.chk_output_to_clip_path:
-            target_path = 'c:\\__clips\\' + os.path.split(self.txt_merge_name.text())[1]
+        if self.chk_output_to_clip_path.isChecked():
+            target_path = 'c:\\__clips\\sample_' + os.path.split(self.txt_merge_name.text())[1]
         merged_path = ffmpeg_util.merge_all_clips(target_path, model_clip_paths)
         if self.is_condenced_merge_condition() \
                 and QMessageBox.Yes == QMessageBox.question(self, 'alert', 'delete source & clips?', QMessageBox.Yes, QMessageBox.No):

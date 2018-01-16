@@ -82,6 +82,7 @@ class MainWindow(TabledUtilWindow):
         self.txt_offset_time.set_input_mask('x00 : 00 : 00')
         self.txt_offset_time.set_text('-00 : 00 : 00')
         self.btn_recapture = QPushButton('recapture')
+        self.chk_insert_start_capture = QCheckBox('insert start capture')
         self.tbl_caps = QTableView()
         self.set_default_table(self.tbl_caps)
 
@@ -110,6 +111,7 @@ class MainWindow(TabledUtilWindow):
         offset_clip_group.setColumnStretch(2, 3)
         offset_clip_group.addWidget(self.txt_offset_time, 0, 0)
         offset_clip_group.addWidget(self.btn_recapture, 0, 1)
+        offset_clip_group.addWidget(self.chk_insert_start_capture, 0, 2)
         base_layout.addLayout(offset_clip_group)
 
         table_button_group = QGridLayout()
@@ -195,8 +197,23 @@ class MainWindow(TabledUtilWindow):
 
         capture_util.create_clips_from_captures(self.src_path(), self.clip_dir(), captures)
 
+    def add_start_capture(self, capture_pairs):
+        if len(capture_pairs) == 0:
+            return
+
+        first_path = capture_pairs[0]
+        'mdtm294.mp4_001449.717.jpg'
+        if co.get_capture_time(first_path) == '000000':
+            return
+
+        fname = os.path.splitext(first_path)[0][0:-11]
+        capture_pairs.insert(0, fname + '_000000.000.jpg')
+        capture_pairs.insert(1, fname + '_000001.000.jpg')
+
     def make_clips_from_model(self, out_prefix=''):
         captures = [self.model.item(r, column_def['file']).data() for r in range(self.model.rowCount())]
+        if self.chk_insert_start_capture.isChecked():
+            self.add_start_capture(captures)
         result = capture_util.create_clips_from_captures(self.src_path(), self.clip_dir(), captures, out_prefix, False)
         ui_util.show_create_clip_result(self, result)
 
@@ -222,7 +239,7 @@ class MainWindow(TabledUtilWindow):
     def add_cap_result(self, cap_path):
         row = self.model.rowCount()
 
-        time = co.to_time_form(co.get_time(cap_path))
+        time = co.to_time_form(co.get_capture_time(cap_path))
         time_item = QtGui.QStandardItem(time)
         font = time_item.font()
         # font.setPointSize(20)

@@ -6,6 +6,7 @@ import subprocess
 
 import common_util as co
 import file_util
+import capture_util
 import ui_util
 
 
@@ -25,9 +26,9 @@ def create_clip_command(src_path, start_time, end_time, out_clip_path, is_reenco
     end_time_form = co.to_time_form(end_time)
     command = ''
     if is_reencode:
-        command = 'ffmpeg -i "{}" -ss {} -to {} {} -y'.format(src_path, start_time_form, end_time_form, out_clip_path)
+        command = 'ffmpeg -i "{}" -ss {} -to {} "{}" -y'.format(src_path, start_time_form, end_time_form, out_clip_path)
     else:
-        command = 'ffmpeg -i "{}" -ss {} -to {} -c copy {} -y'.format(src_path, start_time_form, end_time_form,
+        command = 'ffmpeg -i "{}" -ss {} -to {} -c copy "{}" -y'.format(src_path, start_time_form, end_time_form,
                                                                       out_clip_path)
     print(command)
     return command
@@ -61,6 +62,22 @@ def merge_file_path(src_path):
     return merged_file_name
 
 
+def add_start_paths(clip_pairs):
+    if len(clip_pairs) == 0:
+        return
+
+    first_path = clip_pairs[0]
+    'mdtm294.mp4_001449.717.jpg'
+    if co.get_capture_time(first_path) == '000000':
+        return
+
+    fname = os.path.splitext(first_path)[0][0:-11]
+    clip_pairs.insert(0, fname + '_000000.000.jpg')
+    clip_pairs.insert(1, fname + '_000001.000.jpg')
+
+    # todo : need to create tmp clip for 0~1 sec
+    # capture_util.create_clips_from_captures(self.src_path(), self.clip_dir(), captures, out_prefix, False)
+
 def merge_all_clips(merged_file_path, clip_paths, is_async = False):
     if len(clip_paths) < 1:
         return
@@ -71,6 +88,7 @@ def merge_all_clips(merged_file_path, clip_paths, is_async = False):
         return merged_file_path
 
     tmp_list_file_name = 'tmp_list.txt'
+    # add_start_paths(clip_paths)
     with open(tmp_list_file_name, 'w') as tmp_list_file:
         for p in clip_paths:
             tmp_list_file.write("file '{}'\n".format(p))

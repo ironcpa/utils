@@ -23,10 +23,20 @@ class WebSearchResult:
 
 
 def search_result(max_count, page_no, text):
-    search_url_form = 'https://www.kukudas.com/bbs/search.php?srows={}&sfl=wr_subject&stx={}&sop=and&gr_id=jav&onetable=JAV1A&page={}'
-
     search_string = '+'.join(text.split())
-    search_url = search_url_form.format(max_count, search_string, page_no)
+
+    # search_url_form = 'https://www.kukudas.com/bbs/search.php?srows={}&sfl=wr_subject&stx={}&sop=and&gr_id=jav&onetable=JAV1A&page={}'
+    # search_url = search_url_form.format(max_count, search_string, page_no)
+
+    params = {'srows': max_count,
+              'sfl': 'wr_subject',
+              'stx': search_string,
+              'sop': 'and',
+              'gr_id': 'jav',
+              'onetable': 'JAV1A',
+              'page': page_no}
+    search_url = 'https://www.kukudas.com/bbs/search.php?' + urllib.parse.urlencode(params)
+
     print(search_url)
     html = urlopen(search_url)
     content = html.read().decode('utf-8')

@@ -8,18 +8,31 @@ from urllib.request import urlopen
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import time
+import asyncio
 
 from PyQt5 import QtGui
 
+REQ_HEADER = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36',
+          'referer': 'http://javtorrent.re/'}
+
+BASE_EVENT_LOOP = asyncio.get_event_loop()
+
 
 class WebSearchResult:
-    def __init__(self, date, title, desc, content_url, img_url, torrent_url):
+    def __init__(self, product_no, date, title, desc, content_url, img_url, torrent_url):
+        self.product_no = product_no
         self.date = date
         self.title = title
         self.desc = desc
         self.content_url = content_url
         self.img_url = img_url
         self.torrent_url = torrent_url
+
+
+class FetchResult:
+    def __init__(self, type):
+        self.type = type
+        self.data = []
 
 
 def search_result(max_count, page_no, text):
@@ -134,9 +147,59 @@ def search_main_page(start_page, page_count, load_content=False):
                 date, torrent_url, desc, _ = get_content_detail(content_url)
 
             # results.append((title, desc, img_url, torrent_url, content_url))
-            results.append(WebSearchResult(date, title, desc, content_url, img_url, torrent_url))
+            results.append(WebSearchResult('', date, title, desc, content_url, img_url, torrent_url))
 
     return results
+
+
+def search_javtorrent(start_page, page_count, load_content=False):
+    base_url = 'http://javtorrent.re'
+    search_url = base_url + '/page/{}/'
+
+    results = []
+    for page in range(start_page, start_page+page_count):
+        url = search_url.format(page)
+        html = urlopen(url)
+        content = html.read().decode('utf-8')
+
+        bs = BeautifulSoup(content, 'html.parser')
+
+        list_tags = bs.find('div', {'class': 'base'}).find_all('li')
+        print(len(list_tags))
+        results = []
+        for l in list_tags:
+            title_tag = l.a.find('span', {'class': 'base-t'})
+
+            product_no = title_tag.text  # []로 묶인 문자열 추출
+            title = product_no + ' : title'
+            desc = title_tag.text
+            small_img = 'http:' + l.a.img['src']
+            detail_url = base_url + l.a.attrs['href']   # for big image
+            torrent_url = 'https://sukebei.nyaa.si/?f=0&c=0_0&q={}'.format(product_no)
+            big_img = ''  # from javtorrent detail page
+            date = l.a.find('span').text
+
+            results.append(WebSearchResult(product_no, date, title, desc, detail_url, small_img, torrent_url))
+
+    print('debug: results size:', len(results))
+    return results
+
+
+def get_javtorent_big_image(url):
+    '''get big image url from detail page'''
+    print('debug: get_javtorrent_big_image:', url)
+    html = urlopen(urllib.request.Request(url, headers=REQ_HEADER)).read().decode('utf-8')
+    bs = BeautifulSoup(html, 'html.parser')
+
+    date = ''
+    torrent_url = ''
+    desc = ''
+    img_url = bs.find('div', '{id: content}').img['src']
+    return 'test-date', 'torrent url', 'test-desc', img_url
+
+
+def get_sukebei_torrent_link(url):
+    return 'test-date', 'torrent url', 'test-desc', 'http://jtl.re/x/18/xvsr380.jpg'
 
 
 def get_content_detail(content_url):
@@ -153,13 +216,28 @@ def get_content_detail(content_url):
     return date, torrent_url, desc, img_url
 
 
-def get_content_with_image(content_url):
-    date, torrent_url, desc, img_url = get_content_detail(content_url)
-    data = urllib.request.urlopen(img_url).read()
+def get_detail_page_data(url):
+    html = urlopen(urllib.request.Request(url, headers=REQ_HEADER)).read().decode('utf-8')
+    bs = BeautifulSoup(html, 'html.parser')
+
+    img_url = bs.find('div', {'id': 'content'}).img['src']
+
+    #sample_img_url = 'http://jtl.re/x/18/tpro008_s.jpg'
+    return '', '', '', img_url
+
+    '''
+    print('get_content_with_image:', content_url)
+    #date, torrent_url, desc, img_url = get_content_detail(content_url)
+    date, torrent_url, desc, img_url = get_javtorent_big_image(content_url)
+    print('get_content_with_image:', date, torrent_url, desc, img_url)
+
+    req = urllib.request.Request(img_url, headers=REQ_HEADER)
+    data = urllib.request.urlopen(req).read()
     image = QtGui.QImage()
     image.loadFromData(data)
 
     return date, torrent_url, desc, image
+    '''
 
 
 def download_torrents(content_download_url_pairs):

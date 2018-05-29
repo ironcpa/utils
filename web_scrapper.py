@@ -2,6 +2,8 @@
 
 import re
 import collections
+import os
+import subprocess
 
 import urllib
 from urllib.request import urlopen
@@ -9,13 +11,14 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 import time
 import asyncio
+import aiohttp
 
 from PyQt5 import QtGui
 
+SUKEBEI_BASE_URL = 'https://sukebei.nyaa.si'
+
 REQ_HEADER = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36',
           'referer': 'http://javtorrent.re/'}
-
-BASE_EVENT_LOOP = asyncio.get_event_loop()
 
 
 class WebSearchResult:
@@ -26,6 +29,7 @@ class WebSearchResult:
         self.desc = desc
         self.content_url = content_url
         self.img_url = img_url
+        self.big_img_url = ''
         self.torrent_url = torrent_url
 
 
@@ -152,7 +156,7 @@ def search_main_page(start_page, page_count, load_content=False):
     return results
 
 
-def search_javtorrent(start_page, page_count, load_content=False):
+def search_javtorrent(start_page, page_count):
     base_url = 'http://javtorrent.re'
     search_url = base_url + '/page/{}/'
 
@@ -170,36 +174,39 @@ def search_javtorrent(start_page, page_count, load_content=False):
         for l in list_tags:
             title_tag = l.a.find('span', {'class': 'base-t'})
 
-            product_no = title_tag.text  # []로 묶인 문자열 추출
-            title = product_no + ' : title'
+            title = title_tag.text
+            product_no = title[title.find('[')+1:title.find(']')]
             desc = title_tag.text
             small_img = 'http:' + l.a.img['src']
             detail_url = base_url + l.a.attrs['href']   # for big image
-            torrent_url = 'https://sukebei.nyaa.si/?f=0&c=0_0&q={}'.format(product_no)
-            big_img = ''  # from javtorrent detail page
             date = l.a.find('span').text
 
-            results.append(WebSearchResult(product_no, date, title, desc, detail_url, small_img, torrent_url))
+            results.append(WebSearchResult(product_no, date, title, desc, detail_url, small_img, ''))
 
     print('debug: results size:', len(results))
     return results
 
 
-def get_javtorent_big_image(url):
-    '''get big image url from detail page'''
-    print('debug: get_javtorrent_big_image:', url)
-    html = urlopen(urllib.request.Request(url, headers=REQ_HEADER)).read().decode('utf-8')
-    bs = BeautifulSoup(html, 'html.parser')
+async def load_detail(idx, url):
+    async with aiohttp.ClientSession(headers=REQ_HEADER) as session:
+        async with session.get(url) as res:
+            html = await res.text()
+            bs = BeautifulSoup(html, 'html.parser')
 
-    date = ''
-    torrent_url = ''
-    desc = ''
-    img_url = bs.find('div', '{id: content}').img['src']
-    return 'test-date', 'torrent url', 'test-desc', img_url
+            big_img_url = bs.find('div', {'id': 'content'}).img['src']
+
+    print('{} detail fetched: {}'.format(idx, big_img_url))
+    return idx, 'http:' + big_img_url
 
 
-def get_sukebei_torrent_link(url):
-    return 'test-date', 'torrent url', 'test-desc', 'http://jtl.re/x/18/xvsr380.jpg'
+async def load_image_data(idx, url):
+    async with aiohttp.ClientSession(headers=REQ_HEADER) as session:
+        async with session.get(url) as res:
+            bin = await res.read()
+            # create image data
+
+    print('{} {} image fetched'.format(idx, type))
+    return idx, url, bin
 
 
 def get_content_detail(content_url):
@@ -216,42 +223,23 @@ def get_content_detail(content_url):
     return date, torrent_url, desc, img_url
 
 
-def get_detail_page_data(url):
-    html = urlopen(urllib.request.Request(url, headers=REQ_HEADER)).read().decode('utf-8')
-    bs = BeautifulSoup(html, 'html.parser')
+def download_torrent_file(product_id, url):
+    opener = urllib.request.build_opener()
+    opener.addheaders = [('User-Agent', 'CERN-LineMode/2.15 libwww/2.17b3')]
+    urllib.request.install_opener(opener)  # NOTE: global for the process
 
-    img_url = bs.find('div', {'id': 'content'}).img['src']
+    filename = product_id + '.torrent'
+    urllib.request.urlretrieve(url, filename)
+    print('curr dir:', os.getcwd())
 
-    #sample_img_url = 'http://jtl.re/x/18/tpro008_s.jpg'
-    return '', '', '', img_url
-
-    '''
-    print('get_content_with_image:', content_url)
-    #date, torrent_url, desc, img_url = get_content_detail(content_url)
-    date, torrent_url, desc, img_url = get_javtorent_big_image(content_url)
-    print('get_content_with_image:', date, torrent_url, desc, img_url)
-
-    req = urllib.request.Request(img_url, headers=REQ_HEADER)
-    data = urllib.request.urlopen(req).read()
-    image = QtGui.QImage()
-    image.loadFromData(data)
-
-    return date, torrent_url, desc, image
-    '''
+    # run on command line
+    # "C:\Program Files\qBittorrent\qbittorrent.exe" torrent_file
 
 
-def download_torrents(content_download_url_pairs):
-    """
-    not completed
-    doesn't work as expected -> 오류 페이지 다운
-    """
-    driver = webdriver.PhantomJS()
-    for p in content_download_url_pairs:
-        driver.get(p[0])
-        time.sleep(1)
-        urllib.request.urlretrieve(p[1], 'test_download_phantomjs')
-    driver.close()
-    print('downloaded')
+def run_torrent_magnet(url):
+    command = '"C:\Program Files\qBittorrent\qbittorrent.exe" "{}"'.format(url)
+    print(command)
+    subprocess.Popen(command)
 
 
 def download_torrents_chromedriver(content_download_url_pairs):
@@ -270,6 +258,46 @@ def download_torrents_chromedriver(content_download_url_pairs):
         driver.get(p[1])
     # driver.close()
     print('downloaded')
+
+
+async def load_torrent_link(idx, product_no, sema):
+    base_url = '{}/?f=0&c=0_0&q={}'.format(SUKEBEI_BASE_URL, product_no)
+    url = base_url
+
+    with (await sema):
+        async with aiohttp.ClientSession(headers=REQ_HEADER) as session:
+            async with session.get(url) as res:
+                html = await res.text()
+                bs = BeautifulSoup(html, 'html.parser')
+
+                results = []
+                try:
+                    base = bs.find('div', {'class': 'table-responsive'}).find('tbody')
+                    rows = base.find_all('tr')
+
+                    for tr in rows:
+                        tds = tr.find_all('td')
+                        size = get_float(tds[3].text)
+                        torrent_link = tds[2].find_all('a')[0].attrs['href']
+                        magnet_link = tds[2].find_all('a')[1].attrs['href']
+                        seeders = get_float(tds[5].text)
+                        results.append({'size': size,
+                                        'link': magnet_link,
+                                        'seeders': seeders})
+
+                    sorted_r = sorted(results, key=lambda e: (e['size'], e['seeders']))
+
+                    if len(sorted_r) > 0 and 'link' in sorted_r[0]:
+                        print('torrent link:{} {}'.format(product_no, sorted_r[0]['link'][:10]))
+
+                    return idx, SUKEBEI_BASE_URL + sorted_r[0]['link']
+                except Exception as e:
+                    print('failed: >>>>>>>>>', product_no, e, url)
+                    return -1, ''
+
+
+def get_float(s):
+    return float(''.join(filter(lambda c: c.isdigit() or c == '.', s)))
 
 
 if __name__ == '__main__':

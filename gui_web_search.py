@@ -24,7 +24,6 @@ column_def = ColumnDef(['chk', 'state', 'desc', 'torrent', 'img'],
 
 
 class SearchWorker(QObject):
-    fetched = pyqtSignal(int, int)
     finished = pyqtSignal(list)
 
     def __init__(self, lazy_content_load=True):
@@ -39,7 +38,7 @@ class SearchWorker(QObject):
     def on_search_today_req(self, start_page, page_count):
         print('on_search_today_req')
         #results = wsc.search_main_page(start_page, page_count, not self.lazy_content_load)
-        results = wsc.search_javtorrent(start_page, page_count, not self.lazy_content_load)
+        results = wsc.search_javtorrent(start_page, page_count)
         self.finished.emit(results)
 
     def on_stop_req(self):
@@ -50,25 +49,40 @@ class ContentLoadWorker(QObject):
     # row, date, torrent_url, desc, img_url
     detail_fetched = pyqtSignal(int, str, str, str, str)
     detail_fetch_finished = pyqtSignal()
-    # row, img_url
-    image_fetched = pyqtSignal(int, str)
-    image_fetch_finished = pyqtSignal()
+    # type, row, img_data
+    image_fetched = pyqtSignal(str, int, str, bytes)
+    torrent_link_fetched = pyqtSignal(int, str)
+    torrent_link_fetch_finished = pyqtSignal()
 
-    def __init__(self, img_cache):
+    def __init__(self):
         super().__init__()
         print(threading.current_thread())
-        if sys.platform == 'windows':
+        if sys.platform == 'win32':
             self.loop = asyncio.ProactorEventLoop()
         else:
             self.loop = asyncio.new_event_loop()
-        self.img_cache = img_cache
 
-    def on_detail_load_req(self, rows, urls):
-        print('on_load_req, {}, {}'.format(len(rows), len(urls)))
-        #img_urls = self.fetch_all_details(rows, urls)
-        #self.fetch_all_images(rows, img_urls)
-        img_urls = self.loop.run_until_complete(self.fetch_all_details(rows, urls))
-        self.loop.run_until_complete(self.fetch_all_images(rows, img_urls))
+        asyncio.set_event_loop(self.loop)
+        self.sema = asyncio.Semaphore(5)
+
+    def on_detail_load_req(self, rows, detail_urls, small_img_urls, product_ids):
+        print('on_load_req, {}, {}'.format(len(rows), len(detail_urls)))
+        load_detail_tasks = [wsc.load_detail(row, url) for row, url in zip(rows, detail_urls)]
+        done, _ = self.loop.run_until_complete(asyncio.wait(load_detail_tasks))
+
+        self.load_images('small', rows, small_img_urls)
+
+        img_rows = []
+        bigimg_detail_urls = []
+        for dr in done:
+            idx, url = dr.result()
+            img_rows.append(idx)
+            bigimg_detail_urls.append(url)
+        self.load_images('big', img_rows, bigimg_detail_urls)
+
+        self.detail_fetch_finished.emit()
+
+        self.load_torrent_links(rows, product_ids)
 
     def on_stop_req(self):
         print('on_stop_req : content load worker is_running={}'.format(self.loop.is_running()))
@@ -76,82 +90,28 @@ class ContentLoadWorker(QObject):
             self.loop.stop()
             self.detail_fetch_finished.emit()
 
-    async def fetch_all_details(self, rows, urls):
-        '''
-        rows = rows[0:2]
-        urls = urls[0:2]
-        '''
+    def load_images(self, img_type, rows, urls):
+        load_bigimg_tasks = [wsc.load_image_data(idx, url) for idx, url in zip(rows, urls)]
+        done, _ = self.loop.run_until_complete(asyncio.wait(load_bigimg_tasks))
 
-        asyncio.set_event_loop(self.loop)
+        for task in done:
+            row, url, data = task.result()
+            self.image_fetched.emit(img_type, row, url, data)
 
-        futures = [asyncio.ensure_future(self.load_detail_page(row, url)) for row, url in zip(rows, urls)]
-        '''
-        tasks = asyncio.gather(*futures)
+    def load_torrent_links(self, rows, product_ids):
+        tasks = [wsc.load_torrent_link(row, pid, self.sema) for row, pid in zip(rows, product_ids)]
 
-        results = self.loop.run_until_complete(tasks)
+        done, _ = self.loop.run_until_complete(asyncio.wait(tasks))
 
-        img_urls = []
-        for r in results:
-            row, date, torrent_url, desc, img_url = r
-            self.detail_fetched.emit(row, date, torrent_url, desc, img_url)
-            img_urls.append(img_url)
-        
-        self.detail_fetch_finished.emit()
-        '''
+        for task in done:
+            row, link = task.result()
+            self.torrent_link_fetched.emit(row, link)
 
-        img_urls = []
-        for t in asyncio.as_completed(futures):
-            row, date, torrent_url, desc, img_url = await t
-            self.detail_fetched.emit(row, date, torrent_url, desc, img_url)
-            img_urls.append(img_url)
+        self.torrent_link_fetch_finished.emit()
 
-        self.detail_fetch_finished.emit()
-
-        return img_urls
-
-    async def load_detail_page(self, row, url):
-        try:
-            date, torrent_url, desc, img_url = wsc.get_detail_page_data(url)
-            print('load: {}, {}, {}'.format(row, url, img_url))
-            return row, date, torrent_url, desc, 'http:' + img_url
-        except Exception as e:
-            print('exception on {}, {}'.format(row, url))
-            print(e)
-            raise
-
-    async def fetch_all_images(self, rows, urls):
-        asyncio.set_event_loop(self.loop)
-
-        futures = [asyncio.ensure_future(self.load_images(row, url)) for row, url in zip(rows, urls)]
-        '''
-        tasks = asyncio.gather(*futures)
-
-        results = self.loop.run_until_complete(tasks)
-
-        for r in results:
-            row, img_url = r
-            if img_url and img_url != '':
-                self.image_fetched.emit(row, img_url)
-        '''
-
-        for t in asyncio.as_completed(futures):
-            row, img_url = await t
-            if img_url and img_url != '':
-                self.image_fetched.emit(row, img_url)
-
-        self.image_fetch_finished.emit()
-
-    async def load_images(self, row, url):
-        in_cache = self.img_cache[url] if url in self.img_cache else None
-        if not in_cache and url:
-            req = urllib.request.Request(url, headers=wsc.REQ_HEADER)
-            data = urllib.request.urlopen(req).read()
-            image = QtGui.QImage()
-            image.loadFromData(data)
-            self.img_cache[url] = image
-
-        print('load_image: {}, {}'.format(row, url))
-        return row, url
+    def get_chunks(self, l, n):
+        for i in range(0, len(l), n):
+            yield l[i:i+n]
 
 
 class MyEventFilter(QObject):
@@ -169,7 +129,8 @@ class MainWindow(TabledUtilWindow):
     search_keyword_req = pyqtSignal(str, int, int)
     search_today_req = pyqtSignal(int, int)
     search_stop_req = pyqtSignal()
-    content_load_req = pyqtSignal(list, list)
+    # rows, detail_page_urls, small_img_urls, product_ids
+    content_load_req = pyqtSignal(list, list, list, list)
     content_load_stop_req = pyqtSignal()
 
     def __init__(self, search_text):
@@ -190,12 +151,13 @@ class MainWindow(TabledUtilWindow):
         self.search_today_req.connect(self.search_worker.on_search_today_req)
         self.search_stop_req.connect(self.search_worker.on_stop_req)
 
-        self.content_load_worker = ContentLoadWorker(self.img_cache)
+        self.content_load_worker = ContentLoadWorker()
         self.content_load_worker.moveToThread(self.thread)
-        self.content_load_worker.detail_fetched.connect(self.on_content_fetched)
+        self.content_load_worker.detail_fetched.connect(self.on_detail_page_fetched)
         self.content_load_worker.detail_fetch_finished.connect(self.arrange_table)
         self.content_load_worker.image_fetched.connect(self.on_image_fetched)
-        self.content_load_worker.image_fetch_finished.connect(self.arrange_table)
+        self.content_load_worker.torrent_link_fetched.connect(self.on_torrent_link_fetched)
+        self.content_load_worker.torrent_link_fetch_finished.connect(self.on_all_torrent_link_fetched)
 
         self.content_load_req.connect(self.content_load_worker.on_detail_load_req)
         self.content_load_stop_req.connect(self.content_load_worker.on_stop_req)
@@ -361,7 +323,7 @@ class MainWindow(TabledUtilWindow):
             desc_item.setData(r) # save content url for later use
             self.model.setItem(row, column_def['desc'], desc_item)
             ui_util.add_checkbox_on_tableview(self.tableview, row, column_def['chk'], '', 60, None)
-            slot = functools.partial(self.download_torrent, r.torrent_url, r.content_url)
+            slot = functools.partial(self.download_torrent2, r.product_no, r.torrent_url)
             ui_util.add_button_on_tableview(self.tableview, row, column_def['torrent'], 'download', None, 0, slot)
             if r.img_url is not '':
                 # pass for lazy loading small images to fast text only loading
@@ -409,24 +371,24 @@ class MainWindow(TabledUtilWindow):
             self.load_content_data_background()
         self.show_elapsed_time()
 
-    # def set_start_time(self):
-    #     self.start_t = time.time()
-    #
-    # def show_elapsed_time(self):
-    #     print('elapse={}'.format(time.time() -self.start_t))
-
     def load_content_data_background(self):
-        rows, content_urls = [], []
+        rows, content_urls, small_img_urls, pids = [], [], [], []
         for r in range(self.model.rowCount()):
             rows.append(r)
-            content_urls.append(self.model.item(r, column_def['desc']).data().content_url)
+            #content_urls.append(self.model.item(r, column_def['desc']).data().content_url)
+            #small_img_urls.append(self.model.item(r, column_def['desc']).data().img_url)
+            row_data = self.row_data(r)
+            content_urls.append(row_data.content_url)
+            small_img_urls.append(row_data.img_url)
+            pids.append(row_data.product_no)
 
-        self.content_load_req.emit(rows, content_urls)
+        self.content_load_req.emit(rows, content_urls, small_img_urls, pids)
 
-    def on_content_fetched(self, row, date, torrent_url, desc, image):
+    def on_detail_page_fetched(self, row, date, torrent_url, desc, image):
         print('on content fetched, {}, {}'.format(row, torrent_url))
+        # nothing to do on javtorrent right now
 
-        '''
+        ''' # old code for old site
         row_data = self.model.item(row, column_def['desc']).data()
         row_data.date = date if date != '' else row_data.date
         row_data.torrent_url = torrent_url
@@ -440,13 +402,25 @@ class MainWindow(TabledUtilWindow):
         self.show_elapsed_time()
         '''
 
-    def on_image_fetched(self, row, img_url):
-        print('on image fetched, {}, {}'.format(row, img_url))
+    def on_image_fetched(self, itype, row, img_url, img_data):
+        print('on image fetched, {} {} {}'.format(itype, row, img_url))
+        image = QtGui.QImage()
+        image.loadFromData(img_data)
+        self.img_cache[img_url] = image
 
-        image = self.img_cache[img_url]
-        add_image_widget_on_tableview(self.tableview, row, column_def['img'], image,
-                                      self.setting_ui.row_image_size())
+        if itype == 'small':
+            add_image_widget_on_tableview(self.tableview, row, column_def['img'], image,
+                                          self.setting_ui.row_image_size())
+        else: # 'big'
+            self.row_data(row).big_img_url = img_url
+
         self.show_elapsed_time()
+
+    def on_torrent_link_fetched(self, row, link):
+        self.row_data(row).torrent_url = link
+
+    def on_all_torrent_link_fetched(self):
+        QMessageBox.information(self, 'info', 'torrent link fetch finished')
 
     def download_torrent(self, url, content_url):
         print(url)
@@ -457,16 +431,23 @@ class MainWindow(TabledUtilWindow):
             _, url, _, _ = wsc.get_content_detail(content_url)
         else:
             time.sleep(0.1)
+
         command = 'start chrome "{}"'.format(url)
         os.system(command)
 
         # wsc.download_torrents([(content_url, url)])
         # wsc.download_torrents_chromedriver([(content_url, url)])
 
+    def download_torrent2(self, product_id, torrent_url):
+        #wsc.download_torrent_file(product_id, torrent_url)
+        wsc.run_torrent_magnet(torrent_url)
+
     def download_checked_torrents(self):
         for r in range(self.model.rowCount()):
             if self.is_checked(r):
-                self.tableview.indexWidget(self.model.index(r, column_def['torrent'])).clicked.emit()
+                #self.tableview.indexWidget(self.model.index(r, column_def['torrent'])).clicked.emit()
+                row_data = self.row_data(r)
+                self.download_torrent2(row_data.product_no, row_data.torrent_url)
 
     def stop_search(self):
         self.search_stop_req.emit()
@@ -479,15 +460,15 @@ class MainWindow(TabledUtilWindow):
         return QSize(w, h)
 
     def show_big_picture(self):
-        content_url = self.row_content_url()
-        image = self.load_content_big_image_from_cache(content_url)
+        url = self.row_data().big_img_url
+        image = self.load_content_big_image_from_cache(url)
+        ''' # this is not impl yet, complete ithis if needed
         if not image:
-            #_, _, _, img_url = wsc.get_content_detail(content_url)
-            _, _, _, img_url = wsc.get_javtorent_big_image(content_url)
-            image = self.load_image(img_url)
-            self.img_cache[content_url] = image
-        self.img_big_picture.show_img(image, True, self.calc_big_picture_size())
-        self.img_big_picture.show()
+            self.content_load_worker.fetch_image_req.emit()
+            '''
+        if image:
+            self.img_big_picture.show_img(image, True, self.calc_big_picture_size())
+            self.img_big_picture.show()
 
     def open_db_search(self):
         pno = file_util.parse_product_no(self.row_data().title)

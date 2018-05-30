@@ -12,6 +12,7 @@ from selenium import webdriver
 import time
 import asyncio
 import aiohttp
+from googletrans import Translator
 
 from PyQt5 import QtGui
 
@@ -159,6 +160,7 @@ def search_main_page(start_page, page_count, load_content=False):
 def search_javtorrent(start_page, page_count):
     base_url = 'http://javtorrent.re'
     search_url = base_url + '/page/{}/'
+    googletran = Translator()
 
     results = []
     for page in range(start_page, start_page+page_count):
@@ -174,7 +176,8 @@ def search_javtorrent(start_page, page_count):
         for l in list_tags:
             title_tag = l.a.find('span', {'class': 'base-t'})
 
-            title = title_tag.text
+            trslt = googletran.translate(title_tag.text, src='ja', dest='ko')
+            title = trslt.text if trslt else title_tag.text
             product_no = title[title.find('[')+1:title.find(']')]
             desc = title_tag.text
             small_img = 'http:' + l.a.img['src']

@@ -435,9 +435,6 @@ class MainWindow(TabledUtilWindow):
         command = 'start chrome "{}"'.format(url)
         os.system(command)
 
-        # wsc.download_torrents([(content_url, url)])
-        # wsc.download_torrents_chromedriver([(content_url, url)])
-
     def download_torrent2(self, product_id, torrent_url):
         #wsc.download_torrent_file(product_id, torrent_url)
         wsc.run_torrent_magnet(torrent_url)

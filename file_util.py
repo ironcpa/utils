@@ -32,6 +32,7 @@ REMOVE_STRS = ["[Thz.la]",
                '[FHD60fps]',
                '[Fhd]',
                '[FHD]',
+               'hjd2048.com-',
               ]
 REMOVE_STRS_3PLENET = ['{:03d}_'.format(x) + '3xplanet_' for x in range(1, 100)]
 REMOVE_STRS.extend(REMOVE_STRS_3PLENET)
@@ -110,9 +111,9 @@ def backup_file_name(log_name, old_path, new_path):
 
 def parse_product_no(name):
     new_name = name
+    new_name = remove_unused(new_name)
     if not ('1pon' in name and 'carib' in name):
         new_name = remove_date_prefix(new_name)
-    new_name = remove_unused(new_name)
     new_name = make_valid_product_name(new_name)
 
     return new_name
@@ -142,7 +143,13 @@ def rename_files(path):
             o_path = os.path.join(root, file_name)
             n_path = os.path.join(root, new_name)
             print(new_name, '<-', file_name)
-            os.rename(o_path, n_path)
+            try:
+                os.rename(o_path, n_path)
+            except FileExistsError as e:
+                new_name = os.path.splitext(new_name)[0] + '_1' + ext
+                n_path = os.path.join(root, new_name)
+                os.rename(o_path, n_path)
+                print('\tfile already exists: use suffix : {}'.format(n_path))
 
             backup_file_name(log_name, o_path, n_path)
 
@@ -209,6 +216,6 @@ if __name__ == '__main__':
     # #
     # # rename_files(test_dir)
 
-    name = '[FHD]JUX-999 타니하라 노조미'
+    name = '0409jUX999'
     pno = parse_product_no(name)
     print(pno)

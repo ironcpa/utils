@@ -112,8 +112,10 @@ class MainWindow(TabledUtilWindow):
         key = event.key()
         mod = event.modifiers()
 
-        if key == Qt.Key_Return:
+        if key == Qt.Key_Return and mod == Qt.ControlModifier:
             self.on_search_dir_clicked()
+        elif key == Qt.Key_Return:
+            self.on_open_file_clicked()
         elif key == Qt.Key_Escape:
             ui_util.focus_to_text(self.txt_search_text)
         elif key == Qt.Key_S and mod == Qt.ControlModifier:

@@ -70,7 +70,7 @@ class ContentLoadWorker(QObject):
         load_detail_tasks = [wsc.load_detail(row, url) for row, url in zip(rows, detail_urls)]
         done, _ = self.loop.run_until_complete(asyncio.wait(load_detail_tasks))
 
-        self.load_images('small', rows, small_img_urls)
+        #self.load_images('small', rows, small_img_urls)
 
         img_rows = []
         bigimg_detail_urls = []
@@ -91,6 +91,7 @@ class ContentLoadWorker(QObject):
             self.detail_fetch_finished.emit()
 
     def load_images(self, img_type, rows, urls):
+        print('>>>>>>>>> load_images:', img_type)
         load_bigimg_tasks = [wsc.load_image_data(idx, url) for idx, url in zip(rows, urls)]
         done, _ = self.loop.run_until_complete(asyncio.wait(load_bigimg_tasks))
 
@@ -408,10 +409,9 @@ class MainWindow(TabledUtilWindow):
         image.loadFromData(img_data)
         self.img_cache[img_url] = image
 
-        if itype == 'small':
-            add_image_widget_on_tableview(self.tableview, row, column_def['img'], image,
-                                          self.setting_ui.row_image_size())
-        else: # 'big'
+        add_image_widget_on_tableview(self.tableview, row, column_def['img'], image,
+                                      self.setting_ui.row_image_size())
+        if itype == 'big':
             self.row_data(row).big_img_url = img_url
 
         self.show_elapsed_time()

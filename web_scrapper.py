@@ -205,7 +205,7 @@ async def load_image_data(idx, url):
             bin = await res.read()
             # create image data
 
-    print('{} {} image fetched'.format(idx, type))
+    print('{} {} image fetched'.format(idx, url))
     return idx, url, bin
 
 
@@ -237,7 +237,8 @@ def download_torrent_file(product_id, url):
 
 
 def run_torrent_magnet(url):
-    command = '"C:\Program Files\qBittorrent\qbittorrent.exe" "{}"'.format(url)
+    #command = '"C:\Program Files\qBittorrent\qbittorrent.exe" "{}"'.format(url)
+    command = '"C:\Program Files (x86)\qBittorrent\qbittorrent.exe" "{}"'.format(url)
     print(command)
     subprocess.Popen(command)
 

@@ -187,7 +187,8 @@ def search_javtorrent(start_page, page_count):
             results.append(WebSearchResult(product_no, date, title, desc, detail_url, small_img, ''))
 
     print('debug: results size:', len(results))
-    return results
+    #return results
+    return results[:2]
 
 
 async def load_detail(idx, url):

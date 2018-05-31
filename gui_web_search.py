@@ -7,6 +7,7 @@ import os
 import functools
 import urllib.request
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QHeaderView
 import time
 import asyncio
 
@@ -173,13 +174,16 @@ class MainWindow(TabledUtilWindow):
         self.model.setHorizontalHeaderLabels(column_def.header_titles)
         self.tableview.setModel(self.model)
         self.tableview.installEventFilter(MyEventFilter())
+        self.set_column_width()
 
         self.load_settings()
-
 
         if search_text and search_text != '':
             self.txt_search_text.set_text(search_text)
             self.search_keyword()
+
+    def on_header_section_resized(self, idx):
+        print(idx)
 
     def setup_ui(self):
         super().setup_ui()
@@ -225,6 +229,17 @@ class MainWindow(TabledUtilWindow):
         self.search_counter = SearchCounter(self)
         self.search_counter.hide()
 
+    def set_column_width(self):
+        hheader = self.tableview.horizontalHeader()
+        hheader.setSectionResizeMode(column_def['chk'], QHeaderView.ResizeToContents)
+        hheader.setSectionResizeMode(column_def['state'], QHeaderView.ResizeToContents)
+        hheader.setSectionResizeMode(column_def['desc'], QHeaderView.Stretch)
+        hheader.setSectionResizeMode(column_def['torrent'], QHeaderView.ResizeToContents)
+        hheader.setSectionResizeMode(column_def['img'], QHeaderView.ResizeToContents)
+        self.tableview.verticalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+
+        #self.tableview.setColumnWidth(column_def['desc'], 500)
+
     def init_setting_ui(self):
         self.setting_ui = WebSearchSettingUI(self)
         self.setting_ui.hide()
@@ -264,8 +279,10 @@ class MainWindow(TabledUtilWindow):
             super().keyPressEvent(event)
 
     def arrange_table(self):
-        self.tableview.resizeRowsToContents()
-        self.tableview.resizeColumnsToContents()
+        # 아래 코드는 set_column_width() 내용을 override 한다.
+        #self.tableview.resizeRowsToContents()
+        #self.tableview.resizeColumnsToContents()
+        pass
 
     def get_search_text(self):
         return self.txt_search_text.text()

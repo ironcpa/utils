@@ -208,7 +208,7 @@ class MainWindow(TabledUtilWindow):
 
         fname = os.path.splitext(first_path)[0][0:-11]
         capture_pairs.insert(0, fname + '_000000.000.jpg')
-        capture_pairs.insert(1, fname + '_000001.000.jpg')
+        capture_pairs.insert(1, fname + '_000010.000.jpg')
 
     def make_clips_from_model(self, out_prefix=''):
         captures = [self.model.item(r, column_def['file']).data() for r in range(self.model.rowCount())]

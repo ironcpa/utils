@@ -403,9 +403,14 @@ class MainWindow(TabledUtilWindow):
         self.model.item(row, column_def['date']).setText(product.cdate)
 
     def show_web_search_result(self):
+        '''
         pno = self.get_pno_on_curr_row()
         results = web_scrapper.search_titles(pno)
         QMessageBox.information(self, 'search', '\n'.join(results))
+        '''
+        pno = self.get_pno_on_curr_row()
+        command = '"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" "? {}"'.format(pno)
+        subprocess.Popen(command)
 
 
 old_hook = sys.excepthook

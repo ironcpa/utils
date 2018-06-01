@@ -298,7 +298,7 @@ class MainWindow(TabledUtilWindow):
         return row_data.date + '\n' + row_data.title + '\n' + row_data.desc
 
     def row_data(self, row=None):
-        if not row:
+        if row is None:
             row = self.tableview.currentIndex().row()
 
         return self.model.item(row, column_def['desc']).data()

@@ -16,6 +16,7 @@ from googletrans import Translator
 
 from PyQt5 import QtGui
 
+JAVTORRENT_BASE_URL = 'http://javtorrent.re'
 SUKEBEI_BASE_URL = 'https://sukebei.nyaa.si'
 
 REQ_HEADER = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36',
@@ -157,34 +158,47 @@ def search_main_page(start_page, page_count, load_content=False):
     return results
 
 
-def search_javtorrent(start_page, page_count):
-    base_url = 'http://javtorrent.re'
-    search_url = base_url + '/page/{}/'
+def get_javtorrent_main(url):
+    print('debug:get_javtorrent_main:', url)
+    html = urlopen(url)
+    content = html.read().decode('utf-8')
+
+    bs = BeautifulSoup(content, 'html.parser')
     googletran = Translator()
+
+    list_tags = bs.find('div', {'class': 'base'}).find_all('li')
+    print(len(list_tags))
+    results = []
+    for l in list_tags:
+        title_tag = l.a.find('span', {'class': 'base-t'})
+
+        en_title = title_tag.text
+        trslt = googletran.translate(en_title, src='ja', dest='ko')
+        ko_title = trslt.text if trslt else title_tag.text
+        product_no = en_title[en_title.find('[')+1:en_title.find(']')]
+        desc = ''
+        small_img = 'http:' + l.a.img['src']
+        detail_url = JAVTORRENT_BASE_URL + l.a.attrs['href']   # for big image
+        date = l.a.find('span').text
+
+        results.append(WebSearchResult(product_no, date, ko_title, desc, detail_url, small_img, ''))
+
+    return results
+
+
+def search_javtorrent(keywords):
+    # todo: need to apply pagenation
+    search_url = JAVTORRENT_BASE_URL + '/page/{}/?s={}'.format(1, keywords)
+    return get_javtorrent_main(search_url)
+
+
+def get_javtorrent_latest(start_page, page_count):
+    search_url = JAVTORRENT_BASE_URL + '/page/{}/'
 
     results = []
     for page in range(start_page, start_page+page_count):
         url = search_url.format(page)
-        html = urlopen(url)
-        content = html.read().decode('utf-8')
-
-        bs = BeautifulSoup(content, 'html.parser')
-
-        list_tags = bs.find('div', {'class': 'base'}).find_all('li')
-        print(len(list_tags))
-        results = []
-        for l in list_tags:
-            title_tag = l.a.find('span', {'class': 'base-t'})
-
-            trslt = googletran.translate(title_tag.text, src='ja', dest='ko')
-            title = trslt.text if trslt else title_tag.text
-            product_no = title[title.find('[')+1:title.find(']')]
-            desc = title_tag.text
-            small_img = 'http:' + l.a.img['src']
-            detail_url = base_url + l.a.attrs['href']   # for big image
-            date = l.a.find('span').text
-
-            results.append(WebSearchResult(product_no, date, title, desc, detail_url, small_img, ''))
+        results.extend(get_javtorrent_main(url))
 
     print('debug: results size:', len(results))
     #return results

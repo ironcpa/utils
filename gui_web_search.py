@@ -20,7 +20,7 @@ from widgets import *
 import threading
 
 
-column_def = ColumnDef(['chk', 'state', 'desc', 'torrent', 'img'],
+column_def = ColumnDef(['chk', 'state', 'torrent', 'img', 'desc'],
                        {'chk': ''})
 
 
@@ -33,13 +33,14 @@ class SearchWorker(QObject):
 
     def on_search_keyword_req(self, keyword, max_count, page_no):
         print('on_search_req')
-        results = wsc.search_detail_list(keyword, max_count, page_no, not self.lazy_content_load)
+        #results = wsc.search_detail_list(keyword, max_count, page_no, not self.lazy_content_load)
+        results = wsc.search_javtorrent(keyword)
         self.finished.emit(results)
 
     def on_search_today_req(self, start_page, page_count):
         print('on_search_today_req')
         #results = wsc.search_main_page(start_page, page_count, not self.lazy_content_load)
-        results = wsc.search_javtorrent(start_page, page_count)
+        results = wsc.get_javtorrent_latest(start_page, page_count)
         self.finished.emit(results)
 
     def on_stop_req(self):
@@ -233,7 +234,7 @@ class MainWindow(TabledUtilWindow):
         hheader = self.tableview.horizontalHeader()
         hheader.setSectionResizeMode(column_def['chk'], QHeaderView.ResizeToContents)
         hheader.setSectionResizeMode(column_def['state'], QHeaderView.ResizeToContents)
-        hheader.setSectionResizeMode(column_def['desc'], QHeaderView.Stretch)
+        #hheader.setSectionResizeMode(column_def['desc'], QHeaderView.Interactive)
         hheader.setSectionResizeMode(column_def['torrent'], QHeaderView.ResizeToContents)
         hheader.setSectionResizeMode(column_def['img'], QHeaderView.ResizeToContents)
         self.tableview.verticalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
@@ -280,8 +281,8 @@ class MainWindow(TabledUtilWindow):
 
     def arrange_table(self):
         # 아래 코드는 set_column_width() 내용을 override 한다.
-        #self.tableview.resizeRowsToContents()
-        #self.tableview.resizeColumnsToContents()
+        self.tableview.resizeRowsToContents()
+        self.tableview.resizeColumnsToContents()
         pass
 
     def get_search_text(self):
@@ -470,7 +471,10 @@ class MainWindow(TabledUtilWindow):
 
     def calc_big_picture_size(self):
         h = self.height()
-        w = h * (768.0 / 1024.0)
+        pw = self.img_big_picture.width()
+        ph = self.img_big_picture.height()
+        w = h * (pw / ph)
+        print('debug:calc_big_picture_size:', w, h)
         return QSize(w, h)
 
     def show_big_picture(self):

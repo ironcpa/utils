@@ -175,20 +175,24 @@ def get_javtorrent_main(url):
         en_title = title_tag.text
         trslt = googletran.translate(en_title, src='ja', dest='ko')
         ko_title = trslt.text if trslt else title_tag.text
+        # ko_title = en_title
+        title = ko_title + '\n' + en_title
         product_no = en_title[en_title.find('[')+1:en_title.find(']')]
         desc = ''
         small_img = 'http:' + l.a.img['src']
         detail_url = JAVTORRENT_BASE_URL + l.a.attrs['href']   # for big image
         date = l.a.find('span').text
 
-        results.append(WebSearchResult(product_no, date, ko_title, desc, detail_url, small_img, ''))
+        results.append(WebSearchResult(product_no, date, title, desc, detail_url, small_img, ''))
 
     return results
 
 
 def search_javtorrent(keywords):
     # todo: need to apply pagenation
-    search_url = JAVTORRENT_BASE_URL + '/page/{}/?s={}'.format(1, keywords)
+    param = urllib.parse.urlencode({'s': keywords})
+    search_url = JAVTORRENT_BASE_URL + '/page/{}/?{}'.format(1, param)
+    #search_url = JAVTORRENT_BASE_URL + '/page/{}/?s={}'.format(1, keywords)
     return get_javtorrent_main(search_url)
 
 
@@ -201,8 +205,8 @@ def get_javtorrent_latest(start_page, page_count):
         results.extend(get_javtorrent_main(url))
 
     print('debug: results size:', len(results))
-    #return results
-    return results[:2]
+    return results
+    #return results[:2]
 
 
 async def load_detail(idx, url):

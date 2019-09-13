@@ -490,7 +490,8 @@ class MainWindow(TabledUtilWindow):
 
     def open_db_search(self):
         pno = file_util.parse_product_no(self.row_data().title)
-        fixed_pno = pno[:8] if len(pno) >= 7 else pno
+        fixed_pno = pno[1:pno.index(']')] if pno.startswith('[') else pno
+        fixed_pno = fixed_pno[:8] if len(fixed_pno) >= 7 else fixed_pno
         command = 'pythonw c:/__devroot/utils/gui_db_search.py "{}"'.format(fixed_pno)
         subprocess.Popen(command)
 

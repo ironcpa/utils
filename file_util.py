@@ -33,9 +33,22 @@ REMOVE_STRS = ["[Thz.la]",
                '[Fhd]',
                '[FHD]',
                'hjd2048.com-',
+               '[44x.me]',
+               'hjd2048.com',
+               'hjd-2048.com',
+               '[5-5h.me]',
+               '[thzu.cc]',
+               '[ThZu.Cc]',
+               '[44x.me]',
+               '[8-8q.me]',
+               '[88q.me]'
               ]
 REMOVE_STRS_3PLENET = ['{:03d}_'.format(x) + '3xplanet_' for x in range(1, 100)]
 REMOVE_STRS.extend(REMOVE_STRS_3PLENET)
+
+REMOVE_SUFFIXES = [
+    '-h264'
+]
 
 TIME_FORMAT = '%Y%m%d-%H%M%S'
 
@@ -109,6 +122,14 @@ def backup_file_name(log_name, old_path, new_path):
         f.write("{} <- {}\n".format(new_path, old_path))
 
 
+def remove_suffix(src_name):
+    new_name = src_name
+    for suffix in REMOVE_SUFFIXES:
+        if new_name.endswith(suffix):
+            new_name = new_name.replace(suffix, "")
+
+    return new_name
+
 def parse_product_no(name):
     new_name = name
     new_name = remove_unused(new_name)
@@ -116,11 +137,12 @@ def parse_product_no(name):
         new_name = remove_date_prefix(new_name)
     new_name = make_valid_product_name(new_name)
 
-    return new_name
+    return remove_suffix(new_name)
 
 
 def rename_files(path):
     log_name = create_log_name(path)
+    renamed_count = 0
 
     for root, dirs, files in os.walk(path):
         for file_name in files:
@@ -143,6 +165,7 @@ def rename_files(path):
             o_path = os.path.join(root, file_name)
             n_path = os.path.join(root, new_name)
             print(new_name, '<-', file_name)
+            renamed_count += 1
             try:
                 os.rename(o_path, n_path)
             except FileExistsError as e:
@@ -152,6 +175,8 @@ def rename_files(path):
                 print('\tfile already exists: use suffix : {}'.format(n_path))
 
             backup_file_name(log_name, o_path, n_path)
+
+    return renamed_count
 
 #rename_files("D:/새 폴더")
 

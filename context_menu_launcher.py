@@ -21,6 +21,14 @@ def collect_files_to_db(disk_name, path):
         db.insert_product_w_fileinfos(fileinfos)
 
 
+def collect_db_curr_dir(path):
+    disk_name = None
+    if len(path) <= 3:  # drive root
+        disk_name = win32api.GetVolumeInformation(os.path.splitdrive(path)[0] + os.path.sep)
+    print('collect to db <- curr dir:', disk_name, path)
+    collect_files_to_db(disk_name, path)
+
+
 if __name__ == '__main__':
     if len(sys.argv) >= 3:
         print('context_menu_launcher', sys.argv[1], sys.argv[2])
@@ -29,7 +37,9 @@ if __name__ == '__main__':
 
     command = sys.argv[1]
     if command == 'format':
-        file_util.rename_files(sys.argv[2])
+        count = file_util.rename_files(sys.argv[2])
+        if count:
+            collect_db_curr_dir(sys.argv[2])
     elif command == 'collect':
         if len(sys.argv) == 2:
             # collect from all drive
@@ -40,9 +50,11 @@ if __name__ == '__main__':
                 print(disk_name, drive)
                 collect_files_to_db(disk_name, drive)
         else:
+            '''
             path = sys.argv[2]
             disk_name = None
             if len(path) <= 3: # drive root
                 disk_name = win32api.GetVolumeInformation(os.path.splitdrive(path)[0] + os.path.sep)
             collect_files_to_db(disk_name, path)
-
+            '''
+            collect_db_curr_dir(sys.argv[2])
